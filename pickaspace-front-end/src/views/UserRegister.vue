@@ -28,6 +28,8 @@
   </template>
   
   <script>
+  import { registerUser } from '../services/userService';
+  
   export default {
     name: 'UserRegister',
     data() {
@@ -41,15 +43,20 @@
         }
       };
     },
+
     methods: {
-      async registerUser() {
-        // Add logic to handle user registration
-        console.log('Registering user:', this.user);
-        // Here you would typically make an HTTP request to your backend
-        // For demonstration, we're just logging to the console
+    async registerUser() {
+      try {
+        const result = await registerUser(this.user);
+        console.log('User registered:', result);
+        // Handle success (e.g., redirect to login page, show success message)
+      } catch (error) {
+        console.error('Registration failed:', error);
+        // Handle error (e.g., show error message)
       }
     }
   }
+}
   </script>
   
   <style scoped>
