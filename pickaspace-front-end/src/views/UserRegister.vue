@@ -1,7 +1,7 @@
 <template>
-    <div class="register-container">
-      <h1>Register</h1>
-      <form @submit.prevent="registerUser">
+  <div class="register-container">
+    <h1>Register</h1>
+    <form @submit.prevent="registerUser" v-if="!registrationSuccess">
         <div>
           <label for="carRegistration">Car Registration:</label>
           <input type="text" id="carRegistration" v-model="user.car_registration" required>
@@ -24,8 +24,11 @@
         </div>
         <button type="submit">Register</button>
       </form>
+      <div v-if="registrationSuccess" class="success-message">
+      <p>Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.</p>
     </div>
-  </template>
+  </div>
+</template>
   
   <script>
   import { registerUser } from '../services/userService';
@@ -40,7 +43,8 @@
           password: '',
           full_name: '',
           DOB: ''
-        }
+        },
+        registrationSuccess: false
       };
     },
 
@@ -49,11 +53,13 @@
       try {
         const result = await registerUser(this.user);
         console.log('User registered:', result);
-        // Handle success (e.g., redirect to login page, show success message)
+        this.registrationSuccess = true;
       } catch (error) {
         console.error('Registration failed:', error);
-        // Handle error (e.g., show error message)
       }
+    },
+    redirectToLogin() {
+      this.$router.push('/login');
     }
   }
 }
@@ -65,6 +71,11 @@
     margin: 0 auto;
     padding: 20px;
   }
+
+  .success-message {
+  color: green;
+  margin-top: 20px;
+}
   
   .register-container div {
     margin-bottom: 10px;

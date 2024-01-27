@@ -31,3 +31,20 @@ app.post('/create-user', async (req, res) => {
   }
 });
 
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    // Find user by email
+    const user = await db.User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(401).send('Authentication failed');
+    }
+    // Check password (will be editing this to hash passwords)
+    if (user.password !== password) {
+      return res.status(401).send('Authentication failed');
+    }
+    res.json({ message: 'Login successful' });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
