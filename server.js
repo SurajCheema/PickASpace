@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 const db = require('./models'); 
 const PORT = process.env.PORT || 3000;
+const bcrypt = require('bcrypt');
 
 // Enable CORS for all routes
 app.use(cors());
@@ -22,27 +23,39 @@ db.sequelize.sync().then(() => {
   });
 });
 
+// Register user
 app.post('/create-user', async (req, res) => {
-  try {
-    const newUser = await db.User.create(req.body);
-    res.json(newUser);
+  try {    
+    // How intense the hashing will be. Higher = harder to guess but will slow down the process.
+    const saltRounds = 10; 
+    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const newUser = await db.User.create({ 
+    // Spread operator copies all other user fields
+      ...req.body,
+      password: hashedPassword
+    });
+
+    res.json({ message: "User created successfully", userId: newUser.user_id });
   } catch (error) {
     res.status(500).send(error.message);
   }
 });
 
+// Login user
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    // Find user by email
     const user = await db.User.findOne({ where: { email } });
+
     if (!user) {
       return res.status(401).send('Authentication failed');
     }
-    // Check password (will be editing this to hash passwords)
-    if (user.password !== password) {
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
       return res.status(401).send('Authentication failed');
     }
+
     res.json({ message: 'Login successful' });
   } catch (error) {
     res.status(500).send(error.message);
