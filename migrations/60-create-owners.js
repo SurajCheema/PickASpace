@@ -2,8 +2,8 @@
 
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Admins', {
-      admin_id: {
+    await queryInterface.createTable('Owners', {
+      owner_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -27,6 +27,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Admins');
+    await queryInterface.dropTable('Owners');
   }
 };
