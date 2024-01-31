@@ -4,6 +4,10 @@ const app = express();
 const db = require('./models'); 
 const PORT = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// Environment variables for JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // Enable CORS for all routes
 app.use(cors());
@@ -60,4 +64,13 @@ app.post('/login', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
+
+  if (match) {
+    // Create a token
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ message: 'Login successful', token });
+  } else {
+    return res.status(401).send('Authentication failed');
+  }
+
 });

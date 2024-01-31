@@ -15,8 +15,27 @@ module.exports = {
       bay_number: {
         type: Sequelize.INTEGER
       },
-      taken: {
-        type: Sequelize.BOOLEAN
+      isAvailable: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
+      },
+      vehicleSize: {
+        type: Sequelize.STRING
+      },
+      hasEVCharging: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      price: {
+        type: Sequelize.DECIMAL
+      },
+      disabled: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true
       }
     });
   },

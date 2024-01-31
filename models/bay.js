@@ -12,8 +12,27 @@ module.exports = (sequelize, DataTypes) => {
       bay_number: {
           type: DataTypes.INTEGER
       },
-      taken: {
-          type: DataTypes.BOOLEAN
+      isAvailable: { 
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+      },
+      vehicleSize: {
+        type: DataTypes.STRING
+      },
+      hasEVCharging: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      price: {
+        type: DataTypes.DECIMAL
+      },
+      disabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      description: {
+        type: DataTypes.STRING,
+        allowNull: true
       }
   });
   return Bay;

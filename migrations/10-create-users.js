@@ -35,6 +35,10 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      },
+      carpark_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER
       }
     });
   },
