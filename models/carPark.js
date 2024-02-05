@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
         location: {
             type: DataTypes.STRING
         },
-        hasEVCharging: { 
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
-          },
           openTime: { 
             type: DataTypes.TIME
           },

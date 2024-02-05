@@ -11,10 +11,6 @@ module.exports = {
       location: {
         type: Sequelize.STRING
       },
-      hasEVCharging: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
-      },
       openTime: {
         type: Sequelize.TIME
       },
