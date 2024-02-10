@@ -48,7 +48,23 @@
               <input type="number" class="form-control" id="totalBays" v-model.number="totalBays" @change="updateBays" required>
             </div>
           </div>
+
+  <!-- Pricing -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-3" v-for="pricing in ['Hourly', 'Daily', 'Weekly', 'Monthly']" :key="pricing">
+            <div class="card text-center">
+                <div class="card-header">{{ pricing }} Pricing</div>
+                <div class="card-body">
+                    <div class="input-group">
+                <span class="input-group-text">£</span>
+                <input type="number" class="form-control" :placeholder="`£${getDefaultPrice(pricing)}`" :aria-label="`${pricing} price`" v-model.number="carPark.pricing[pricing.toLowerCase()]" step="0.01">
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
   
+          <!-- Bay cards -->
           <div class="row justify-content-center mb-3">
     <div v-for="(bay, index) in carPark.bays" :key="index" class="col-6 col-md-3 mb-4">
       <div class="card h-100 text-center p-2">
@@ -100,10 +116,25 @@
         openTime: '',
         closeTime: '',
         accessInstructions: '',
+        pricing: {
+          hourly: 0.91,
+          daily: 4.05,
+          weekly: 20.25,
+          monthly: 33.27,
+        },
         }),
       };
     },
     methods: {
+        getDefaultPrice(pricing) {
+      switch (pricing) {
+        case 'Hourly': return '0.91';
+        case 'Daily': return '4.05';
+        case 'Weekly': return '20.25';
+        case 'Monthly': return '33.27';
+        default: return '0.00';
+      }
+    },
         updateBays() {
             const numberOfBays = parseInt(this.totalBays, 10) || 0;
             this.carPark.bays = Array.from({ length: numberOfBays }, (_, i) => ({
