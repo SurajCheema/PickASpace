@@ -20,11 +20,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING
       },
       hasEVCharging: {
-        type: Sequelize.BOOLEAN,
+        type: DataTypes.BOOLEAN,
         defaultValue: false
-      },
-      price: {
-        type: DataTypes.DECIMAL
       },
       disabled: {
         type: DataTypes.BOOLEAN,

@@ -26,9 +26,6 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
-      price: {
-        type: Sequelize.DECIMAL
-      },
       disabled: {
         type: Sequelize.BOOLEAN,
         defaultValue: false

@@ -20,6 +20,11 @@ module.exports = {
       accessInstructions: {
         type: Sequelize.STRING,
         allowNull: true
+      },
+      pricing: {
+        type: Sequelize.JSON,
+        allowNull: false,
+        defaultValue: {}
       }
     });
   },

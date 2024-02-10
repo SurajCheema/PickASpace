@@ -17,7 +17,12 @@ module.exports = (sequelize, DataTypes) => {
           accessInstructions: {
             type: DataTypes.STRING,
             allowNull: true
-          }
+          },
+          pricing: {
+            type: DataTypes.JSON,
+            allowNull: false,
+            defaultValue: {}
+        }
     });
     return CarPark;
 };
