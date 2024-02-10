@@ -8,9 +8,6 @@ module.exports = {
         primaryKey: true,
         autoIncrement: true
       },
-      location: {
-        type: Sequelize.STRING
-      },
       openTime: {
         type: Sequelize.TIME
       },
@@ -25,6 +22,14 @@ module.exports = {
         type: Sequelize.JSON,
         allowNull: false,
         defaultValue: {}
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
       }
     });
   },

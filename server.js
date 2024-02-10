@@ -74,3 +74,40 @@ app.post('/login', async (req, res) => {
   }
 
 });
+
+// Create a new car park
+app.post('/api/create-carpark', async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    // Extract car park data from request body
+    const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
+    
+    // Create car park
+    const newCarPark = await db.CarPark.create({
+      addressLine1,
+      addressLine2,
+      city,
+      postcode,
+      openTime,
+      closeTime,
+      accessInstructions,
+      pricing
+    }, { transaction });
+    
+    // Create bays associated with the car park
+    for (const bay of bays) {
+      await db.Bay.create({
+        ...bay,
+        carpark_id: newCarPark.carpark_id
+      }, { transaction });
+    }
+
+    await transaction.commit();
+
+    res.json({ message: "Car park created successfully", carparkId: newCarPark.carpark_id });
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Failed to create car park:", error);
+    res.status(500).send(error.message);
+  }
+});

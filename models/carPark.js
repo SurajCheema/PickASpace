@@ -5,9 +5,6 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true
         },
-        location: {
-            type: DataTypes.STRING
-        },
           openTime: { 
             type: DataTypes.TIME
           },
