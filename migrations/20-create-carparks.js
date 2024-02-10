@@ -23,6 +23,22 @@ module.exports = {
         allowNull: false,
         defaultValue: {}
       },
+      addressLine1: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      addressLine2: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      city: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      postcode: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

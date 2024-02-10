@@ -19,6 +19,22 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.JSON,
             allowNull: false,
             defaultValue: {}
+        },
+        addressLine1: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        addressLine2: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        city: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        postcode: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     });
     return CarPark;
