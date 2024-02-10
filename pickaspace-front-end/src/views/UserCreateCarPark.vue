@@ -4,12 +4,27 @@
       <div class="col-md-8 offset-md-2">
         <h2 class="text-center">Create a New Car Park</h2>
         <form @submit.prevent="handleSubmit" class="mt-4">
-          <div class="row mb-3 justify-content-center">
+         
+        <div class="row g-3 mb-3 justify-content-center">
             <div class="col-md-4">
-              <label for="location" class="form-label">Location:</label>
-              <input type="text" class="form-control" id="location" v-model="carPark.location" required>
+                <label for="addressLine1" class="form-label">Address Line 1:</label>
+                <input type="text" class="form-control" id="addressLine1" v-model="carPark.addressLine1" required>
             </div>
-          </div>
+            <div class="col-md-4">
+                <label for="addressLine2" class="form-label">Address Line 2:</label>
+                <input type="text" class="form-control" id="addressLine2" v-model="carPark.addressLine2">
+            </div>
+        </div>
+        <div class="row g-3 mb-3 justify-content-center">
+            <div class="col-md-4">
+                <label for="city" class="form-label">City:</label>
+                <input type="text" class="form-control" id="city" v-model="carPark.city" required>
+            </div>
+            <div class="col-md-4">
+                <label for="postcode" class="form-label">Postcode:</label>
+                <input type="text" class="form-control" id="postcode" v-model="carPark.postcode" required>
+            </div>
+        </div>
   
           <div class="row g-3 mb-3 justify-content-center">
             <div class="col-md-4">
@@ -80,10 +95,13 @@
     data() {
       return {
         carPark: reactive({
-          location: '',
-          openTime: '',
-          closeTime: '',
-          accessInstructions: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        postcode: '',
+        openTime: '',
+        closeTime: '',
+        accessInstructions: '',
         }),
       };
     },
