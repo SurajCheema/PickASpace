@@ -49,31 +49,29 @@
             </div>
           </div>
   
-      <div v-for="(bay, index) in carPark.bays" :key="index" class="mb-3">
-            <div class="text-center mb-2">
-            <h4>Bay {{ bay.bay_number }}</h4>
-            </div>
-            <div class="d-flex justify-content-center align-items-center mb-2">
-            <div class="form-check me-2">
-                <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging" :id="'evCharging'+index">
-                <label class="form-check-label" :for="'evCharging'+index">EV Charging</label>
-            </div>
-            <div class="form-check ms-2">
-                <input class="form-check-input" type="checkbox" v-model="bay.disabled" :id="'disabled'+index">
-                <label class="form-check-label" :for="'disabled'+index">Accessible</label>
-            </div>
-            </div>
-            <div class="d-flex justify-content-center">
-            <div class="col-md-5"> 
-                <select class="form-select" v-model="bay.vehicleSize" :id="'vehicleSize'+index">
-                <option value="Small">Small (e.g., VW Polo, Ford Fiesta)</option>
-                <option value="Medium">Medium (e.g., Audi A3)</option>
-                <option value="Large">Large (e.g., Volvo XC90)</option>
-                <option value="Van & Minibus">Van & Minibus (e.g., Ford Sprinter)</option>
-                </select>
-            </div>
+          <div class="row justify-content-center mb-3">
+    <div v-for="(bay, index) in carPark.bays" :key="index" class="col-6 col-md-3 mb-4">
+      <div class="card h-100 text-center p-2">
+        <div class="card-body">
+          <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging" :id="'evCharging' + index">
+            <label class="form-check-label" :for="'evCharging' + index">EV Charging</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" v-model="bay.disabled" :id="'disabled' + index">
+            <label class="form-check-label" :for="'disabled' + index">Accessible</label>
+          </div>
+          <select class="form-select mt-2" v-model="bay.vehicleSize" :id="'vehicleSize' + index">
+            <option value="Small">Small (e.g., VW Polo, Ford Fiesta)</option>
+            <option value="Medium">Medium (e.g., Audi A3)</option>
+            <option value="Large">Large (e.g., Volvo XC90)</option>
+            <option value="Van & Minibus">Van & Minibus (e.g., Ford Sprinter)</option>
+          </select>
         </div>
-     </div>  
+      </div>
+    </div>
+  </div>
 
   
             <div class="text-center">
