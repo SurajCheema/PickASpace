@@ -9,11 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       email: DataTypes.STRING,
       password: DataTypes.STRING,
       full_name: DataTypes.STRING,
-      DOB: DataTypes.DATE,
-      carpark_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-      }
+      DOB: DataTypes.DATE
     }, {
       // I will insert additional settings here.
     });

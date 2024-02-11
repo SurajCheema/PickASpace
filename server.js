@@ -56,23 +56,17 @@ app.post('/login', async (req, res) => {
     }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
+    if (match) {
+      // Create a token if the password matches
+      const token = jwt.sign({ userId: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+      res.json({ message: 'Login successful', token }); // Send the token to the client
+    } else {
+      // Password does not match
       return res.status(401).send('Authentication failed');
     }
-
-    res.json({ message: 'Login successful' });
   } catch (error) {
     res.status(500).send(error.message);
   }
-
-  if (match) {
-    // Create a token
-    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ message: 'Login successful', token });
-  } else {
-    return res.status(401).send('Authentication failed');
-  }
-
 });
 
 // Create a new car park
