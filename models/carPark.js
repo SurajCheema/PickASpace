@@ -36,10 +36,16 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        userId: {
+        user_id: {
           type: DataTypes.INTEGER,
           references: { model: 'Users', key: 'user_id' }
         }
     });
+
+      // Define associations
+      CarPark.associate = (models) => {
+        CarPark.belongsTo(models.User, { foreignKey: 'user_id' });
+    };
+
     return CarPark;
 };

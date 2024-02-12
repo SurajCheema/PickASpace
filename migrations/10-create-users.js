@@ -6,7 +6,8 @@ module.exports = {
       user_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false
       },
       car_registration: {
         type: Sequelize.STRING,

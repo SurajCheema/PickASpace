@@ -10,6 +10,12 @@ require('dotenv').config();
 // Environment variables for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
 
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET is not defined. Check your .env file and environment variables.');
+  process.exit(1); // Exit the application if the JWT_SECRET is not defined
+}
+
+
 // Enable CORS for all routes
 app.use(cors());
 
@@ -70,15 +76,39 @@ app.post('/login', async (req, res) => {
   }
 });
 
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  // Bearer TOKEN
+  const token = authHeader && authHeader.split(' ')[1]; 
+  // No token found
+  if (token == null) return res.sendStatus(401); 
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    // Token not valid
+    if (err) return res.sendStatus(403); 
+
+    console.log(user); // Log the decoded user payload
+    req.user = user;
+    next();
+  });
+};
+
 // Create a new car park
-app.post('/api/create-carpark', async (req, res) => {
+app.post('/api/create-carpark', authenticateToken, async (req, res) => {
+
+  console.log(req.user); // Log to confirm the structure
+  const userId = req.user.userId; // Access userId correctly from req.user
+  
+  // Extracted from the token by the middleware
+  const user_id = req.user.userId; // Use req.user.userId to match the payload of your JWT
+
   const transaction = await db.sequelize.transaction();
   try {
-    // Extract car park data from request body
     const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
-    
-    // Create car park
+
+    // Create car park with dynamic user_id from JWT
     const newCarPark = await db.CarPark.create({
+      user_id,
       addressLine1,
       addressLine2,
       city,
@@ -88,7 +118,7 @@ app.post('/api/create-carpark', async (req, res) => {
       accessInstructions,
       pricing
     }, { transaction });
-    
+
     // Create bays associated with the car park
     for (const bay of bays) {
       await db.Bay.create({
@@ -98,7 +128,6 @@ app.post('/api/create-carpark', async (req, res) => {
     }
 
     await transaction.commit();
-
     res.json({ message: "Car park created successfully", carparkId: newCarPark.carpark_id });
   } catch (error) {
     await transaction.rollback();
@@ -106,3 +135,4 @@ app.post('/api/create-carpark', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+

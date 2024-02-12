@@ -39,6 +39,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      user_id: {
+        allowNull:false,
+        type: Sequelize.INTEGER
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -46,11 +50,7 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
-      },
-      userId: {
-        allowNull:false,
-        type: Sequelize.INTEGER
-    },
+      }
   });
   },
 

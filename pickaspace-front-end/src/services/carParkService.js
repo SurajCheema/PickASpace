@@ -6,10 +6,14 @@ export const createCarPark = async (carParkData) => {
   // Complete endpoint URL
   const url = `${API_BASE_URL}/create-carpark`;
   try {
+    // Retrieve the stored token
+    const token = localStorage.getItem('token'); 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Include the token in the Authorization header
+        'Authorization': `Bearer ${token}` 
       },
       body: JSON.stringify(carParkData),
     });

@@ -30,10 +30,10 @@
     },
     methods: {
       async loginUser() {
-        try {
-          const result = await loginUser(this.user);
-          console.log('User logged in:', result);
-          this.$router.push('/dashboard'); 
+          try {
+          await loginUser(this.user);
+          console.log('User logged in');
+          this.$router.push('/dashboard');
         } catch (error) {
           console.error('Login failed:', error);
         }
