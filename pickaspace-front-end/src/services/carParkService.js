@@ -31,9 +31,9 @@ export const createCarPark = async (carParkData) => {
 };
 
 // Fetch car parks from backend
-export const fetchCarParks = async () => {
+export const fetchCarParks = async (searchParams = '') => {
   try {
-    const response = await fetch(`${API_BASE_URL}/carparks`, {
+    const response = await fetch(`${API_BASE_URL}/carparks?${searchParams}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

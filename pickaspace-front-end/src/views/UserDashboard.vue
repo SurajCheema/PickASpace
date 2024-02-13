@@ -49,16 +49,18 @@ export default {
   },
   methods: {
     async fetchCarParks() {
-      try {
-        const carParks = await fetchCarParks();
-        this.carParks = carParks;
-      } catch (error) {
-        alert('Failed to fetch car parks. Please try again later.');
-      }
-    },
-    selectCarPark(carPark) {
-      this.selectedCarPark = carPark;
-    },
+    // Assuming you want to keep a single search field for simplicity
+    const searchParams = new URLSearchParams({
+      query: this.searchQuery, // Send a single query parameter
+    }).toString();
+
+    try {
+      const carParks = await fetchCarParks(searchParams);
+      this.carParks = carParks;
+    } catch (error) {
+      alert('Failed to fetch car parks. Please try again later.');
+    }
+  },
     bookCarPark() {
       // Placeholder for booking logic
       alert('Booking logic goes here.');
