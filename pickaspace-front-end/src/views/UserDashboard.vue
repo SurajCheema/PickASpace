@@ -7,9 +7,9 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-12 col-md-6" v-for="carPark in filteredCarParks" :key="carPark.carpark_id" @click="selectCarPark(carPark)">
+      <div class="col-12 col-md-6" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
         <div class="card mb-3" style="cursor:pointer">
-          <div class="card-body">
+          <div class="card-body" @click="selectCarPark(carPark)">
             <h5 class="card-title">{{ carPark.addressLine1 }}</h5>
             <p class="card-text">{{ carPark.city }}, {{ carPark.postcode }}</p>
           </div>

@@ -135,14 +135,21 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all carparks
+// Get all carparks with optional address filtering
 app.get('/api/carparks', async (req, res) => {
+  const { addressLine1, addressLine2, city, postcode } = req.query;
   try {
-    const carParks = await db.CarPark.findAll();
+    const whereClause = {};
+
+    if (addressLine1) whereClause.addressLine1 = { [db.Sequelize.Op.iLike]: `%${addressLine1}%` };
+    if (addressLine2) whereClause.addressLine2 = { [db.Sequelize.Op.iLike]: `%${addressLine2}%` };
+    if (city) whereClause.city = { [db.Sequelize.Op.iLike]: `%${city}%` };
+    if (postcode) whereClause.postcode = { [db.Sequelize.Op.iLike]: `%${postcode}%` };
+
+    const carParks = await db.CarPark.findAll({ where: whereClause });
     res.json(carParks);
   } catch (error) {
     console.error('Failed to fetch car parks:', error);
     res.status(500).send('Internal Server Error');
   }
 });
-
