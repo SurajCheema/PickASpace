@@ -37,5 +37,7 @@ export default {
 </script>
 
 <style>
-/* Additional styles if needed */
+.navbar {
+  margin-bottom: 100px; /* Adjustable, creates space between body and navbar */
+}
 </style>
