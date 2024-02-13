@@ -29,3 +29,24 @@ export const createCarPark = async (carParkData) => {
     throw error;
   }
 };
+
+// Fetch car parks from backend
+export const fetchCarParks = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/carparks`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch car parks');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching car parks:', error);
+    throw error;
+  }
+};

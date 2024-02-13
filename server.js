@@ -97,10 +97,9 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
 
   console.log(req.user); // Log to confirm the structure
-  const userId = req.user.userId; // Access userId correctly from req.user
-  
+
   // Extracted from the token by the middleware
-  const user_id = req.user.userId; // Use req.user.userId to match the payload of your JWT
+  const user_id = req.user.userId;
 
   const transaction = await db.sequelize.transaction();
   try {
@@ -133,6 +132,17 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
     await transaction.rollback();
     console.error("Failed to create car park:", error);
     res.status(500).send(error.message);
+  }
+});
+
+// Get all carparks
+app.get('/api/carparks', async (req, res) => {
+  try {
+    const carParks = await db.CarPark.findAll();
+    res.json(carParks);
+  } catch (error) {
+    console.error('Failed to fetch car parks:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 

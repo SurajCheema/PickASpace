@@ -1,21 +1,73 @@
 <template>
-    <div class="dashboard-container">
-      <h1>User Dashboard</h1>
-      <p>Hello World!</p>
+  <div class="container mt-5">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" placeholder="Search by address..." v-model="searchQuery" @input="fetchCarParks">
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" @click="fetchCarParks">Search</button>
+      </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'UserDashboard'
-  }
-  </script>
-  
-  <style scoped>
-  .dashboard-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  </style>
-  
+    <div class="row">
+      <div class="col-12 col-md-6" v-for="carPark in filteredCarParks" :key="carPark.carpark_id" @click="selectCarPark(carPark)">
+        <div class="card mb-3" style="cursor:pointer">
+          <div class="card-body">
+            <h5 class="card-title">{{ carPark.addressLine1 }}</h5>
+            <p class="card-text">{{ carPark.city }}, {{ carPark.postcode }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="selectedCarPark" class="car-park-details mt-5">
+      <h2>Car Park Details</h2>
+      <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
+      <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
+      <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
+      <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
+      <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
+      <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
+    </div>
+  </div>
+</template>
+
+<script>
+import { fetchCarParks } from '@/services/carParkService';
+export default {
+  name: 'UserDashboard',
+  data() {
+    return {
+      searchQuery: '',
+      carParks: [],
+      selectedCarPark: null,
+    };
+  },
+  computed: {
+    filteredCarParks() {
+      return this.carParks.filter((carPark) =>
+        carPark.addressLine1.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
+  },
+  methods: {
+    async fetchCarParks() {
+      try {
+        const carParks = await fetchCarParks();
+        this.carParks = carParks;
+      } catch (error) {
+        alert('Failed to fetch car parks. Please try again later.');
+      }
+    },
+    selectCarPark(carPark) {
+      this.selectedCarPark = carPark;
+    },
+    bookCarPark() {
+      // Placeholder for booking logic
+      alert('Booking logic goes here.');
+    },
+  },
+  mounted() {
+    this.fetchCarParks();
+  },
+};
+</script>
+
+<style scoped>
+</style>
