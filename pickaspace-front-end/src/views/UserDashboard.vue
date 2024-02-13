@@ -8,8 +8,8 @@
     </div>
     <div class="row">
       <div class="col-12 col-md-6" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
-        <div class="card mb-3" style="cursor:pointer">
-          <div class="card-body" @click="selectCarPark(carPark)">
+        <div class="card mb-3 hover-highlight" style="cursor:pointer" @click="selectCarPark(carPark)">
+          <div class="card-body">
             <h5 class="card-title">{{ carPark.addressLine1 }}</h5>
             <p class="card-text">{{ carPark.city }}, {{ carPark.postcode }}</p>
           </div>
@@ -26,6 +26,7 @@
       <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
     </div>
   </div>
+
 </template>
 
 <script>
@@ -70,4 +71,7 @@ export default {
 </script>
 
 <style scoped>
+.hover-highlight:hover {
+  background-color: #f8f9fa;
+}
 </style>
