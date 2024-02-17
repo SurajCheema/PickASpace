@@ -137,6 +137,7 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
 
 // Get all carparks with optional address filtering
 app.get('/api/carparks', async (req, res) => {
+  console.log("Search Query:", req.query.query); // Debug incoming query
   const { query } = req.query;
   try {
     const whereClause = {

@@ -42,11 +42,14 @@ export default {
   },
   computed: {
     filteredCarParks() {
-      return this.carParks.filter((carPark) =>
-        carPark.addressLine1.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    },
+    return this.carParks.filter(carPark =>
+      carPark.addressLine1.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+      (carPark.addressLine2 && carPark.addressLine2.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+      carPark.city.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+      carPark.postcode.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
   },
+},
   methods: {
     async fetchCarParks() {
     // Assuming you want to keep a single search field for simplicity
@@ -56,6 +59,7 @@ export default {
 
     try {
       const carParks = await fetchCarParks(searchParams);
+      console.log(carParks); //Debugging
       this.carParks = carParks;
     } catch (error) {
       alert('Failed to fetch car parks. Please try again later.');
