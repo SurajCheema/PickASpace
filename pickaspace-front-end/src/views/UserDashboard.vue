@@ -16,15 +16,6 @@
         </div>
       </div>
     </div>
-    <div v-if="selectedCarPark" class="car-park-details mt-5">
-      <h2>Car Park Details</h2>
-      <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
-      <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
-      <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
-      <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
-      <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
-      <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
-    </div>
 
     <!-- Modal for Car Park Details -->
     <div v-if="showModal" class="modal" tabindex="-1" role="dialog" style="display: block;">
@@ -42,6 +33,7 @@
             <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
             <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
             <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
+            <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
             <!-- You can extend this with more details or actions -->
           </div>
         </div>
