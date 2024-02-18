@@ -32,7 +32,19 @@
             <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
             <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
             <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
-            <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
+            <p><strong>Total Number of Bays:</strong> {{ selectedCarPark.bays.length }}</p>
+            <p><strong>Number of Bays with EV Charging:</strong> {{ selectedCarPark.baysWithEVCharging }}</p>
+            <p><strong>Number of Bays with Disabled Access:</strong> {{ selectedCarPark.baysWithDisabledAccess || 'N/A' }}</p>
+          <!-- Pricing details for car park -->
+          <div>
+            <h6><strong>Pricing:</strong></h6>
+            <ul>
+              <li><strong>Hourly:</strong> {{ selectedCarPark.pricing.hourly }}</li>
+              <li><strong>Daily:</strong> {{ selectedCarPark.pricing.daily }}</li>
+              <li><strong>Weekly:</strong> {{ selectedCarPark.pricing.weekly }}</li>
+              <li><strong>Monthly:</strong> {{ selectedCarPark.pricing.monthly }}</li>
+            </ul>
+          </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
             <!-- You can extend this with more details or actions -->
           </div>
@@ -44,7 +56,8 @@
 </template>
 
 <script>
-import { fetchCarParks } from '@/services/carParkService';
+import { fetchCarParks, fetchCarParkBays } from '@/services/carParkService';
+
 export default {
   name: 'UserDashboard',
   data() {
@@ -76,10 +89,20 @@ methods: {
         alert('Failed to fetch car parks. Please try again later.');
       }
     },
-    selectCarPark(carPark) {
-      this.selectedCarPark = carPark;
-      this.showModal = true; // Correctly placed inside methods
-    },
+    async selectCarPark(carPark) {
+    this.selectedCarPark = carPark;
+    try {
+      const bays = await fetchCarParkBays(carPark.carpark_id);
+      // Update the selectedCarPark object with fetched bays
+      this.selectedCarPark.bays = bays;
+      this.selectedCarPark.baysWithEVCharging = bays.filter(bay => bay.hasEVCharging).length;
+      this.selectedCarPark.baysWithDisabledAccess = bays.filter(bay => bay.disabled).length;
+      this.showModal = true;
+    } catch (error) {
+      console.error('Error fetching bays:', error);
+    }
+  },
+
     closeModal() {
       this.showModal = false; // Correctly placed inside methods
     },
