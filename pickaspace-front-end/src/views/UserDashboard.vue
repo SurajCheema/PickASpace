@@ -18,7 +18,7 @@
     </div>
     <div v-if="selectedCarPark" class="car-park-details mt-5">
       <h2>Car Park Details</h2>
-      <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
+      <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
       <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
       <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
       <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
@@ -37,7 +37,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
+            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
             <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
             <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
             <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
