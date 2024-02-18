@@ -156,3 +156,22 @@ app.get('/api/carparks', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Fetch bays for a specific car park
+app.get('/api/carparks/:carparkId/bays', async (req, res) => {
+  try {
+    const { carparkId } = req.params; // Extract carparkId from URL parameters
+    const bays = await db.Bay.findAll({
+      where: { carpark_id: carparkId }
+    });
+
+    if (bays) {
+      res.json(bays);
+    } else {
+      res.status(404).send('Bays not found');
+    }
+  } catch (error) {
+    console.error('Failed to fetch bays:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});

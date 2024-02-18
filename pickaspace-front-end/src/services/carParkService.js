@@ -50,3 +50,23 @@ export const fetchCarParks = async (searchParams = '') => {
     throw error;
   }
 };
+
+export const fetchCarParkBays = async (carparkId) => {
+  const url = `${API_BASE_URL}/carparks/${carparkId}/bays`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch bays');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching bays:', error);
+    throw error;
+  }
+};

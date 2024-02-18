@@ -46,6 +46,13 @@ module.exports = (sequelize, DataTypes) => {
       CarPark.associate = (models) => {
         CarPark.belongsTo(models.User, { foreignKey: 'user_id' });
     };
+    
+      CarPark.associate = (models) => {
+        CarPark.hasMany(models.Bay, { 
+          foreignKey: 'carpark_id',
+          as: 'bays'
+        });
+      };
 
     return CarPark;
 };

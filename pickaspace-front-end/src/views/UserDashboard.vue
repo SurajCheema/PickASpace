@@ -25,6 +25,28 @@
       <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
       <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
     </div>
+
+    <!-- Modal for Car Park Details -->
+    <div v-if="showModal" class="modal" tabindex="-1" role="dialog" style="display: block;">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Car Park Details</h5>
+            <button type="button" class="close" @click="closeModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
+            <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
+            <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
+            <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
+            <p><strong>Number of Bays:</strong> {{ selectedCarPark.bays?.length || 'N/A' }}</p>
+            <!-- You can extend this with more details or actions -->
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -35,9 +57,11 @@ export default {
   name: 'UserDashboard',
   data() {
     return {
-      searchQuery: '',
-      carParks: [],
-      selectedCarPark: null,
+      searchQuery: '', // Search query string
+      carParks: [], // Array to hold car parks fetched from the backend
+      selectedCarPark: null, // Object to hold the currently selected car park details
+      bays: [], // Placeholder array for car park bays, to be filled once fetched from the backend
+      showModal: false, 
     };
   },
   computed: {
@@ -50,23 +74,24 @@ export default {
     );
   },
 },
-  methods: {
+methods: {
     async fetchCarParks() {
-    // Assuming you want to keep a single search field for simplicity
-    const searchParams = new URLSearchParams({
-      query: this.searchQuery, // Send a single query parameter
-    }).toString();
-
-    try {
-      const carParks = await fetchCarParks(searchParams);
-      console.log(carParks); //Debugging
-      this.carParks = carParks;
-    } catch (error) {
-      alert('Failed to fetch car parks. Please try again later.');
-    }
-  },
+      const searchParams = new URLSearchParams({ query: this.searchQuery }).toString();
+      try {
+        const carParks = await fetchCarParks(searchParams);
+        this.carParks = carParks;
+      } catch (error) {
+        alert('Failed to fetch car parks. Please try again later.');
+      }
+    },
+    selectCarPark(carPark) {
+      this.selectedCarPark = carPark;
+      this.showModal = true; // Correctly placed inside methods
+    },
+    closeModal() {
+      this.showModal = false; // Correctly placed inside methods
+    },
     bookCarPark() {
-      // Placeholder for booking logic
       alert('Booking logic goes here.');
     },
   },

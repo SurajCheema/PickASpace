@@ -32,5 +32,13 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       }
   });
+
+  Bay.associate = (models) => {
+    Bay.belongsTo(models.CarPark, {
+      foreignKey: 'carpark_id',
+      as: 'carPark'
+    });
+  };
+
   return Bay;
 };
