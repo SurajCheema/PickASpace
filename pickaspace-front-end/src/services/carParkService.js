@@ -70,3 +70,24 @@ export const fetchCarParkBays = async (carparkId) => {
     throw error;
   }
 };
+
+// Fetch details of a specific carpark by its ID
+export const fetchCarParkDetails = async (carparkId) => {
+  const url = `${API_BASE_URL}/carparks/${carparkId}`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch carpark details');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching carpark details:', error);
+    throw error;
+  }
+};

@@ -175,3 +175,28 @@ app.get('/api/carparks/:carparkId/bays', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Fetch details of a specific car park by its ID along with all associated bays
+app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
+  const { carparkId } = req.params;
+  
+  try {
+    const carPark = await db.CarPark.findOne({
+      where: { carpark_id: carparkId },
+      include: [{
+        model: db.Bay,
+        as: 'bays', 
+        attributes: ['bay_id', 'bay_number', 'isAvailable', 'vehicleSize', 'hasEVCharging', 'disabled', 'description']
+      }]
+    });
+
+    if (!carPark) {
+      return res.status(404).send('Car park not found');
+    }
+
+    res.json(carPark);
+  } catch (error) {
+    console.error('Failed to fetch car park details:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
