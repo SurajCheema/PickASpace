@@ -4,6 +4,7 @@ import UserRegister from './views/UserRegister.vue';
 import UserLogin from './views/UserLogin.vue'; 
 import UserDashboard from './views/UserDashboard.vue';
 import UserCreateCarPark from './views/UserCreateCarPark.vue';
+import BayBooking from './views/BayBooking.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -18,6 +19,13 @@ const routes = [
     path: '/create-carpark',
     name: 'UserCreateCarPark',
     component: UserCreateCarPark,
+    meta: { requiresAuth: true } // Requires authentication
+  },
+  {
+    path: '/booking/:carparkId',
+    name: 'BayBooking',
+    component: BayBooking,
+    props: true,
     meta: { requiresAuth: true } // Requires authentication
   },
 ]; 

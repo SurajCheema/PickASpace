@@ -127,9 +127,10 @@ methods: {
     closeModal() {
       this.showModal = false; // Correctly placed inside methods
     },
+    
     bookCarPark() {
-      alert('Booking logic goes here.');
-    },
+    this.$router.push({ name: 'BayBooking', params: { carparkId: this.selectedCarPark.carpark_id } });
+  },
   },
   mounted() {
     this.fetchCarParks();
