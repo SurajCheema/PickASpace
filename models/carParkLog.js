@@ -13,12 +13,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             references: { model: 'User', key: 'user_id' }
         },
-        date: {
-            type: DataTypes.DATE
-        },
-        duration: {
-            type: DataTypes.INTEGER
-        },
         bay_id: {
             type: DataTypes.INTEGER,
             references: { model: 'Bay', key: 'bay_id' }
@@ -26,7 +20,23 @@ module.exports = (sequelize, DataTypes) => {
         payment_id: {
             type: DataTypes.INTEGER,
             references: { model: 'Payment', key: 'payment_id' }
+        },
+        startTime: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+        endTime: {
+            type: DataTypes.DATE,
+            allowNull: false
         }
     });
+
+    CarParkLog.associate = (models) => {
+        CarParkLog.belongsTo(models.CarPark, { foreignKey: 'carpark_id', as: 'carPark' });
+        CarParkLog.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        CarParkLog.belongsTo(models.Bay, { foreignKey: 'bay_id', as: 'bay' });
+        CarParkLog.belongsTo(models.Payment, { foreignKey: 'payment_id', as: 'payment' });
+    };
+
     return CarParkLog;
 };

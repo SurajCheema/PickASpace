@@ -47,7 +47,6 @@
             </ul>
           </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
-            <!-- You can extend this with more details or actions -->
           </div>
         </div>
       </div>

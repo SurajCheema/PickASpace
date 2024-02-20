@@ -53,7 +53,7 @@
   async mounted() {
     const carparkId = this.$route.params.carparkId;
     const carParkDetails = await fetchCarParkDetails(carparkId);
-    this.carParkAddress = `${carParkDetails.addressLine1}, ${carParkDetails.city}, ${carParkDetails.postcode}`;
+    this.carParkAddress = `${carParkDetails.addressLine1}, ${carParkDetails.addressLine2}, ${carParkDetails.city}, ${carParkDetails.postcode}`;
     this.bays = carParkDetails.bays;
   },
 };

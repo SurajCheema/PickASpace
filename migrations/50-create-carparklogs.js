@@ -10,26 +10,40 @@ module.exports = {
       },
       carpark_id: {
         type: Sequelize.INTEGER,
-        references: { model: 'CarParks', key: 'carpark_id' }
+        references: { model: 'CarParks', key: 'carpark_id' },
+        allowNull: false
       },
       user_id: {
         type: Sequelize.INTEGER,
-        references: { model: 'Users', key: 'user_id' }
-      },
-      date: {
-        type: Sequelize.DATE
-      },
-      duration: {
-        type: Sequelize.INTEGER
+        references: { model: 'Users', key: 'user_id' },
+        allowNull: false
       },
       bay_id: {
         type: Sequelize.INTEGER,
-        references: { model: 'Bays', key: 'bay_id' }
+        references: { model: 'Bays', key: 'bay_id' },
+        allowNull: false
       },
       payment_id: {
         type: Sequelize.INTEGER,
-        references: { model: 'Payments', key: 'payment_id' }
-      }
+        references: { model: 'Payments', key: 'payment_id' },
+        allowNull: true
+      },
+      startTime: {
+        type: Sequelize.DATE,
+        allowNull: false
+     },
+      endTime: {
+          type: Sequelize.DATE,
+          allowNull: false
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
     });
   },
 

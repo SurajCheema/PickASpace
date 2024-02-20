@@ -12,5 +12,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE
         }
     });
+
+    Payment.associate = (models) => {
+        Payment.hasMany(models.CarParkLog, { foreignKey: 'payment_id', as: 'logs' });
+    };
+    
     return Payment;
 };

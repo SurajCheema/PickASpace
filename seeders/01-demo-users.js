@@ -1,21 +1,21 @@
 'use strict';
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkInsert('Users', [{
-      car_registration: 'ABC123',
-      email: 'user@example.com',
-      // Hardcoded for testing purposes, will be hashed in the real application.
-      password: 'password', 
-      full_name: 'John Doe',
-      // January 1, 1990
-      DOB: new Date(1990, 0, 1), 
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }], {});
+  async up (queryInterface, Sequelize) {
+    await queryInterface.bulkInsert('Users', [
+      {
+        email: 'user@example.com',
+        password: 'hashedpassword', // Will hash in production
+        full_name: 'John Doe',
+        DOB: new Date('1990-01-01'),
+        car_registration: 'ABC123',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ], {});
   },
 
-  down: async (queryInterface, Sequelize) => {
+  async down (queryInterface, Sequelize) {
     await queryInterface.bulkDelete('Users', null, {});
   }
 };

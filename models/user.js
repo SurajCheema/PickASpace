@@ -14,10 +14,11 @@ module.exports = (sequelize, DataTypes) => {
       // Insert additional settings here.
     });
 
-    // If you define associations here, make sure all related models are already defined.
     User.associate = (models) => {
-      User.hasMany(models.CarPark, { foreignKey: 'user_id' });
-    };
+      User.hasMany(models.CarPark, { foreignKey: 'user_id', as: 'carParks' });
+      User.hasMany(models.CarParkLog, { foreignKey: 'user_id', as: 'logs' });
+  };
+
     return User;
   };
   

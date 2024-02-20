@@ -1,25 +1,56 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    /**
-     * Add seed commands here.
-     *
-     * Example:
-     * await queryInterface.bulkInsert('People', [{
-     *   name: 'John Doe',
-     *   isBetaMember: false
-     * }], {});
-    */
+    await queryInterface.bulkInsert('Bays', [
+      {
+        carpark_id: 1, // Assuming the first car park
+        bay_number: 1,
+        isAvailable: true,
+        vehicleSize: 'Medium',
+        hasEVCharging: false,
+        disabled: false,
+        description: 'Bay 1, Medium size, No EV Charging, No disabled access',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        carpark_id: 1,
+        bay_number: 2,
+        isAvailable: true,
+        vehicleSize: 'Large',
+        hasEVCharging: true,
+        disabled: true,
+        description: 'Bay 2, Large size, With EV Charging, Disabled access',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        carpark_id: 1,
+        bay_number: 3,
+        isAvailable: true,
+        vehicleSize: 'Small',
+        hasEVCharging: false,
+        disabled: false,
+        description: 'Bay 3, Small size, No EV Charging, No disabled access',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        carpark_id: 1,
+        bay_number: 4,
+        isAvailable: true,
+        vehicleSize: 'Medium',
+        hasEVCharging: true,
+        disabled: false,
+        description: 'Bay 4, Medium size, With EV Charging, No disabled access',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add commands to revert seed here.
-     *
-     * Example:
-     * await queryInterface.bulkDelete('People', null, {});
-     */
+    await queryInterface.bulkDelete('Bays', null, {});
   }
 };
