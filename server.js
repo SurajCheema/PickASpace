@@ -185,7 +185,7 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
       where: { carpark_id: carparkId },
       include: [{
         model: db.Bay,
-        as: 'bays', 
+        as: 'bays',
         attributes: ['bay_id', 'bay_number', 'isAvailable', 'vehicleSize', 'hasEVCharging', 'disabled', 'description']
       }]
     });
