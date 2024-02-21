@@ -91,3 +91,36 @@ export const fetchCarParkDetails = async (carparkId) => {
     throw error;
   }
 };
+
+// Book a bay from a carpark
+export const bookBay = async (bayId, carparkId, startTime, endTime, calculatedCost) => {
+  const url = `${API_BASE_URL}/book-bay`;
+  const token = localStorage.getItem('token');
+  const bookingData = {
+      bay_id: bayId,
+      carpark_id: carparkId,
+      startTime,
+      endTime,
+      cost: calculatedCost
+  };
+
+  try {
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(bookingData)
+      });
+
+      if (!response.ok) {
+          throw new Error('Failed to book the bay');
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error('Error booking the bay:', error);
+      throw error;
+  }
+};

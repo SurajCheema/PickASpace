@@ -15,7 +15,10 @@
           </div>
           <div class="form-group">
             <label for="departureTime">Departure Time</label>
-            <input type="datetime-local" id="departureTime" class="form-control mx-auto" v-model="departureTime">
+            <input type="datetime-local" id="departureTime" class="form-control mx-auto" v-model="departureTime" :min="minDepartureTime">
+            <div v-if="!isDepartureValid" class="text-danger">
+              Departure time cannot be earlier than arrival time.
+            </div>
           </div>
         </form>
       </div>
@@ -27,6 +30,7 @@
           <p>Selected Bay: {{ selectedBay.bay_number }}</p>
           <p>Duration: {{ stayDuration }} hours</p>
           <p>Cost: {{ formatCurrency(calculatedCost) }}</p>
+          <button @click="submitBooking" :disabled="!isDepartureValid || !selectedBay" class="btn btn-primary">Submit Booking</button>
         </div>
       </div>
     </div>
@@ -52,7 +56,7 @@
 </template>
 
 <script>
-import { fetchCarParkDetails } from '@/services/carParkService';
+import { fetchCarParkDetails, bookBay } from '@/services/carParkService';
 
 export default {
   name: 'BayBooking',
@@ -68,6 +72,12 @@ export default {
     };
   },
   computed: {
+    isDepartureValid() {
+      return !this.arrivalTime || !this.departureTime || new Date(this.departureTime) >= new Date(this.arrivalTime);
+    },
+    minDepartureTime() {
+      return this.arrivalTime;
+    },
     stayDuration() {
       if (!this.arrivalTime || !this.departureTime) return 0;
       const arrival = new Date(this.arrivalTime);
@@ -76,25 +86,55 @@ export default {
     },
     calculatedCost() {
       if (!this.selectedBay || !this.arrivalTime || !this.departureTime) return 0;
-      const hours = this.stayDuration;
-      return hours * this.pricing.hourly; // TODO: Will adjust to account for daily, monthly, weekly
+      return this.stayDuration * this.pricing.hourly;
     }
   },
   methods: {
     selectBay(bay) {
-      if (!bay.isAvailable) return;
-      this.bays = this.bays.map(b => ({ ...b, isAvailable: b.bay_id === bay.bay_id ? false : b.isAvailable }));
-      this.selectedBay = bay;
+      this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
     },
     formatCurrency(value) {
-      return `$${parseFloat(value).toFixed(2)}`;
+      return `£${parseFloat(value).toFixed(2)}`;
+    },
+    async submitBooking() {
+      if (!this.selectedBay || !this.isDepartureValid) {
+        alert("Please ensure all fields are correctly filled.");
+        return;
+      }
+
+      const bookingData = {
+        bayId: this.selectedBay.bay_id,
+        carparkId: this.carparkId,
+        startTime: this.arrivalTime,
+        endTime: this.departureTime,
+        cost: this.calculatedCost
+        // Dummy payment details aren't sent to the server at the moment.
+      };
+
+      try {
+        const response = await bookBay(
+          bookingData.bayId,
+          bookingData.carparkId,
+          bookingData.startTime,
+          bookingData.endTime,
+          bookingData.cost
+        );
+        alert(`Booking successful: ${response.message}`);
+      } catch (error) {
+        alert(`Booking failed: ${error.message}`);
+      }
     }
   },
   async mounted() {
-    const details = await fetchCarParkDetails(this.carparkId);
-    this.carParkAddress = details.address;
-    this.bays = details.bays;
-    this.pricing = details.pricing;
+    try {
+      const details = await fetchCarParkDetails(this.carparkId);
+      this.carParkAddress = details.address;
+      this.bays = details.bays;
+      this.pricing = details.pricing;
+    } catch (error) {
+      console.error('Failed to load car park details:', error);
+      alert('Failed to load car park details. Please try again later.');
+    }
   }
 };
 </script>

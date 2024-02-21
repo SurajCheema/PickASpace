@@ -38,10 +38,16 @@ module.exports = {
       postcode: {
         type: Sequelize.STRING,
         allowNull: false
-      },
+      },      
       user_id: {
-        allowNull:false,
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'user_id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
       },
       createdAt: {
         allowNull: false,

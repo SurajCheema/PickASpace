@@ -19,14 +19,22 @@ module.exports = (sequelize, DataTypes) => {
         },
         payment_id: {
             type: DataTypes.INTEGER,
-            references: { model: 'Payment', key: 'payment_id' }
-        },
+            allowNull: true, 
+            references: {
+              model: 'Payments',
+              key: 'payment_id'
+            }
+          },
         startTime: {
             type: DataTypes.DATE,
             allowNull: false
         },
         endTime: {
             type: DataTypes.DATE,
+            allowNull: false
+        },
+        cost: {
+            type: DataTypes.FLOAT,
             allowNull: false
         }
     });

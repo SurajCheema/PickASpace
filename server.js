@@ -5,6 +5,8 @@ const db = require('./models');
 const PORT = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cron = require('node-cron');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
 // Environment variables for JWT
@@ -198,5 +200,58 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch car park details:', error);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/api/book-bay', authenticateToken, async (req, res) => {
+  const { bay_id, carpark_id, startTime, endTime } = req.body;
+  const user_id = req.user.userId;
+
+  try {
+    const booking = await db.CarParkLog.create({
+      bay_id,
+      carpark_id,
+      user_id,
+      // Removed the payment_id from the operation
+      startTime,
+      endTime
+    });
+
+    await db.Bay.update({ isAvailable: false }, { where: { bay_id } });
+
+    res.json({ message: "Booking successful", bookingId: booking.log_id });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).send(error.message);
+  }
+});
+
+// Schedule a task to run every minute
+cron.schedule('* * * * *', async () => {
+  console.log('Running a task every minute to check for expired bookings');
+
+  const now = new Date();
+  const expiredBookings = await db.CarParkLog.findAll({
+      where: {
+          endTime: {
+              [Op.lt]: now // endTime is less than current time
+          },
+      },
+      include: [{
+          model: db.Bay,
+          as: 'bay',
+          where: {
+              isAvailable: false // Only include bookings where the associated bay is not already marked as available
+          }
+      }]
+  });
+
+  for (const booking of expiredBookings) {
+      await db.Bay.update({ isAvailable: true }, { 
+          where: { 
+              bay_id: booking.bay_id,
+              isAvailable: false // Double-check to avoid unnecessary updates
+          } 
+      });
   }
 });

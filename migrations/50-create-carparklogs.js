@@ -44,6 +44,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
+      cost: {
+        type: Sequelize.FLOAT,
+        allowNull: false
+      }
     });
   },
 
