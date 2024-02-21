@@ -203,23 +203,30 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
   }
 });
 
+// Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
-  const { bay_id, carpark_id, startTime, endTime } = req.body;
+  const { bay_id, carpark_id, startTime, endTime, cost } = req.body;
   const user_id = req.user.userId;
+
+  // Ensure cost is provided and is a positive number
+  if (typeof cost !== 'number' || cost <= 0) {
+    return res.status(400).send({ message: "Invalid cost provided." });
+  }
 
   try {
     const booking = await db.CarParkLog.create({
       bay_id,
       carpark_id,
       user_id,
-      // Removed the payment_id from the operation
       startTime,
-      endTime
+      endTime,
+      cost
     });
 
+    // Update the bay's availability as part of the booking process
     await db.Bay.update({ isAvailable: false }, { where: { bay_id } });
 
-    res.json({ message: "Booking successful", bookingId: booking.log_id });
+    res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).send(error.message);
