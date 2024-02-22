@@ -1,5 +1,5 @@
 <template>
-    <div class="auth-container">
+    <div id="login-div" class="auth-container">
       <h1>Login</h1>
       <form @submit.prevent="loginUser">
         <div>
@@ -46,7 +46,7 @@
   .auth-container {
     max-width: 400px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 6em 20px 20px 20px; /* top right bottom down */
   }
   
   .auth-container div {

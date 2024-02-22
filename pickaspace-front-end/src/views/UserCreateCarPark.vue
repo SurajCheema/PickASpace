@@ -2,7 +2,7 @@
   <div class="container mt-5">
     <div class="row">
       <div class="col-md-8 offset-md-2">
-        <h2 class="text-center">Create a New Car Park</h2>
+        <h2 class="text-center"><span class="green-text">Create a</span> New Car Park</h2>
         <form @submit.prevent="handleSubmit" class="mt-4">
          
         <div class="row g-3 mb-3 justify-content-center">
@@ -164,7 +164,9 @@
   </script>
   
   <style scoped>
-  /*CSS styles here */
+ .green-text{
+  color: #8707f7;
+ }
   </style>
   
 
