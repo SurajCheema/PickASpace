@@ -170,12 +170,12 @@ export default {
     }
   }
 },
-
   async mounted() {
     try {
       const details = await fetchCarParkDetails(this.carparkId);
       this.carParkAddress = details.address;
-      this.bays = details.bays;
+      // Sort the bays by bay_number
+      this.bays = details.bays.sort((a, b) => a.bay_number - b.bay_number);
       this.pricing = details.pricing;
     } catch (error) {
       console.error('Failed to load car park details:', error);

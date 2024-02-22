@@ -117,7 +117,7 @@ export const bookBay = async (bookingData) => {
       if (!response.ok) {
         // If the server response is not okay, attempt to parse the response body as JSON
         const errorData = await response.json();
-        // Throw a new error with the message from the server's response. This assumes the server sends back an error message in a property named "message" or "error"
+        // Throw a new error with the message from the server's response. The server sends back an error message in a property named "message" or "error"
         throw new Error(errorData.message || errorData.error || 'Failed to book the bay');
       }
   
