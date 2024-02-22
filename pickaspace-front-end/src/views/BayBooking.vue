@@ -159,7 +159,13 @@ export default {
         const response = await bookBay(bookingData);
         alert(`Booking successful: ${response.message}`);
       } catch (error) {
-        alert(`Booking failed: ${error.message}`);
+        if (error && error.response && error.response.data && error.response.data.error) {
+          // Display the specific error message from the server if the structure matches
+          alert(`Booking failed: ${error.response.data.error}`);
+        } else {
+          // Fallback error message if the structure is different or parsing fails
+          alert("Booking failed: An unexpected error occurred.");
+        }
       }
     }
   },

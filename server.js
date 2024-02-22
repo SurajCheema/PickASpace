@@ -205,14 +205,36 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 
 // Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
+  // Extract booking details from the request body
   const { bay_id, carpark_id, startTime, endTime, cost } = req.body;
   const user_id = req.user.userId;
 
-  // Ensure cost is provided and is a positive number
+  // Validate the provided cost
   if (typeof cost !== 'number' || cost <= 0) {
-    return res.status(400).send({ message: "Invalid cost provided." });
+    return res.status(400).json({ error: "Invalid cost provided." });
   }
 
+  // Check for existing bookings that might overlap with the requested time
+  const overlappingBookings = await db.CarParkLog.count({
+    where: {
+      bay_id,
+      [Op.or]: [
+        {
+          [Op.and]: [
+            { startTime: { [Op.lt]: endTime } },
+            { endTime: { [Op.gt]: startTime } }
+          ]
+        }
+      ]
+    }
+  });
+
+  // If overlapping bookings are found, return an error
+  if (overlappingBookings > 0) {
+    return res.status(400).json({ error: "The requested time slot for the bay is already booked." });
+  }
+
+  // Proceed to create the booking if no overlap is found
   try {
     const booking = await db.CarParkLog.create({
       bay_id,
@@ -222,14 +244,10 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       endTime,
       cost
     });
-
-    // Update the bay's availability as part of the booking process
-    await db.Bay.update({ isAvailable: false }, { where: { bay_id } });
-
     res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
   } catch (error) {
-    console.error("Booking error:", error);
-    res.status(400).send({ message: "Failed to book due to: " + error.message });
+    console.error("Error creating booking:", error);
+    res.status(500).json({ error: "An error occurred while booking the bay." });
   }
 });
 
