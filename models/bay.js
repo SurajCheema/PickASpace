@@ -12,10 +12,6 @@ module.exports = (sequelize, DataTypes) => {
       bay_number: {
           type: DataTypes.INTEGER
       },
-      isAvailable: { 
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-      },
       vehicleSize: {
         type: DataTypes.STRING
       },

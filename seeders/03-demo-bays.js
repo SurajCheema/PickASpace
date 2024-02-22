@@ -6,7 +6,6 @@ module.exports = {
       {
         carpark_id: 1, // Assuming the first car park
         bay_number: 1,
-        isAvailable: true,
         vehicleSize: 'Medium',
         hasEVCharging: false,
         disabled: false,
@@ -17,7 +16,6 @@ module.exports = {
       {
         carpark_id: 1,
         bay_number: 2,
-        isAvailable: true,
         vehicleSize: 'Large',
         hasEVCharging: true,
         disabled: true,
@@ -28,7 +26,6 @@ module.exports = {
       {
         carpark_id: 1,
         bay_number: 3,
-        isAvailable: true,
         vehicleSize: 'Small',
         hasEVCharging: false,
         disabled: false,
@@ -39,7 +36,6 @@ module.exports = {
       {
         carpark_id: 1,
         bay_number: 4,
-        isAvailable: true,
         vehicleSize: 'Medium',
         hasEVCharging: true,
         disabled: false,

@@ -15,10 +15,6 @@ module.exports = {
       bay_number: {
         type: Sequelize.INTEGER
       },
-      isAvailable: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true
-      },
       vehicleSize: {
         type: Sequelize.STRING
       },
