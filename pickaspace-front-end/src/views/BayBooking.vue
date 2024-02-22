@@ -50,7 +50,7 @@
                 <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
                 <p class="card-text">EV Charging: {{ bay.hasEVCharging ? 'Yes' : 'No' }}</p>
                 <p class="card-text">Disabled Access: {{ bay.disabled ? 'Yes' : 'No' }}</p>
-                <p class="card-text">Available: {{ bay.isAvailable ? 'Yes' : 'No' }}</p>
+                <p class="card-text">Available: {{ getAvailabilityText(bay) }}</p>
                 <p class="card-text">Vehicle Size: {{ bay.vehicleSize }}</p>
               </div>
             </div>
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import { fetchCarParkDetails, bookBay, checkBayAvailability  } from '@/services/carParkService';
+import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
 
 export default {
   name: 'BayBooking',
@@ -84,7 +84,6 @@ export default {
       return !this.arrivalTime || !this.departureTime || new Date(this.departureTime) >= new Date(this.arrivalTime);
     },
     canSubmitBooking() {
-      // Check if the form is ready for submission
       return this.isDepartureValid && this.selectedBay && this.creditCard && !this.creditCardError;
     },
     minDepartureTime() {
@@ -100,6 +99,14 @@ export default {
       if (!this.selectedBay || !this.arrivalTime || !this.departureTime) return 0;
       return this.stayDuration * this.pricing.hourly;
     }
+  },
+  watch: {
+    async arrivalTime() {
+      await this.checkAllBayAvailability();
+    },
+    async departureTime() {
+      await this.checkAllBayAvailability();
+    },
   },
   methods: {
     selectBay(bay) {
@@ -118,16 +125,25 @@ export default {
         this.creditCardError = ''; // Clear the error if the input is valid
       }
     },
-    async submitBooking() {
-      if (!this.selectedBay || !this.isDepartureValid) {
-        alert("Please ensure all fields are correctly filled.");
-        return;
+    async checkAllBayAvailability() {
+      if (this.arrivalTime && this.departureTime) {
+        for (const bay of this.bays) {
+          const availability = await fetchBayAvailability(bay.bay_id, this.arrivalTime, this.departureTime);
+          bay.isAvailable = availability.isAvailable;
+        }
       }
-      
-      // Check bay availability before proceeding
-      const availability = await checkBayAvailability(this.selectedBay.bay_id, this.arrivalTime, this.departureTime);
-      if (!availability.isAvailable) {
-        alert("Selected bay is not available for the chosen time. Please select a different time or bay.");
+    },
+
+    getAvailabilityText(bay) {
+      if (!this.arrivalTime || !this.departureTime) {
+        return 'Waiting...'; // Display this text when no times are selected
+      }
+      return bay.isAvailable ? 'Yes' : 'No';
+    },
+
+    async submitBooking() {
+      if (!this.canSubmitBooking) {
+        alert("Please ensure all fields are correctly filled.");
         return;
       }
 
@@ -136,24 +152,18 @@ export default {
         carparkId: this.carparkId,
         startTime: this.arrivalTime,
         endTime: this.departureTime,
-        cost: this.calculatedCost,
-        // Dummy payment data not sent to the server at this current moment in time.
+        cost: this.calculatedCost
       };
 
       try {
-        const response = await bookBay(
-          bookingData.bayId,
-          bookingData.carparkId,
-          bookingData.startTime,
-          bookingData.endTime,
-          bookingData.cost
-        );
+        const response = await bookBay(bookingData);
         alert(`Booking successful: ${response.message}`);
       } catch (error) {
         alert(`Booking failed: ${error.message}`);
       }
     }
   },
+
   async mounted() {
     try {
       const details = await fetchCarParkDetails(this.carparkId);

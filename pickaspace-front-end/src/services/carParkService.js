@@ -93,17 +93,11 @@ export const fetchCarParkDetails = async (carparkId) => {
 };
 
 // Book a bay from a carpark
-export const bookBay = async (bayId, carparkId, startTime, endTime, calculatedCost) => {
+export const bookBay = async (bookingData) => {
   const url = `${API_BASE_URL}/book-bay`;
   const token = localStorage.getItem('token');
-  const bookingData = {
-      bay_id: bayId,
-      carpark_id: carparkId,
-      startTime,
-      endTime,
-      cost: calculatedCost
-  };
 
+  console.log("Booking data being sent:", bookingData);
   try {
       const response = await fetch(url, {
           method: 'POST',
@@ -111,7 +105,13 @@ export const bookBay = async (bayId, carparkId, startTime, endTime, calculatedCo
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(bookingData)
+          body: JSON.stringify({
+            bay_id: bookingData.bayId,
+            carpark_id: bookingData.carparkId,
+            startTime: bookingData.startTime,
+            endTime: bookingData.endTime,
+            cost: bookingData.cost
+          })
       });
 
       if (!response.ok) {
@@ -126,25 +126,15 @@ export const bookBay = async (bayId, carparkId, startTime, endTime, calculatedCo
 };
 
 // Check bay availability
-export const checkBayAvailability = async (bayId, startTime, endTime) => {
-  const url = `${API_BASE_URL}/check-availability/${bayId}?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to check bay availability');
-    }
-
-    return await response.json(); // { isAvailable: true/false }
-  } catch (error) {
-    console.error('Error checking bay availability:', error);
-    throw error;
+export const fetchBayAvailability = async (bayId, startTime, endTime) => {
+  const url = `${API_BASE_URL}/bays/${bayId}/availability?startTime=${startTime}&endTime=${endTime}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch bay availability');
   }
+  return response.json();
 };

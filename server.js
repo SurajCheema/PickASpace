@@ -228,8 +228,8 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
 
     res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
   } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).send(error.message);
+    console.error("Booking error:", error);
+    res.status(400).send({ message: "Failed to book due to: " + error.message });
   }
 });
 
@@ -263,22 +263,28 @@ cron.schedule('* * * * *', async () => {
   }
 });
 
-app.get('/api/check-availability/:bayId', async (req, res) => {
+// Check for bay availability
+app.get('/api/bays/:bayId/availability', async (req, res) => {
   const { bayId } = req.params;
   const { startTime, endTime } = req.query;
 
-  // Query database for overlapping bookings
-  const overlaps = await db.CarParkLog.findAndCountAll({
-    where: {
-      bay_id: bayId,
-      [Op.or]: [
-        {
-          startTime: { [Op.lt]: endTime },
-          endTime: { [Op.gt]: startTime },
-        },
-      ],
-    },
-  });
+  try {
+    const overlappingBookings = await db.CarParkLog.count({
+      where: {
+        bay_id: bayId,
+        [Op.or]: [
+          {
+            startTime: { [Op.lt]: endTime },
+            endTime: { [Op.gt]: startTime },
+          },
+        ],
+      },
+    });
 
-  res.json({ isAvailable: overlaps.count === 0 });
+    const isAvailable = overlappingBookings === 0;
+    res.json({ isAvailable });
+  } catch (error) {
+    console.error('Error checking bay availability:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
