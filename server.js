@@ -188,7 +188,7 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
       include: [{
         model: db.Bay,
         as: 'bays',
-        attributes: ['bay_id', 'bay_number', 'isAvailable', 'vehicleSize', 'hasEVCharging', 'disabled', 'description']
+        attributes: ['bay_id', 'bay_number', 'vehicleSize', 'hasEVCharging', 'disabled', 'description']
       }]
     });
 

@@ -7,20 +7,20 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul id="menu-options" class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link" href="create-carpark">Rent out your space</a>
+          <router-link class="nav-link" to="/create-carpark">Rent out your space</router-link>
         </li>
         <li class="nav-item" v-if="isLoggedIn">
-          <a class="nav-link" href="dashboard">Dashboard</a>
+          <router-link class="nav-link" to="/dashboard">Dashboard</router-link>
         </li>
         <li class="nav-item" v-if="!isLoggedIn">
-          <a class="nav-link" href="login">Login</a>
+          <router-link class="nav-link" to="/login">Login</router-link>
         </li>
         <li class="nav-item" v-if="!isLoggedIn">
-          <a class="nav-link" href="register">Register</a>
+          <router-link class="nav-link" to="/register">Register</router-link>
         </li>
         <li class="nav-item" v-if="isLoggedIn">
           <a class="nav-link" href="login" @click.prevent="logout">Logout</a>
-        </li>
+        </li>      
       </ul>
     </div>
   </nav>
