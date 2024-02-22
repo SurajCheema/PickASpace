@@ -14,7 +14,7 @@
             <input type="datetime-local" id="arrivalTime" class="form-control mx-auto" v-model="arrivalTime">
           </div>
           <div class="form-group">
-            <label for="departureTime">Departure Time</label>
+            <label for="departureTime">Departure Time</label> 
             <input type="datetime-local" id="departureTime" class="form-control mx-auto" v-model="departureTime" :min="minDepartureTime">
             <div v-if="!isDepartureValid" class="text-danger">
               Departure time cannot be earlier than arrival time.
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import { fetchCarParkDetails, bookBay } from '@/services/carParkService';
+import { fetchCarParkDetails, bookBay, checkBayAvailability  } from '@/services/carParkService';
 
 export default {
   name: 'BayBooking',
@@ -123,14 +123,21 @@ export default {
         alert("Please ensure all fields are correctly filled.");
         return;
       }
+      
+      // Check bay availability before proceeding
+      const availability = await checkBayAvailability(this.selectedBay.bay_id, this.arrivalTime, this.departureTime);
+      if (!availability.isAvailable) {
+        alert("Selected bay is not available for the chosen time. Please select a different time or bay.");
+        return;
+      }
 
       const bookingData = {
         bayId: this.selectedBay.bay_id,
         carparkId: this.carparkId,
         startTime: this.arrivalTime,
         endTime: this.departureTime,
-        cost: this.calculatedCost
-        // Dummy payment details aren't sent to the server at the moment.
+        cost: this.calculatedCost,
+        // Dummy payment data not sent to the server at this current moment in time.
       };
 
       try {

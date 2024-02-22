@@ -262,3 +262,23 @@ cron.schedule('* * * * *', async () => {
       });
   }
 });
+
+app.get('/api/check-availability/:bayId', async (req, res) => {
+  const { bayId } = req.params;
+  const { startTime, endTime } = req.query;
+
+  // Query database for overlapping bookings
+  const overlaps = await db.CarParkLog.findAndCountAll({
+    where: {
+      bay_id: bayId,
+      [Op.or]: [
+        {
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gt]: startTime },
+        },
+      ],
+    },
+  });
+
+  res.json({ isAvailable: overlaps.count === 0 });
+});

@@ -124,3 +124,27 @@ export const bookBay = async (bayId, carparkId, startTime, endTime, calculatedCo
       throw error;
   }
 };
+
+// Check bay availability
+export const checkBayAvailability = async (bayId, startTime, endTime) => {
+  const url = `${API_BASE_URL}/check-availability/${bayId}?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check bay availability');
+    }
+
+    return await response.json(); // { isAvailable: true/false }
+  } catch (error) {
+    console.error('Error checking bay availability:', error);
+    throw error;
+  }
+};
