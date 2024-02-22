@@ -30,6 +30,12 @@
           <p>Selected Bay: {{ selectedBay.bay_number }}</p>
           <p>Duration: {{ stayDuration }} hours</p>
           <p>Cost: {{ formatCurrency(calculatedCost) }}</p>
+          <!-- Credit Card Input -->
+          <div class="form-group">
+            <label for="creditCard">Credit Card Number</label>
+            <input type="text" id="creditCard" class="form-control" v-model="creditCard" placeholder="1234 5678 9012 3456" @input="validateCreditCard">
+            <div v-if="creditCardError" class="text-danger">{{ creditCardError }}</div>
+          </div>
           <button @click="submitBooking" :disabled="!isDepartureValid || !selectedBay" class="btn btn-primary">Submit Booking</button>
         </div>
       </div>
@@ -68,12 +74,18 @@ export default {
       selectedBay: null,
       arrivalTime: '',
       departureTime: '',
-      pricing: null
+      pricing: null,
+      creditCard: '',
+      creditCardError: '',
     };
   },
   computed: {
     isDepartureValid() {
       return !this.arrivalTime || !this.departureTime || new Date(this.departureTime) >= new Date(this.arrivalTime);
+    },
+    canSubmitBooking() {
+      // Check if the form is ready for submission
+      return this.isDepartureValid && this.selectedBay && this.creditCard && !this.creditCardError;
     },
     minDepartureTime() {
       return this.arrivalTime;
@@ -95,6 +107,16 @@ export default {
     },
     formatCurrency(value) {
       return `£${parseFloat(value).toFixed(2)}`;
+    },
+    validateCreditCard() {
+      const regex = new RegExp("^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$");
+      if (!this.creditCard) {
+        this.creditCardError = 'Credit card number is required.';
+      } else if (!regex.test(this.creditCard)) {
+        this.creditCardError = 'Invalid credit card number. Format: 1234 5678 9012 3456';
+      } else {
+        this.creditCardError = ''; // Clear the error if the input is valid
+      }
     },
     async submitBooking() {
       if (!this.selectedBay || !this.isDepartureValid) {
