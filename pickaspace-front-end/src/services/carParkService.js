@@ -115,14 +115,18 @@ export const bookBay = async (bookingData) => {
       });
 
       if (!response.ok) {
-          throw new Error('Failed to book the bay');
+        // If the server response is not okay, attempt to parse the response body as JSON
+        const errorData = await response.json();
+        // Throw a new error with the message from the server's response. This assumes the server sends back an error message in a property named "message" or "error"
+        throw new Error(errorData.message || errorData.error || 'Failed to book the bay');
       }
-
+  
       return await response.json();
-  } catch (error) {
+    } catch (error) {
       console.error('Error booking the bay:', error);
+      // Rethrow the error to be caught by the calling function
       throw error;
-  }
+    }
 };
 
 // Check bay availability

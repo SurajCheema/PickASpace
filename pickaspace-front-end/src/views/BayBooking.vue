@@ -36,6 +36,7 @@
             <input type="text" id="creditCard" class="form-control" v-model="creditCard" placeholder="1234 5678 9012 3456" @input="validateCreditCard">
             <div v-if="creditCardError" class="text-danger">{{ creditCardError }}</div>
           </div>
+          <div class="text-danger" v-if="submitError">{{ submitError }}</div>
           <button @click="submitBooking" :disabled="!isDepartureValid || !selectedBay" class="btn btn-primary">Submit Booking</button>
         </div>
       </div>
@@ -77,8 +78,10 @@ export default {
       pricing: null,
       creditCard: '',
       creditCardError: '',
+      submitError: '', 
     };
   },
+  
   computed: {
     isDepartureValid() {
       return !this.arrivalTime || !this.departureTime || new Date(this.departureTime) >= new Date(this.arrivalTime);
@@ -142,33 +145,31 @@ export default {
     },
 
     async submitBooking() {
-      if (!this.canSubmitBooking) {
-        alert("Please ensure all fields are correctly filled.");
-        return;
-      }
-
-      const bookingData = {
-        bayId: this.selectedBay.bay_id,
-        carparkId: this.carparkId,
-        startTime: this.arrivalTime,
-        endTime: this.departureTime,
-        cost: this.calculatedCost
-      };
-
-      try {
-        const response = await bookBay(bookingData);
-        alert(`Booking successful: ${response.message}`);
-      } catch (error) {
-        if (error && error.response && error.response.data && error.response.data.error) {
-          // Display the specific error message from the server if the structure matches
-          alert(`Booking failed: ${error.response.data.error}`);
-        } else {
-          // Fallback error message if the structure is different or parsing fails
-          alert("Booking failed: An unexpected error occurred.");
-        }
-      }
+    this.submitError = ''; // Reset submitError on new submission attempt
+    if (!this.canSubmitBooking) {
+      alert("Please ensure all fields are correctly filled.");
+      return;
     }
-  },
+
+    const bookingData = {
+      bayId: this.selectedBay.bay_id,
+      carparkId: this.carparkId,
+      startTime: this.arrivalTime,
+      endTime: this.departureTime,
+      cost: this.calculatedCost
+    };
+
+    try {
+      await bookBay(bookingData);
+      alert(`Booking successful`);
+      // Reset the form or redirect the user as necessary
+    } catch (error) {
+      console.error('Error booking the bay:', error);
+      // Directly use the error message if available
+      this.submitError = error.message || "An unexpected error occurred.";
+    }
+  }
+},
 
   async mounted() {
     try {
