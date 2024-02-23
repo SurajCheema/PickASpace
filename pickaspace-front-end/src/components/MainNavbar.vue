@@ -6,7 +6,7 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul id="menu-options" class="navbar-nav ms-auto">
-        <li class="nav-item">
+        <li class="nav-item" v-if="isLoggedIn">
           <router-link class="nav-link" to="/create-carpark">Rent out your space</router-link>
         </li>
         <li class="nav-item" v-if="isLoggedIn">
@@ -19,37 +19,50 @@
           <router-link class="nav-link" to="/register">Register</router-link>
         </li>
         <li class="nav-item" v-if="isLoggedIn">
-          <a class="nav-link" href="login" @click.prevent="logout">Logout</a>
-        </li>      
+          <a class="nav-link" href="#" @click.prevent="logout">Logout</a>
+        </li>
       </ul>
     </div>
   </nav>
 </template>
 
 <script>
+import { eventBus } from '../eventBus.js';
+
 export default {
-  name: 'NavbarComponent',
-  computed: {
-    isLoggedIn() {
-      return !!localStorage.getItem('token');
-    }
+  name: 'MainNavbar',
+  data() {
+    return {
+      isLoggedIn: false,
+    };
+  },
+  created() {
+    this.checkLogin();
+    eventBus.on('login', () => {
+      this.isLoggedIn = true;
+    });
+    eventBus.on('logout', () => {
+      this.isLoggedIn = false;
+    });
   },
   methods: {
+    checkLogin() {
+      this.isLoggedIn = !!localStorage.getItem('token');
+    },
     logout() {
       localStorage.removeItem('token');
-      // Additional logout logic here
       this.$router.push('/login');
-      alert('You have been logged out successfully.');
+      eventBus.emit('logout');
     }
   }
 }
 </script>
 
 <style>
-#brand-name{
+#brand-name {
   padding-left: 1.5em;
 }
-#menu-options{
+#menu-options {
   padding-right: 1.5em;
 }
 </style>

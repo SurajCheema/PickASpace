@@ -1,3 +1,5 @@
+import { eventBus } from '../eventBus'; 
+
 const API_URL = 'http://localhost:3000';
 
 // Register
@@ -31,6 +33,7 @@ export const loginUser = async (userData) => {
 
   const data = await response.json();
   saveAuthToken(data.token);
+  eventBus.emit('login'); // Emit login event
   return data;
 };
   
