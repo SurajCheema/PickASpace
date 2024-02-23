@@ -40,10 +40,10 @@
           <div class="text-center"> <!-- This centers all text within -->
             <h6><strong>Pricing:</strong></h6>
             <ul class="list-unstyled"> <!-- Removes bullet points -->
-              <li><strong>Hourly:</strong> {{ selectedCarPark.pricing.hourly }}</li>
-              <li><strong>Daily:</strong> {{ selectedCarPark.pricing.daily }}</li>
-              <li><strong>Weekly:</strong> {{ selectedCarPark.pricing.weekly }}</li>
-              <li><strong>Monthly:</strong> {{ selectedCarPark.pricing.monthly }}</li>
+              <li><strong>Hourly:</strong> £{{ selectedCarPark.pricing.hourly.toFixed(2) }}</li>
+              <li><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2) }}</li>
+              <li><strong>Weekly:</strong> £{{ selectedCarPark.pricing.weekly.toFixed(2) }}</li>
+              <li><strong>Monthly:</strong> £{{ selectedCarPark.pricing.monthly.toFixed(2) }}</li>
             </ul>
           </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
