@@ -57,41 +57,48 @@
                 <div class="card-body">
                     <div class="input-group">
                 <span class="input-group-text">£</span>
-                <input type="number" class="form-control" :placeholder="`£${getDefaultPrice(pricing)}`" :aria-label="`${pricing} price`" v-model.number="carPark.pricing[pricing.toLowerCase()]" step="0.01">
+                <input type="number" class="form-control" :placeholder="`£${getDefaultPrice(pricing)}`" :aria-label="`${pricing} price`" v-model.number="carPark.pricing[pricing.toLowerCase()]" step="0.01" min="0">
                 </div>
             </div>
             </div>
         </div>
         </div>
   
-          <!-- Bay cards -->
-          <div class="row justify-content-center mb-3">
-    <div v-for="(bay, index) in carPark.bays" :key="index" class="col-6 col-md-3 mb-4">
-      <div class="card h-100 text-center p-2">
-        <div class="card-body">
-          <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging" :id="'evCharging' + index">
-            <label class="form-check-label" :for="'evCharging' + index">EV Charging</label>
+              <!-- Bay cards -->
+            <div class="row justify-content-center mb-3">
+          <div v-for="(bay, index) in carPark.bays" :key="index" class="col-6 col-md-3 mb-4">
+            <div class="card h-100 text-center p-2">
+              <div class="card-body">
+                <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging" :id="'evCharging' + index">
+                  <label class="form-check-label" :for="'evCharging' + index">EV Charging</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" v-model="bay.disabled" :id="'disabled' + index">
+                  <label class="form-check-label" :for="'disabled' + index">Accessible</label>
+                </div>
+                <select class="form-select mt-2" v-model="bay.vehicleSize" :id="'vehicleSize' + index">
+                  <option value="Small">Small (e.g., VW Polo, Ford Fiesta)</option>
+                  <option value="Medium">Medium (e.g., Audi A3)</option>
+                  <option value="Large">Large (e.g., Volvo XC90)</option>
+                  <option value="Van & Minibus">Van & Minibus (e.g., Ford Sprinter)</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" v-model="bay.disabled" :id="'disabled' + index">
-            <label class="form-check-label" :for="'disabled' + index">Accessible</label>
-          </div>
-          <select class="form-select mt-2" v-model="bay.vehicleSize" :id="'vehicleSize' + index">
-            <option value="Small">Small (e.g., VW Polo, Ford Fiesta)</option>
-            <option value="Medium">Medium (e.g., Audi A3)</option>
-            <option value="Large">Large (e.g., Volvo XC90)</option>
-            <option value="Van & Minibus">Van & Minibus (e.g., Ford Sprinter)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  
+        </div>  
+              <!-- Success Message -->
+            <div v-if="successMessage" class="alert alert-success text-center" role="alert">
+              {{ successMessage }}
+            </div>
             <div class="text-center">
               <button type="submit" class="btn btn-primary">Create Car Park</button>
+            </div>
+            <div v-if="errorMessages.length > 0" class="alert alert-danger mt-3">
+              <ul>
+                <li v-for="msg in errorMessages" :key="msg">{{ msg }}</li>
+              </ul>
             </div>
           </form>
         </div>
@@ -123,10 +130,45 @@
           monthly: 33.27,
         },
         }),
+        errorMessages: [],
+        successMessage: '',
       };
     },
-    methods: {
-        getDefaultPrice(pricing) {
+    methods:  {
+  validateForm() {
+    this.errorMessages = [];
+    if (!this.carPark.addressLine1.trim()) {
+      this.errorMessages.push("Address Line 1 is required.");
+    }
+    if (!this.carPark.city.trim()) {
+      this.errorMessages.push("City is required.");
+    }
+    if (!this.carPark.postcode.trim()) {
+      this.errorMessages.push("Postcode is required.");
+    }
+    if (!this.carPark.openTime.trim()) {
+      this.errorMessages.push("Open Time is required.");
+    }
+    if (!this.carPark.closeTime.trim()) {
+      this.errorMessages.push("Close Time is required.");
+    }
+    ['hourly', 'daily', 'weekly', 'monthly'].forEach(pricingType => {
+      if (!this.carPark.pricing[pricingType]) {
+        this.errorMessages.push(`${pricingType.charAt(0).toUpperCase() + pricingType.slice(1)} pricing is required.`);
+      }
+    });
+
+    const pricingKeys = ['hourly', 'daily', 'weekly', 'monthly'];
+      pricingKeys.forEach(key => {
+        if (this.carPark.pricing[key] < 0) {
+          this.errorMessages.push(`${key.charAt(0).toUpperCase() + key.slice(1)} pricing cannot be negative.`);
+        }
+      });
+      
+    return this.errorMessages.length === 0;
+  },
+
+    getDefaultPrice(pricing) {
       switch (pricing) {
         case 'Hourly': return '0.91';
         case 'Daily': return '4.05';
@@ -151,14 +193,38 @@
         });
         },
       async handleSubmit() {
+        if (!this.validateForm()) {
+          return;
+        }
         try {
           await createCarPark(this.carPark);
-          alert('Car park created successfully!');
+          this.successMessage = 'Successfully created car park.'; // Set success message
+          this.errorMessages = []; // Clear any previous error messages
+
+          // Clear the form by resetting carPark data to its initial state
+          this.resetForm();
         } catch (error) {
           console.error('Error creating car park:', error);
-          alert('Failed to create car park. Please try again later.');
+          this.errorMessages.push('Failed to create car park. Please try again later.');
         }
       },
+        // Reset form fields to their initial state
+        resetForm() {
+          this.carPark.addressLine1 = '';
+          this.carPark.addressLine2 = '';
+          this.carPark.city = '';
+          this.carPark.postcode = '';
+          this.carPark.openTime = '';
+          this.carPark.closeTime = '';
+          this.carPark.accessInstructions = '';
+          this.carPark.pricing = {
+            hourly: 0.91,
+            daily: 4.05,
+            weekly: 20.25,
+            monthly: 33.27,
+          };
+          this.carPark.bays = []; // Clears bays
+        },
     },
   };
   </script>
@@ -167,6 +233,10 @@
  .green-text{
   color: #8707f7;
  }
+
+ .error-messages > li {
+  margin-bottom: 5px; /* Adds a tiny gap between each error message */
+}
   </style>
   
 
