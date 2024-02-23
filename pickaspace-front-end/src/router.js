@@ -5,6 +5,7 @@ import UserLogin from './views/UserLogin.vue';
 import UserDashboard from './views/UserDashboard.vue';
 import UserCreateCarPark from './views/UserCreateCarPark.vue';
 import BayBooking from './views/BayBooking.vue';
+import HomeView from './views/HomeView.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -27,6 +28,10 @@ const routes = [
     component: BayBooking,
     props: true,
     meta: { requiresAuth: true } // Requires authentication
+  },
+  { path: '/', 
+    name: 'Home', 
+    component: HomeView 
   },
 ]; 
 
