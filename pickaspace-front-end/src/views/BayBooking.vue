@@ -162,13 +162,35 @@ export default {
     try {
       await bookBay(bookingData);
       alert(`Booking successful`);
-      // Reset the form or redirect the user as necessary
+      this.resetForm(); // Reset form fields after successful booking
     } catch (error) {
       console.error('Error booking the bay:', error);
       // Directly use the error message if available
       this.submitError = error.message || "An unexpected error occurred.";
     }
-  }
+  },
+  resetForm() {
+      // Reset all data properties to their initial state
+      this.selectedBay = null;
+      this.arrivalTime = '';
+      this.departureTime = '';
+      this.creditCard = '';
+      this.creditCardError = '';
+      this.submitError = '';
+      // Re-fetch data 
+      this.fetchCarParkDetails();
+    },
+    async fetchCarParkDetails() {
+      try {
+        const details = await fetchCarParkDetails(this.carparkId);
+        this.carParkAddress = details.address;
+        this.bays = details.bays.sort((a, b) => a.bay_number - b.bay_number);
+        this.pricing = details.pricing;
+      } catch (error) {
+        console.error('Failed to load car park details:', error);
+        alert('Failed to load car park details. Please try again later.');
+      }
+    },
 },
   async mounted() {
     try {
