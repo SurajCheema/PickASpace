@@ -26,6 +26,7 @@
     <div class="row justify-content-center">
       <div class="col-md-8 mb-4">
         <h4>Checkout</h4>
+        <p class="text-success" v-if="bookingSuccessMessage">{{ bookingSuccessMessage }}</p>
         <div v-if="selectedBay">
           <p>Selected Bay: {{ selectedBay.bay_number }}</p>
           <p>Duration: {{ stayDuration }} hours</p>
@@ -79,6 +80,7 @@ export default {
       creditCard: '',
       creditCardError: '',
       submitError: '', 
+      bookingSuccessMessage: '',
     };
   },
   
@@ -147,8 +149,8 @@ export default {
     async submitBooking() {
     this.submitError = ''; // Reset submitError on new submission attempt
     if (!this.canSubmitBooking) {
-      alert("Please ensure all fields are correctly filled.");
-      return;
+      this.submitError = "Please ensure all fields are correctly filled.";
+     return;
     }
 
     const bookingData = {
@@ -161,7 +163,7 @@ export default {
 
     try {
       await bookBay(bookingData);
-      alert(`Booking successful`);
+      this.bookingSuccessMessage = 'Successfully booked bay';
       this.resetForm(); // Reset form fields after successful booking
     } catch (error) {
       console.error('Error booking the bay:', error);
@@ -188,7 +190,7 @@ export default {
         this.pricing = details.pricing;
       } catch (error) {
         console.error('Failed to load car park details:', error);
-        alert('Failed to load car park details. Please try again later.');
+        this.submitError = 'Failed to load car park details. Please try again later.';
       }
     },
 },

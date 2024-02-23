@@ -5,11 +5,13 @@
         <div>
           <label for="email">Email:</label>
           <input type="email" id="email" v-model="user.email" required>
+          <p class="error" v-if="emailError">{{ emailError }}</p>
         </div>
         <div>
           <label for="password">Password:</label>
           <input type="password" id="password" v-model="user.password" required>
         </div>
+        <p class="error" v-if="loginError">{{ loginError }}</p>
         <button type="submit">Login</button>
       </form>
     </div>
@@ -25,21 +27,34 @@
         user: {
           email: '',
           password: ''
-        }
+        },
+        loginError: '',
+        emailError: ''
       };
     },
     methods: {
       async loginUser() {
-          try {
-          await loginUser(this.user);
-          console.log('User logged in');
-          this.$router.push('/dashboard');
-        } catch (error) {
-          console.error('Login failed:', error);
-        }
+      if (!this.isValidEmail(this.user.email)) {
+        this.emailError = "Please enter a valid email address.";
+        return;
       }
+      this.emailError = ''; // Reset email error
+      try {
+        await loginUser(this.user);
+        console.log('User logged in');
+        this.$router.push('/dashboard');
+      } catch (error) {
+        console.error('Login failed:', error);
+        this.loginError = 'Login failed: Invalid email or password.';
+      }
+    },
+    isValidEmail(email) {
+      // eslint-disable-next-line no-useless-escape
+      const pattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/; // Email regex pattern
+      return pattern.test(email);
     }
   }
+}
   </script>
   
   <style scoped>
@@ -78,5 +93,8 @@
   button:hover {
     background-color: #45a049;
   }
+  .error {
+  color: red;
+}
   </style>
   
