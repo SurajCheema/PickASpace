@@ -46,7 +46,7 @@
         <h4>Available Bays</h4>
         <div class="row">
           <div class="col-md-3" v-for="bay in bays" :key="bay.bay_id" :class="{ 'selected-bay': selectedBay && selectedBay.bay_id === bay.bay_id }">
-            <div class="card mb-3" @click="selectBay(bay)">
+              <div class="card mb-3 hover-highlight" @click="selectBay(bay)">
               <div class="card-body">
                 <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
                 <p class="card-text">EV Charging: {{ bay.hasEVCharging ? 'Yes' : 'No' }}</p>
@@ -186,12 +186,29 @@ export default {
 </script>
 
 <style scoped>
+.hover-highlight:hover {
+  background-color: #f8f9fa; 
+}
 .selected-bay .card {
-  background-color: grey;
+  background-color: #f8f9fa;
 }
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
-  width: 50% !important; 
+  width: 50% !important; /* Ensures width is set to 50% for centered alignment */
+}
+
+/* Adjustments for credit card input and button spacing */
+#creditCard {
+  width: 50% !important; /* Match the width of other input boxes */
+  display: block; /* Ensures the input behaves as a block-level element */
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1rem; /* Adds space below the credit card input */
+}
+
+.btn-primary {
+  display: block; /* Ensures the button behaves as a block-level element */
+  margin: 0 auto; /* Centers the button and maintains the gap from the input above */
 }
 </style>
