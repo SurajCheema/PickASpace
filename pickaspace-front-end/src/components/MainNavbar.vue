@@ -12,6 +12,9 @@
         <li class="nav-item" v-if="isLoggedIn">
           <router-link class="nav-link" to="/carparks">Search Carpark</router-link>
         </li>
+        <li class="nav-item" v-if="isLoggedIn">
+          <router-link class="nav-link" to="/user/dashboard">Profile</router-link>
+        </li>
         <li class="nav-item" v-if="!isLoggedIn">
           <router-link class="nav-link" to="/login">Login</router-link>
         </li>
