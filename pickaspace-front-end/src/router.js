@@ -6,9 +6,10 @@ import CarParkDashboard from './views/CarParkDashboard.vue';
 import UserCreateCarPark from './views/UserCreateCarPark.vue';
 import BayBooking from './views/BayBooking.vue';
 import HomeView from './views/HomeView.vue';
+import UserDashboard from './views/UserDashboard.vue';
 import UserProfile from './views/UserProfile.vue';
-import UserBookings from './views/BookingLogs.vue';
-import PaymentReceipts from './views/PaymentLogs.vue';
+import BookingLogs from './views/BookingLogs.vue';
+import PaymentLogs from './views/PaymentLogs.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -38,9 +39,9 @@ const routes = [
   },
   // User settings routes
   { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
-  { path: '/user/bookings', name: 'BookingLogs', component: UserBookings, meta: { requiresAuth: true } },
-  { path: '/user/payments', name: 'PaymentLogs', component: PaymentReceipts, meta: { requiresAuth: true } },
-
+  { path: '/user/bookings', name: 'BookingLogs', component: BookingLogs, meta: { requiresAuth: true } },
+  { path: '/user/payments', name: 'PaymentLogs', component: PaymentLogs, meta: { requiresAuth: true } },
+  { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
 ]; 
 
 const router = createRouter({
