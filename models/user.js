@@ -8,8 +8,11 @@ module.exports = (sequelize, DataTypes) => {
       car_registration: DataTypes.STRING,
       email: DataTypes.STRING,
       password: DataTypes.STRING,
-      full_name: DataTypes.STRING,
-      DOB: DataTypes.DATE
+      first_name: DataTypes.STRING,
+      last_name: DataTypes.STRING,
+      DOB: DataTypes.DATE,
+      phone: DataTypes.STRING,
+      address: DataTypes.STRING,
     }, {
       // Insert additional settings here.
     });
@@ -17,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     User.associate = (models) => {
       User.hasMany(models.CarPark, { foreignKey: 'user_id', as: 'carParks' });
       User.hasMany(models.CarParkLog, { foreignKey: 'user_id', as: 'logs' });
+      User.hasMany(models.CreditCard, { foreignKey: 'user_id', as: 'creditCards' });
   };
 
     return User;

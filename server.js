@@ -39,18 +39,34 @@ db.sequelize.sync().then(() => {
 // Register user
 app.post('/create-user', async (req, res) => {
   try {    
+
+    const {
+      car_registration,
+      first_name,
+      last_name,
+      email,
+      password,
+      phone,
+      DOB
+    } = req.body;
+
     // How intense the hashing will be. Higher = harder to guess but will slow down the process.
     const saltRounds = 10; 
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
-    const newUser = await db.User.create({ 
-    // Spread operator copies all other user fields
-      ...req.body,
-      password: hashedPassword
+    const newUser = await db.User.create({
+      car_registration,
+      first_name,
+      last_name,
+      email,
+      password: hashedPassword,
+      phone, // Include phone field
+      DOB
     });
 
     res.json({ message: "User created successfully", userId: newUser.user_id });
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error('Failed to create user:', error);
+    res.status(500).send('Detailed Error: ' + error.message + ' | Stack: ' + error.stack);
   }
 });
 
@@ -306,3 +322,46 @@ app.get('/api/bays/:bayId/availability', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Update user details
+app.post('/api/update-user', authenticateToken, async (req, res) => {
+  const { userId } = req.user; // Extracted from the JWT
+
+  const { phone, address, firstName, lastName, email, password } = req.body;
+  const updatedFields = {
+    phone,
+    address,
+    firstName,
+    lastName,
+    email
+  };
+
+  if (password) {
+    const saltRounds = 10;
+    updatedFields.password = await bcrypt.hash(password, saltRounds);
+  }
+
+  try {
+    // Start a transaction
+    const transaction = await db.sequelize.transaction();
+
+    // Update user with validation and transaction control
+    const result = await db.User.update(updatedFields, { 
+      where: { user_id: userId },
+      transaction
+    });
+
+    await transaction.commit(); // Commit the transaction if all goes well
+
+    if (result[0] === 1) { // Check if the update was successful
+      res.json({ message: 'User updated successfully' });
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    if (transaction) await transaction.rollback(); // Rollback transaction on error
+    console.error('Failed to update user:', error);
+    res.status(500).send(error.message);
+  }
+});
+

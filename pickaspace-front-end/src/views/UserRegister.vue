@@ -2,31 +2,49 @@
   <div class="register-container">
     <h1>Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
-        <div>
+        <div class="form-group">
           <label for="carRegistration">Car Registration:</label>
-          <input type="text" id="carRegistration" v-model="user.car_registration" required>
+          <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration" required>
         </div>
-        <div>
+        <div class="form-group">
+          <label for="firstName">First Name:</label>
+          <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name:</label>
+          <input type="text" class="form-control" id="lastName" v-model="user.last_name" required>
+        </div>
+        <div class="form-group">
           <label for="email">Email:</label>
-          <input type="email" id="email" v-model="user.email" required>
+          <input type="email" class="form-control" id="email" v-model="user.email" required>
+          <div v-if="emailError" class="text-danger">{{ emailError }}</div>
         </div>
-        <div>
+        <div class="form-group">
+          <label for="emailConfirm">Confirm Email:</label>
+          <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
+        </div>
+        <div class="form-group">
           <label for="password">Password:</label>
-          <input type="password" id="password" v-model="user.password" required>
+          <input type="password" class="form-control" id="password" v-model="user.password" required>
+          <div v-if="passwordError" class="text-danger">{{ passwordError }}</div>
         </div>
-        <div>
-          <label for="fullName">Full Name:</label>
-          <input type="text" id="fullName" v-model="user.full_name" required>
+        <div class="form-group">
+          <label for="passwordConfirm">Confirm Password:</label>
+          <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm" required>
         </div>
-        <div>
+        <div class="form-group">
+          <label for="phone">Phone Number:</label>
+          <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
+        </div>
+        <div class="form-group">
           <label for="dob">Date of Birth:</label>
-          <input type="date" id="dob" v-model="user.DOB" required>
+          <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
         </div>
-        <button type="submit">Register</button>
+        <button type="submit" class="btn btn-primary">Register</button>
       </form>
-      <div v-if="registrationSuccess" class="success-message">
-      <p>Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.</p>
-    </div>
+      <div v-if="registrationSuccess" class="alert alert-success">
+        Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.
+      </div>
   </div>
 </template>
   
@@ -44,12 +62,34 @@
           full_name: '',
           DOB: ''
         },
+        emailConfirm: '',
+        passwordConfirm: '',
+        emailError: '',
+        passwordError: '',
         registrationSuccess: false
       };
     },
-
+    watch: {
+    emailConfirm(newVal) {
+      if (this.user.email !== newVal) {
+        this.emailError = 'Emails do not match!';
+      } else {
+        this.emailError = '';
+      }
+    },
+    passwordConfirm(newVal) {
+      if (this.user.password !== newVal) {
+        this.passwordError = 'Passwords do not match!';
+      } else {
+        this.passwordError = '';
+      }
+    }
+  },
     methods: {
     async registerUser() {
+      if (this.emailError || this.passwordError) {
+        return; // Prevent registration if there are errors
+      }
       try {
         const result = await registerUser(this.user);
         console.log('User registered:', result);

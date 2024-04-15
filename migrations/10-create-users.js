@@ -21,13 +21,25 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      full_name: {
+      first_name: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      last_name: {
         type: Sequelize.STRING,
         allowNull: false
       },
       DOB: {
         type: Sequelize.DATE,
         allowNull: false
+      },
+      phone: { 
+        type: Sequelize.STRING,
+        allowNull: true 
+      },
+      address: { 
+        type: Sequelize.STRING,
+        allowNull: true 
       },
       createdAt: {
         allowNull: false,

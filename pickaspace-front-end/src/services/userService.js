@@ -41,3 +41,49 @@ export const loginUser = async (userData) => {
 export const saveAuthToken = (token) => {
   localStorage.setItem('token', token);
 };
+
+export const updateUser = async (userData) => {
+  const response = await fetch(`${API_URL}/api/update-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) {
+    throw new Error('Server error during profile update');
+  }
+  return response.json();
+};
+
+// Get user details
+export const getUserDetails = async () => {
+  const response = await fetch(`${API_URL}/user-details`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch user details');
+  }
+  return response.json();
+};
+
+// userService.js
+export const updateUserDetails = async (userData) => {
+  const response = await fetch(`${API_URL}/api/update-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update user details');
+  }
+  return response.json();
+};
