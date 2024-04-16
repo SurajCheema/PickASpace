@@ -2,37 +2,54 @@
   <div class="container mt-5">
     <h1 class="mb-4">Update Profile</h1>
     <form @submit.prevent="updateProfile" class="needs-validation" novalidate>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.car_registration}">
         <label for="carRegistration" class="form-label">Car Registration:</label>
         <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration" required>
+        <div class="invalid-feedback" v-if="submitted && !user.car_registration">
+          Car registration is required.
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.first_name}">
         <label for="firstName" class="form-label">First Name:</label>
         <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
+        <div class="invalid-feedback" v-if="submitted && !user.first_name">
+          First name is required.
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.last_name}">
         <label for="lastName" class="form-label">Last Name:</label>
         <input type="text" class="form-control" id="lastName" v-model="user.last_name" required>
+        <div class="invalid-feedback" v-if="submitted && !user.last_name">
+          Last name is required.
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.email}">
         <label for="email" class="form-label">Email:</label>
         <input type="email" class="form-control" id="email" v-model="user.email" required>
-        <div v-if="emailError" class="invalid-feedback">{{ emailError }}</div>
+        <div class="invalid-feedback" v-if="submitted && !user.email">
+          Email is required.
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && emailConfirm !== user.email}">
         <label for="emailConfirm" class="form-label">Confirm Email:</label>
         <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
-        <div v-if="emailConfirm !== user.email" class="invalid-feedback">
+        <div class="invalid-feedback" v-if="submitted && emailConfirm !== user.email">
           Emails do not match!
         </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.phone}">
         <label for="phone" class="form-label">Phone Number:</label>
         <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
+        <div class="invalid-feedback" v-if="submitted && !user.phone">
+          Phone number is required.
+        </div>
       </div>
-      <div class="mb-3">
+      <div class="mb-3" :class="{'was-validated': submitted && !user.DOB}">
         <label for="dob" class="form-label">Date of Birth:</label>
         <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
+        <div class="invalid-feedback" v-if="submitted && !user.DOB">
+          Date of birth is required.
+        </div>
       </div>
       <div class="mb-3">
         <label for="password" class="form-label">New Password (leave blank to keep current):</label>
@@ -41,7 +58,7 @@
       <div class="mb-3">
         <label for="passwordConfirm" class="form-label">Confirm New Password:</label>
         <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm">
-        <div v-if="newPassword !== passwordConfirm" class="invalid-feedback">
+        <div v-if="newPassword && newPassword !== passwordConfirm" class="invalid-feedback">
           Passwords do not match!
         </div>
       </div>
@@ -73,7 +90,8 @@ export default {
       passwordConfirm: '',
       updateSuccess: false,
       emailError: '',
-      passwordError: ''    
+      passwordError: '',
+      submitted: false 
     };
   },
   created() {
@@ -87,7 +105,7 @@ export default {
         this.emailConfirm = this.user.email;
       } catch (error) {
         console.error('Failed to fetch user details:', error);
-      }  
+      }
     },
 
     formatDate(dateStr) {
@@ -106,17 +124,9 @@ export default {
     },
 
     async updateProfile() {
-      if (this.newPassword !== this.passwordConfirm) {
-        this.passwordError = 'Passwords do not match!';
-        return;
-      }
-      if (this.user.email !== this.emailConfirm) {
-        this.emailError = 'Emails do not match!';
-        return;
-      }
-      if (this.newPassword) {
-        this.user.password = this.newPassword; // Set the new password only if provided
-      }
+      this.submitted = true;  // Indicate that the form has been submitted for validation
+      if (!this.isValidForm) return;  // Prevent submission if validation fails
+
       try {
         await updateUserDetails(this.user);
         this.updateSuccess = true;
@@ -125,9 +135,14 @@ export default {
         }, 3000);
       } catch (error) {
         console.error('Update failed:', error);
-      }  
+      }
     }
- }
+  },
+  computed: {
+    isValidForm() {
+      return this.user.first_name && this.user.last_name && this.user.email && this.user.phone && this.user.DOB && (this.emailConfirm === this.user.email);
+    }
+  }
 }
 </script>
 

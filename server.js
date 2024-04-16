@@ -328,6 +328,12 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
   const { userId } = req.user; // Extracted from the JWT
 
   const { phone, address, first_name, last_name, email, DOB, car_registration, password } = req.body;
+
+  // Basic validation
+  if (!first_name || !last_name || !email || !phone || !DOB) {
+    return res.status(400).json({ message: 'All fields except password must be filled.' });
+  }
+
   const updatedFields = {
     phone,
     address,
