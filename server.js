@@ -370,3 +370,18 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
   }
 });
 
+// Endpoint to fetch user details
+app.get('/user-details', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const userDetails = await db.User.findByPk(userId);
+    if (userDetails) {
+      res.json(userDetails);
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
