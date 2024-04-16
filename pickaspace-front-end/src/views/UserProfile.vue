@@ -20,12 +20,30 @@
         <div v-if="emailError" class="invalid-feedback">{{ emailError }}</div>
       </div>
       <div class="mb-3">
+        <label for="emailConfirm" class="form-label">Confirm Email:</label>
+        <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
+        <div v-if="emailConfirm !== user.email" class="invalid-feedback">
+          Emails do not match!
+        </div>
+      </div>
+      <div class="mb-3">
         <label for="phone" class="form-label">Phone Number:</label>
         <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
       </div>
       <div class="mb-3">
         <label for="dob" class="form-label">Date of Birth:</label>
         <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">New Password (leave blank to keep current):</label>
+        <input type="password" class="form-control" id="password" v-model="newPassword">
+      </div>
+      <div class="mb-3">
+        <label for="passwordConfirm" class="form-label">Confirm New Password:</label>
+        <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm">
+        <div v-if="newPassword !== passwordConfirm" class="invalid-feedback">
+          Passwords do not match!
+        </div>
       </div>
       <button type="submit" class="btn btn-primary">Update Profile</button>
     </form>
@@ -50,9 +68,12 @@ export default {
         phone: '',
         DOB: ''
       },
+      emailConfirm: '',
+      newPassword: '',
+      passwordConfirm: '',
+      updateSuccess: false,
       emailError: '',
-      passwordError: '',
-      updateSuccess: false
+      passwordError: ''    
     };
   },
   created() {
@@ -60,29 +81,37 @@ export default {
   },
   methods: {
     async fetchUserDetails() {
-    try {
-      const details = await getUserDetails();
-      this.user = { ...details };
-    } catch (error) {
-      console.error('Failed to fetch user details:', error);
-    }
-  },
+      try {
+        const details = await getUserDetails();
+        this.user = { ...details };
+        this.emailConfirm = this.user.email;
+      } catch (error) {
+        console.error('Failed to fetch user details:', error);
+      }  
+    },
 
-  async updateProfile() {
-    if (this.emailError || this.passwordError) {
-      console.error('Validation failed:', this.emailError, this.passwordError);
-      return; // Stop execution if there are form errors
+    async updateProfile() {
+      if (this.newPassword !== this.passwordConfirm) {
+        this.passwordError = 'Passwords do not match!';
+        return;
+      }
+      if (this.user.email !== this.emailConfirm) {
+        this.emailError = 'Emails do not match!';
+        return;
+      }
+      if (this.newPassword) {
+        this.user.password = this.newPassword; // Set the new password only if provided
+      }
+      try {
+        await updateUserDetails(this.user);
+        this.updateSuccess = true;
+        setTimeout(() => {
+          this.updateSuccess = false;
+        }, 3000);
+      } catch (error) {
+        console.error('Update failed:', error);
+      }  
     }
-    try {
-      await updateUserDetails(this.user);
-      this.updateSuccess = true;
-      setTimeout(() => {
-        this.updateSuccess = false; // Reset the success state after 3000ms
-      }, 3000);
-    } catch (error) {
-      console.error('Update failed:', error);
-    }
-  }
  }
 }
 </script>

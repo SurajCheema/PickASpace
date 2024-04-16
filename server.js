@@ -327,19 +327,24 @@ app.get('/api/bays/:bayId/availability', async (req, res) => {
 app.post('/api/update-user', authenticateToken, async (req, res) => {
   const { userId } = req.user; // Extracted from the JWT
 
-  const { phone, address, firstName, lastName, email, password } = req.body;
+  const { phone, address, first_name, last_name, email, DOB, car_registration, password } = req.body;
   const updatedFields = {
     phone,
     address,
-    firstName,
-    lastName,
-    email
+    first_name,
+    last_name,
+    email,
+    DOB,
+    car_registration,
+    password
   };
 
   if (password) {
     const saltRounds = 10;
     updatedFields.password = await bcrypt.hash(password, saltRounds);
   }
+
+  console.log('Attempting to update user:', userId, updatedFields);
 
   try {
     // Start a transaction

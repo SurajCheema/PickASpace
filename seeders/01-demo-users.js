@@ -9,9 +9,11 @@ module.exports = {
       {
         email: 'user@example.com',
         password: 'password', // Plain password will be hashed below
-        full_name: 'John Doe',
+        first_name: 'John',
+        last_name: 'Doe',
         DOB: new Date('1990-01-01'),
         car_registration: 'ABC123',
+        phone: '0123456789',
         createdAt: new Date(),
         updatedAt: new Date()
       }

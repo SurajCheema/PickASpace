@@ -72,8 +72,8 @@ export const getUserDetails = async () => {
   return response.json();
 };
 
-// userService.js
 export const updateUserDetails = async (userData) => {
+  console.log("Updating user with data:", userData);
   const response = await fetch(`${API_URL}/api/update-user`, {
     method: 'POST',
     headers: {
