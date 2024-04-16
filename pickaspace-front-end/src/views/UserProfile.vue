@@ -23,21 +23,21 @@
           Last name is required.
         </div>
       </div>
-      <div class="mb-3" :class="{'was-validated': submitted && !user.email}">
+      <div class="mb-3" :class="{'was-validated': submitted && !isValidEmail(user.email)}">
         <label for="email" class="form-label">Email:</label>
-        <input type="email" class="form-control" id="email" v-model="user.email" required>
-        <div class="invalid-feedback" v-if="submitted && !user.email">
-          Email is required.
+        <input type="email" class="form-control" id="email" v-model="user.email" required :pattern="emailPattern">
+        <div v-if="submitted && !isValidEmail(user.email)" class="invalid-feedback">
+          Please enter a valid email address.
         </div>
       </div>
-      <div class="mb-3" :class="{'was-validated': submitted && emailConfirm !== user.email}">
+      <div class="mb-3" :class="{'was-validated': submitted && (emailConfirm !== user.email || !isValidEmail(emailConfirm))}">
         <label for="emailConfirm" class="form-label">Confirm Email:</label>
-        <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
-        <div class="invalid-feedback" v-if="submitted && emailConfirm !== user.email">
-          Emails do not match!
+        <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required :pattern="emailPattern">
+        <div class="invalid-feedback">
+          <span v-if="emailConfirm !== user.email">Emails must match!</span>
+          <span v-if="!isValidEmail(emailConfirm)">Please enter a valid email address.</span>
         </div>
-      </div>
-      <div class="mb-3" :class="{'was-validated': submitted && !user.phone}">
+      </div>      <div class="mb-3" :class="{'was-validated': submitted && !user.phone}">
         <label for="phone" class="form-label">Phone Number:</label>
         <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
         <div class="invalid-feedback" v-if="submitted && !user.phone">
@@ -91,7 +91,8 @@ export default {
       updateSuccess: false,
       emailError: '',
       passwordError: '',
-      submitted: false 
+      submitted: false,
+      emailPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     };
   },
   created() {
@@ -101,26 +102,27 @@ export default {
     async fetchUserDetails() {
       try {
         const details = await getUserDetails();
-        this.user = { ...details, DOB: this.formatDate(details.DOB) };
-        this.emailConfirm = this.user.email;
+        if (details) {
+          this.user = { ...this.user, ...details };
+          this.user.DOB = this.formatDate(details.DOB); 
+          this.emailConfirm = this.user.email;
+        }
       } catch (error) {
         console.error('Failed to fetch user details:', error);
       }
     },
 
-    formatDate(dateStr) {
+      formatDate(dateStr) {
       if (!dateStr) return '';
       const date = new Date(dateStr);
-      let month = '' + (date.getMonth() + 1),
-          day = '' + date.getDate(),
-          year = date.getFullYear();
+      const year = date.getFullYear();
+      let month = ('0' + (date.getMonth() + 1)).slice(-2);  // Ensures two digits
+      let day = ('0' + date.getDate()).slice(-2);           // Ensures two digits
+      return `${year}-${month}-${day}`;  // Correct format for HTML date input
+    },
 
-      if (month.length < 2) 
-          month = '0' + month;
-      if (day.length < 2) 
-          day = '0' + day;
-
-      return [year, month, day].join('-');
+    isValidEmail(email) {
+      return this.emailPattern.test(email);
     },
 
     async updateProfile() {
@@ -140,7 +142,13 @@ export default {
   },
   computed: {
     isValidForm() {
-      return this.user.first_name && this.user.last_name && this.user.email && this.user.phone && this.user.DOB && (this.emailConfirm === this.user.email);
+      return this.isValidEmail(this.user.email) &&
+             this.user.first_name &&
+             this.user.last_name &&
+             this.user.phone &&
+             this.user.DOB &&
+             this.isValidEmail(this.emailConfirm) &&
+             this.emailConfirm === this.user.email;
     }
   }
 }
