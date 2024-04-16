@@ -83,11 +83,26 @@ export default {
     async fetchUserDetails() {
       try {
         const details = await getUserDetails();
-        this.user = { ...details };
+        this.user = { ...details, DOB: this.formatDate(details.DOB) };
         this.emailConfirm = this.user.email;
       } catch (error) {
         console.error('Failed to fetch user details:', error);
       }  
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      let month = '' + (date.getMonth() + 1),
+          day = '' + date.getDate(),
+          year = date.getFullYear();
+
+      if (month.length < 2) 
+          month = '0' + month;
+      if (day.length < 2) 
+          day = '0' + day;
+
+      return [year, month, day].join('-');
     },
 
     async updateProfile() {
