@@ -51,7 +51,7 @@
 import { fetchCarParkDetails } from '../services/carParkService';
 
 export default {
-  name: 'UserBookings',
+  name: 'UserBookingLogs',
   data() {
     return {
       activeTab: 'upcoming',

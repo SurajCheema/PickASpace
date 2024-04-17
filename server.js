@@ -7,6 +7,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
 const { Op } = require('sequelize');
+const stripe = require('stripe')('sk_test_51P6fSLERwTf2NnasIFtQzbOUUKPrAodsBWGnKvMSls3D2hYcKKeiMYzEIHF4ySkNTg9QQhWEylCJXfiwrn157sQ200R45s3K4R');
+
 require('dotenv').config();
 
 // Environment variables for JWT
@@ -389,5 +391,24 @@ app.get('/user-details', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user details:', error);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+//Stripe payment API
+app.post('/create-charge', async (req, res) => {
+  try {
+      const { amount, source } = req.body;  // Amount in cents, source is the token from frontend
+
+      const charge = await stripe.charges.create({
+          amount: amount,
+          currency: 'gbp',
+          source: source,
+          description: 'Charge for parking bay'
+      });
+
+      res.status(200).json(charge);
+  } catch (error) {
+      console.error("Error creating charge:", error);
+      res.status(500).send("Failed to create charge");
   }
 });

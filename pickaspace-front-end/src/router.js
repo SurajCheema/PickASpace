@@ -8,7 +8,7 @@ import BayBooking from './views/BayBooking.vue';
 import HomeView from './views/HomeView.vue';
 import UserDashboard from './views/UserDashboard.vue';
 import UserProfile from './views/UserProfile.vue';
-import UserBookings from './views/UserBookings.vue';
+import UserBookingLogs from './views/UserBookingLogs.vue';
 import PaymentLogs from './views/PaymentLogs.vue';
 
 const routes = [
@@ -39,7 +39,7 @@ const routes = [
   },
   // User settings routes
   { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
-  { path: '/user/bookings', name: 'UserBookings', component: UserBookings, meta: { requiresAuth: true } },
+  { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
   { path: '/user/payments', name: 'PaymentLogs', component: PaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
 ]; 
