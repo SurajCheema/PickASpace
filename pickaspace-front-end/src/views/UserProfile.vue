@@ -127,15 +127,19 @@ export default {
       const phoneRegex = /^\+?[1-9]\d{1,14}$/;
       return phoneRegex.test(phone);
     },
+
+    isStrongPassword(password) {
+      return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(password);
+    },
+
     submitForm() {
       if (this.isValidForm) {
         let updateData = { ...this.user };
-        // Check if new password is provided and matches the confirmation before updating
-        if (this.newPassword && this.newPassword === this.passwordConfirm) {
+        if (this.newPassword.trim() && this.isStrongPassword(this.newPassword) && this.newPassword === this.passwordConfirm) {
           updateData.password = this.newPassword;
         } else {
-          delete updateData.password; // Prevents password field from being included if not intended
-        }
+          delete updateData.password;
+        }        
         updateUserDetails(updateData).then(() => {
           this.updateSuccess = true;
           setTimeout(() => this.updateSuccess = false, 3000);
@@ -146,13 +150,13 @@ export default {
   computed: {
     isValidForm() {
       return this.isValidEmail(this.user.email) &&
-             this.emailConfirm === this.user.email &&
-             this.isValidPhone(this.user.phone) &&
-             this.user.first_name &&
-             this.user.last_name &&
-             this.user.DOB && 
-             (this.newPassword === this.passwordConfirm || (this.newPassword === '' && this.passwordConfirm === ''));
-    }
+        this.emailConfirm === this.user.email &&
+        this.isValidPhone(this.user.phone) &&
+        this.user.first_name &&
+        this.user.last_name &&
+        this.user.DOB &&
+        (!this.newPassword || (this.newPassword.trim() && this.newPassword === this.passwordConfirm && this.isStrongPassword(this.newPassword)));
+    } 
   }
 }
 </script>

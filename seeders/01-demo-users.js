@@ -7,13 +7,13 @@ module.exports = {
     const saltRounds = 10; // Same as register process
     const users = [
       {
-        email: 'user@example.com',
-        password: 'password', // Plain password will be hashed below
+        email: 'user@test.com',
+        password: 'test', // Plain password will be hashed below
         first_name: 'John',
         last_name: 'Doe',
         DOB: new Date('1990-01-01'),
         car_registration: 'ABC123',
-        phone: '0123456789',
+        phone: '+44123456789',
         createdAt: new Date(),
         updatedAt: new Date()
       }
