@@ -142,3 +142,29 @@ export const fetchBayAvailability = async (bayId, startTime, endTime) => {
   }
   return response.json();
 };
+
+// Create a Stripe charge
+export const createCharge = async (chargeData) => {
+  const url = `${API_BASE_URL}/create-charge`;
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(chargeData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create charge');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating charge:', error);
+    throw error;
+  }
+};
