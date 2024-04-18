@@ -129,19 +129,27 @@ export const bookBay = async (bookingData) => {
     }
 };
 
-// Check bay availability
+// Assuming the existence of an API function like this in your services file
 export const fetchBayAvailability = async (bayId, startTime, endTime) => {
   const url = `${API_BASE_URL}/bays/${bayId}/availability?startTime=${startTime}&endTime=${endTime}`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch bay availability');
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bay availability: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch Bay Availability Error:', error);
+    throw error;  // Re-throw to be handled or alerted in the calling method
   }
-  return response.json();
 };
+
 
 // Create a Stripe charge
 export const createCharge = async (chargeData) => {

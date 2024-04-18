@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
 const { Op } = require('sequelize');
-const stripe = require('stripe')('sk_test_51P6fSLERwTf2NnasIFtQzbOUUKPrAodsBWGnKvMSls3D2hYcKKeiMYzEIHF4ySkNTg9QQhWEylCJXfiwrn157sQ200R45s3K4R');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 require('dotenv').config();
 
@@ -304,18 +304,26 @@ app.get('/api/bays/:bayId/availability', async (req, res) => {
   const { bayId } = req.params;
   const { startTime, endTime } = req.query;
 
+  if (!startTime || !endTime || new Date(startTime).toString() === "Invalid Date" || new Date(endTime).toString() === "Invalid Date") {
+    return res.status(400).send('Invalid start time or end time. Please provide valid ISO 8601 date strings.');
+  }
+
   try {
     const overlappingBookings = await db.CarParkLog.count({
       where: {
         bay_id: bayId,
         [Op.or]: [
           {
-            startTime: { [Op.lt]: endTime },
-            endTime: { [Op.gt]: startTime },
-          },
+            [Op.and]: [
+              { startTime: { [Op.lt]: endTime } },
+              { endTime: { [Op.gt]: startTime } }
+            ]
+          }
         ],
       },
     });
+
+    console.log(`Overlapping bookings for bay ${bayId}: ${overlappingBookings}`);
 
     const isAvailable = overlappingBookings === 0;
     res.json({ isAvailable });
@@ -397,18 +405,19 @@ app.get('/user-details', authenticateToken, async (req, res) => {
 //Stripe payment API
 app.post('/create-charge', async (req, res) => {
   try {
-      const { amount, source } = req.body;  // Amount in cents, source is the token from frontend
+    const { amount, stripeToken } = req.body;  // amount should be in cents
 
-      const charge = await stripe.charges.create({
-          amount: amount,
-          currency: 'gbp',
-          source: source,
-          description: 'Charge for parking bay'
-      });
+    const charge = await stripe.charges.create({
+      amount: amount,
+      currency: 'gbp',
+      source: stripeToken,  // Use the token from the frontend
+      description: 'Charge for parking bay'
+    });
 
-      res.status(200).json(charge);
+    res.status(200).json(charge);
   } catch (error) {
-      console.error("Error creating charge:", error);
-      res.status(500).send("Failed to create charge");
+    console.error("Error creating charge:", error);
+    res.status(500).send("Failed to create charge");
   }
 });
+
