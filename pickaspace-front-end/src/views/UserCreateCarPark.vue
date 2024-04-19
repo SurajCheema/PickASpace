@@ -170,10 +170,10 @@
 
     getDefaultPrice(pricing) {
       switch (pricing) {
-        case 'Hourly': return '0.91';
-        case 'Daily': return '4.05';
-        case 'Weekly': return '20.25';
-        case 'Monthly': return '33.27';
+        case 'Hourly': return '1.00';
+        case 'Daily': return '5.00';
+        case 'Weekly': return '25.00';
+        case 'Monthly': return '80.00';
         default: return '0.00';
       }
     },
