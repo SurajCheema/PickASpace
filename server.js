@@ -403,12 +403,12 @@ app.get('/user-details', authenticateToken, async (req, res) => {
 });
 
 //Stripe payment API
-app.post('/create-charge', async (req, res) => {
-  const { amount, stripeToken } = req.body; 
+app.post('/api/create-charge', async (req, res) => {
+  const { amount, stripeToken } = req.body;
 
   try {
     const charge = await stripe.charges.create({
-      amount: amount,
+      amount: amount,  // Ensure amount is already in pence when sent from frontend
       currency: 'gbp',
       source: stripeToken,  // Token passed from frontend
       description: 'Charge for parking bay'

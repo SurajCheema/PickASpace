@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
+import { fetchCarParkDetails, bookBay, fetchBayAvailability, createCharge } from '@/services/carParkService';
 import { loadStripe } from '@stripe/stripe-js';
 
 export default {
@@ -221,23 +221,46 @@ export default {
     this.submitError = error.message;
     return;
   }
-  const bookingData = {
-    bayId: this.selectedBay.bay_id,
-    carparkId: this.carparkId,
-    startTime: this.arrivalTime,
-    endTime: this.departureTime,
-    cost: this.calculatedCost,
+
+  if (!token) {
+    this.submitError = "Failed to create payment token.";
+    return;
+  }
+
+  const amount = this.calculatedCost;  // Assuming this is the final amount to charge
+  if (amount <= 0) {
+    this.submitError = "Invalid amount to charge.";
+    return;
+  }
+
+  const chargeData = {
+    amount: amount,  // Ensure this matches the expected format on the backend
     stripeToken: token.id
   };
+
   try {
-    const result = await bookBay(bookingData);
-    this.bookingSuccessMessage = 'Successfully booked bay and charged. Booking ID: ' + result.bookingId;
-    this.paymentSuccessful = true; // True on successful booking
-    this.resetForm();
+    const chargeResult = await createCharge(chargeData);
+    if (chargeResult.success) {
+      const bookingData = {
+        bayId: this.selectedBay.bay_id,
+        carparkId: this.carparkId,
+        startTime: this.arrivalTime,
+        endTime: this.departureTime,
+        cost: amount,
+        stripeToken: token.id
+      };
+      const result = await bookBay(bookingData);
+      this.bookingSuccessMessage = 'Successfully booked bay and charged. Booking ID: ' + result.bookingId;
+      this.paymentSuccessful = true;
+      this.resetForm();
+    } else {
+      throw new Error('Charge was not successful');
+    }
   } catch (error) {
     this.submitError = error.message || "An unexpected error occurred.";
   }
 },
+
 
 
 
