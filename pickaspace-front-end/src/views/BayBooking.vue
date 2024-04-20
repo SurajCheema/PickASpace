@@ -26,28 +26,38 @@
             <label>Selected Bay</label>
             <p>{{ selectedBay ? `Bay ${selectedBay.bay_number}` : 'No bay selected' }}</p>
           </div>
-          <div class="form-group">
-            <label>Duration and Cost</label>
-            <p>{{ stayDuration }} hours at {{ formatCurrency(calculatedCost) }}</p>
-          </div>
+          <div v-if="!isDepartureValid" class="text-danger">
+          Departure time must be later than arrival time.
+        </div>
+        <div class="form-group">
+          <label>Duration and Cost</label>
+          <p v-if="stayDuration !== '-'">{{ stayDuration }} hours at {{ formatCurrency(calculatedCost) }}</p>
+          <p v-else>{{ stayDuration }}</p>
+        </div>
         </form>
       </div>
       <div class="col-md-2"></div>
       <div class="col-md-4 payment-section text-center">
-        <div class="form-group">
-          <h4>Payment Details</h4>
-          <div id="card-element"><!--Stripe.js injects the Card Element--></div>
-          <button @click.prevent="submitBooking" :disabled="!isDepartureValid || !selectedBay" id="submit">
-            <div class="spinner hidden" id="spinner"></div>
-            <span id="button-text">Pay now</span>
-          </button>
-          <p id="card-error" role="alert"></p>
-          <p class="result-message hidden">
-            Payment succeeded, see the result in your
-            <a href="" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
-          </p>
-        </div>
+      <div class="form-group">
+        <h4>Payment Details</h4>
+        <label>Card Number</label>
+        <div id="card-number"></div> <!-- Stripe.js injects the Card Number Element -->
+        <label>Card Expiry</label>
+        <div id="card-expiry"></div> <!-- Stripe.js injects the Card Expiry Element -->
+        <label>Card CVC</label>
+        <div id="card-cvc"></div> <!-- Stripe.js injects the Card CVC Element -->
+        <button @click.prevent="submitBooking" :disabled="!isDepartureValid || !selectedBay" id="submit">
+          <div class="spinner hidden" id="spinner"></div>
+          <span id="button-text">Pay now</span>
+        </button>
+        <p id="card-error" role="alert"></p>
+        <p class="result-message" v-if="paymentSuccessful">
+          Payment succeeded, see the result in your
+          <a href="https://dashboard.stripe.com/test/payments" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
+        </p>
       </div>
+    </div>
+
     </div>
     <div class="row mt-5 bay-cards-row"> 
       <div class="col-12">
@@ -89,23 +99,41 @@ export default {
       cardElement: null, // Reference to the card element
       submitError: '', 
       bookingSuccessMessage: '',
+      paymentSuccessful: false,
     };
   },
   
   computed: {
-    isDepartureValid() {
-      return !this.arrivalTime || !this.departureTime || new Date(this.departureTime) >= new Date(this.arrivalTime);
-    },
-    minDepartureTime() {
-      return this.arrivalTime;
-    },
-    stayDuration() {
-      return !this.arrivalTime || !this.departureTime ? 0 : ((new Date(this.departureTime) - new Date(this.arrivalTime)) / (1000 * 60 * 60)).toFixed(2);
-    },
-    calculatedCost() {
-      return !this.selectedBay || !this.arrivalTime || !this.departureTime ? 0 : (this.stayDuration * this.pricing.hourlyRate);
-    }
+  isDepartureValid() {
+    return this.arrivalTime && this.departureTime && new Date(this.departureTime) > new Date(this.arrivalTime);
   },
+  minDepartureTime() {
+    return this.arrivalTime;
+  },
+  stayDuration() {
+    if (!this.arrivalTime || !this.departureTime || !this.isDepartureValid) {
+      return "-";
+    }
+    return ((new Date(this.departureTime) - new Date(this.arrivalTime)) / (1000 * 60 * 60)).toFixed(2);
+  },
+  calculatedCost() {
+    if (!this.selectedBay || !this.arrivalTime || !this.departureTime || !this.pricing || this.stayDuration === "-") {
+      return "-";
+    }
+
+    const hours = parseFloat(this.stayDuration);
+    const { hourly, daily, weekly, monthly } = this.pricing;
+
+    const months = Math.floor(hours / (24 * 30));
+    const weeks = Math.floor((hours % (24 * 30)) / (24 * 7));
+    const days = Math.floor((hours % (24 * 7)) / 24);
+    const remainingHours = hours % 24;
+
+    let totalCost = (months * monthly) + (weeks * weekly) + (days * daily) + (remainingHours * hourly);
+    const allHourlyCost = hours * hourly;
+    return Math.min(totalCost, allHourlyCost);
+  }
+},
 
   watch: {
     async arrivalTime(newVal, oldVal) {
@@ -125,6 +153,7 @@ export default {
       this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
     },
     formatCurrency(value) {
+      if (value === "-") return value;
       return `£${parseFloat(value).toFixed(2)}`;
     },
     async checkAllBayAvailability() {
@@ -147,23 +176,44 @@ export default {
       this.bays = details.bays.sort((a, b) => a.bay_number - b.bay_number);
       this.pricing = details.pricing;
     },
-    async initStripe() {
-      const stripePromise = loadStripe('your-publishable-key');
-      this.stripe = await stripePromise;
-      const elements = this.stripe.elements();
-      const style = {
-        base: {
-          color: "#32325d",
+  async initStripe() {
+    const stripePromise = loadStripe(process.env.VUE_APP_STRIPE_PUBLIC_KEY);
+    this.stripe = await stripePromise;
+    const elements = this.stripe.elements();
+    const style = {
+      base: {
+        color: "#32325d",
+        fontSize: "16px", // Increase font size for better visibility
+        '::placeholder': {
+          color: '#aab7c4',
         },
-      };
-      this.cardElement = elements.create("card", { style: style });
-      this.cardElement.mount("#card-element");
-    },
+        iconColor: '#c4f0ff',
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a',
+      },
+    };
+
+    // Create separate elements for card details
+    this.cardNumberElement = elements.create('cardNumber', { style });
+    this.cardNumberElement.mount('#card-number');
+
+    this.cardExpiryElement = elements.create('cardExpiry', { style });
+    this.cardExpiryElement.mount('#card-expiry');
+
+    this.cardCvcElement = elements.create('cardCvc', { style });
+    this.cardCvcElement.mount('#card-cvc');
+  },
+
+    
     async submitBooking() {
   if (!this.isDepartureValid || !this.selectedBay) {
     this.submitError = "Please ensure all fields are correctly filled.";
     return;
   }
+
+  this.submitError = '';
   const { token, error } = await this.stripe.createToken(this.cardElement);
   if (error) {
     this.submitError = error.message;
@@ -178,8 +228,9 @@ export default {
     stripeToken: token.id
   };
   try {
-    await bookBay(bookingData);
-    this.bookingSuccessMessage = 'Successfully booked bay and charged';
+    const result = await bookBay(bookingData);
+    this.bookingSuccessMessage = 'Successfully booked bay and charged. Booking ID: ' + result.bookingId;
+    this.paymentSuccessful = true; // True on successful booking
     this.resetForm();
   } catch (error) {
     this.submitError = error.message || "An unexpected error occurred.";
@@ -192,6 +243,7 @@ export default {
       this.selectedBay = null;
       this.arrivalTime = '';
       this.departureTime = '';
+      this.paymentSuccessful = false;
       if (this.cardElement) {
         this.cardElement.clear();
       }
@@ -239,4 +291,31 @@ export default {
   flexDirection: column;
   justifyContent: center;
 }
+
+.hidden {
+  display: none;
+}
+
+#card-number, #card-expiry, #card-cvc {
+  background-color: white;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  height: 40px; /* Larger height for easier interaction */
+}
+
+#submit {
+  margin-top: 20px; /* Space between the CVC input and the button */
+  background-color: #4CAF50; /* Green background for visibility */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+#submit:disabled {
+  background-color: #ccc; /* Gray out when disabled */
+}
+
 </style>

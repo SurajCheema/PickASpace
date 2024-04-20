@@ -404,20 +404,19 @@ app.get('/user-details', authenticateToken, async (req, res) => {
 
 //Stripe payment API
 app.post('/create-charge', async (req, res) => {
-  try {
-    const { amount, stripeToken } = req.body;  // amount should be in cents
+  const { amount, stripeToken } = req.body; 
 
+  try {
     const charge = await stripe.charges.create({
       amount: amount,
       currency: 'gbp',
-      source: stripeToken,  // Use the token from the frontend
+      source: stripeToken,  // Token passed from frontend
       description: 'Charge for parking bay'
     });
 
-    res.status(200).json(charge);
+    res.json({ success: true, charge: charge });
   } catch (error) {
     console.error("Error creating charge:", error);
-    res.status(500).send("Failed to create charge");
+    res.status(500).send("Failed to create charge: " + error.message);
   }
 });
-
