@@ -96,8 +96,10 @@ export default {
       departureTime: '',
       pricing: null,
       stripe: null, // Initialize stripe object
-      cardElement: null, // Reference to the card element
-      submitError: '', 
+      cardNumberElement: null, // Initialize card number element
+      cardExpiryElement: null, // Initialize card expiry element
+      cardCvcElement: null,
+      submitError: '',
       bookingSuccessMessage: '',
       paymentSuccessful: false,
     };
@@ -207,14 +209,14 @@ export default {
   },
 
     
-    async submitBooking() {
+  async submitBooking() {
   if (!this.isDepartureValid || !this.selectedBay) {
     this.submitError = "Please ensure all fields are correctly filled.";
     return;
   }
 
   this.submitError = '';
-  const { token, error } = await this.stripe.createToken(this.cardElement);
+  const { token, error } = await this.stripe.createToken(this.cardNumberElement);
   if (error) {
     this.submitError = error.message;
     return;
