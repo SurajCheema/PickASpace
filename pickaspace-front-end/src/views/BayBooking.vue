@@ -46,10 +46,10 @@
         <div id="card-expiry"></div> <!-- Stripe.js injects the Card Expiry Element -->
         <label>Card CVC</label>
         <div id="card-cvc"></div> <!-- Stripe.js injects the Card CVC Element -->
-        <button @click.prevent="submitBooking" :disabled="!isDepartureValid || !selectedBay" id="submit">
-          <div class="spinner hidden" id="spinner"></div>
-          <span id="button-text">Pay now</span>
-        </button>
+        <button @click.prevent="submitBooking" :disabled="!isDepartureValid || !selectedBay || !selectedBay.isAvailable" id="submit">
+        <div class="spinner hidden" id="spinner"></div>
+        <span id="button-text">Pay now</span>
+      </button>
         <p id="card-error" role="alert"></p>
         <p class="result-message" v-if="paymentSuccessful">
           Payment succeeded, see the result in your

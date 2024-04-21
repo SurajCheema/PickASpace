@@ -231,6 +231,12 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
   const { bay_id, carpark_id, startTime, endTime, cost } = req.body;
   const user_id = req.user.userId;
 
+   // Check bay availability again before proceeding
+   const isAvailable = await checkBayAvailability(bay_id, startTime, endTime);
+   if (!isAvailable) {
+     return res.status(400).json({ error: "The requested bay is no longer available." });
+   }
+
   // Validate the provided cost
   if (typeof cost !== 'number' || cost <= 0) {
     return res.status(400).json({ error: "Invalid cost provided." });
@@ -250,6 +256,24 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       ]
     }
   });
+
+  //Ensures that the bay is not already booked.
+  async function checkBayAvailability(bayId, startTime, endTime) {
+    const overlappingBookings = await db.CarParkLog.count({
+      where: {
+        bay_id: bayId,
+        [Op.or]: [
+          {
+            [Op.and]: [
+              { startTime: { [Op.lt]: endTime } },
+              { endTime: { [Op.gt]: startTime } }
+            ]
+          }
+        ],
+      },
+    });
+    return overlappingBookings === 0;
+  }
 
   // If overlapping bookings are found, return an error
   if (overlappingBookings > 0) {
