@@ -227,23 +227,29 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 
 // Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
-  // Extract booking details from the request body
   const { bay_id, carpark_id, startTime, endTime, cost, stripeToken } = req.body;
   const user_id = req.user.userId;
 
-  // Validate the provided cost
+  // Validate inputs
+  if (!stripeToken) {
+    return res.status(400).json({ error: 'Stripe token is required.' });
+  }
   if (typeof cost !== 'number' || cost <= 0) {
-    return res.status(400).json({ error: "Invalid cost provided." });
-  }  
-
-  // Check bay availability again before proceeding
-  const isAvailable = await checkBayAvailability(bay_id, startTime, endTime);
-  if (!isAvailable) {
-    return res.status(400).json({ error: "The requested bay is no longer available." });
+    return res.status(400).json({ error: 'Invalid cost provided.' });
   }
 
-  // Create a Stripe charge
-  try {''
+  // Start transaction for database operations
+  const transaction = await db.sequelize.transaction();
+
+  try {
+    // Check bay availability including overlap check
+    const isAvailable = await checkBayAvailability(bay_id, startTime, endTime, transaction);
+    if (!isAvailable) {
+      await transaction.rollback();
+      return res.status(400).json({ error: 'The requested bay is not available or already booked.' });
+    }
+
+    // Create Stripe charge
     const charge = await stripe.charges.create({
       amount: cost,
       currency: 'gbp',
@@ -251,28 +257,37 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       description: `Charge for parking at bay ${bay_id} in carpark ${carpark_id}`
     });
 
-    if (charge && charge.paid) {
-      // Proceed to log the booking if the charge is successful
-      const booking = await db.CarParkLog.create({
-        bay_id,
-        carpark_id,
-        user_id,
-        startTime,
-        endTime,
-        cost
-      });
-      res.json({ message: "Booking successful", bookingId: booking.log_id, chargeId: charge.id, charge: charge });
-    } else {
-      throw new Error("Stripe charge was not successful.");
+    // Verify if the charge was successful
+    if (!charge.paid) {
+      await transaction.rollback();
+      return res.status(402).json({ error: 'Payment failed.' });
     }
+
+    // Record the booking
+    const booking = await db.CarParkLog.create({
+      bay_id,
+      carpark_id,
+      user_id,
+      startTime,
+      endTime,
+      cost
+    }, { transaction });
+
+    await transaction.commit();
+    res.json({
+      message: "Booking and payment successful",
+      bookingId: booking.log_id,
+      chargeId: charge.id
+    });
   } catch (error) {
-    console.error("Error during booking or payment:", error);
+    await transaction.rollback();
+    console.error("Booking or payment error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Check for existing bookings that might overlap with the requested time
-async function checkBayAvailability(bayId, startTime, endTime) {
+// Helper function to check bay availability within a transaction
+async function checkBayAvailability(bayId, startTime, endTime, transaction) {
   const overlappingBookings = await db.CarParkLog.count({
     where: {
       bay_id: bayId,
@@ -285,50 +300,10 @@ async function checkBayAvailability(bayId, startTime, endTime) {
         }
       ],
     },
+    transaction
   });
-  return overlappingBookings === 0;
+  return overlappingBookings === 0; // true if no overlapping bookings
 }
-
-
-// Check for existing bookings that might overlap with the requested time
-async function checkBayAvailability(bayId, startTime, endTime) {
-  const overlappingBookings = await db.CarParkLog.count({
-    where: {
-      bay_id: bayId,
-      [Op.or]: [
-        {
-          [Op.and]: [
-            { startTime: { [Op.lt]: endTime } },
-            { endTime: { [Op.gt]: startTime } }
-          ]
-        }
-      ],
-    },
-  });
-  return overlappingBookings === 0;
-}
-
-// If overlapping bookings are found, return an error
-if (overlappingBookings > 0) {
-  return res.status(400).json({ error: "The requested time slot for the bay is already booked." });
-}
-
-// Proceed to create the booking if no overlap is found
-try {
-  const booking = await db.CarParkLog.create({
-    bay_id,
-    carpark_id,
-    user_id,
-    startTime,
-    endTime,
-    cost
-  });
-
-  res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
-} catch (error) {
-  console.error("Error creating booking:", error);
-  res.status(500).json({ error: "An error occurred while booking the bay." });
-};
 
 // Schedule a task to run every minute
 cron.schedule('* * * * *', async () => {

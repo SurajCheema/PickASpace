@@ -110,24 +110,23 @@ export const bookBay = async (bookingData) => {
             carpark_id: bookingData.carparkId,
             startTime: bookingData.startTime,
             endTime: bookingData.endTime,
-            cost: bookingData.cost
+            cost: bookingData.cost,
+            stripeToken: bookingData.stripeToken  // Include the Stripe token in the request body
           })
       });
 
       if (!response.ok) {
-        // If the server response is not okay, attempt to parse the response body as JSON
         const errorData = await response.json();
-        // Throw a new error with the message from the server's response. The server sends back an error message in a property named "message" or "error"
         throw new Error(errorData.message || errorData.error || 'Failed to book the bay');
       }
   
       return await response.json();
     } catch (error) {
       console.error('Error booking the bay:', error);
-      // Rethrow the error to be caught by the calling function
       throw error;
     }
 };
+
 
 // Assuming the existence of an API function like this in your services file
 export const fetchBayAvailability = async (bayId, startTime, endTime) => {
@@ -149,3 +148,30 @@ export const fetchBayAvailability = async (bayId, startTime, endTime) => {
     throw error;  // Re-throw to be handled or alerted in the calling method
   }
 };
+
+
+// // Create a Stripe charge
+// export const createCharge = async (chargeData) => {
+//   const url = `${API_BASE_URL}/create-charge`;
+//   try {
+//     const token = localStorage.getItem('token');
+//     const response = await fetch(url, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`
+//       },
+//       body: JSON.stringify(chargeData)
+//     });
+
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       throw new Error(errorData.error || 'Failed to create charge');
+//     }
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error('Error creating charge:', error);
+//     throw error;
+//   }
+// };
