@@ -36,6 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         cost: {
             type: DataTypes.FLOAT,
             allowNull: false
+        },
+        status: {
+            type: DataTypes.STRING,
+            defaultValue: 'reserved' // reserved, cancelled, completed, refunded
         }
     });
 

@@ -36,6 +36,14 @@ module.exports = {
           type: Sequelize.DATE,
           allowNull: false
       },
+      cost: {
+        type: Sequelize.FLOAT,
+        allowNull: false
+      },
+      status: {
+        type: Sequelize.STRING,
+        defaultValue: 'reserved' // Example values: reserved, cancelled, completed, refunded
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -44,10 +52,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
-      cost: {
-        type: Sequelize.FLOAT,
-        allowNull: false
-      }
     });
   },
 

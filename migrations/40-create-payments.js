@@ -8,8 +8,20 @@ module.exports = {
         primaryKey: true,
         autoIncrement: true
       },
+      stripePaymentId: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       amount: {
         type: Sequelize.DECIMAL
+      },
+      paymentStatus: {
+        type: Sequelize.STRING,
+        defaultValue: 'pending' // Example values: pending, completed, failed, refunded
+      },
+      receiptUrl: {
+        type: Sequelize.STRING,
+        allowNull: true
       },
       date_paid: {
         type: Sequelize.DATE
