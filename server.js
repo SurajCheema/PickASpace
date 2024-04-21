@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const db = require('./models'); 
+const db = require('./models');
 const PORT = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -44,7 +44,7 @@ db.sequelize.sync().then(() => {
 
 // Register user
 app.post('/create-user', async (req, res) => {
-  try {    
+  try {
 
     const {
       car_registration,
@@ -57,7 +57,7 @@ app.post('/create-user', async (req, res) => {
     } = req.body;
 
     // How intense the hashing will be. Higher = harder to guess but will slow down the process.
-    const saltRounds = 10; 
+    const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
     const newUser = await db.User.create({
       car_registration,
@@ -103,13 +103,13 @@ app.post('/login', async (req, res) => {
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   // Bearer TOKEN
-  const token = authHeader && authHeader.split(' ')[1]; 
+  const token = authHeader && authHeader.split(' ')[1];
   // No token found
-  if (token == null) return res.sendStatus(401); 
+  if (token == null) return res.sendStatus(401);
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     // Token not valid
-    if (err) return res.sendStatus(403); 
+    if (err) return res.sendStatus(403);
 
     console.log(user); // Log the decoded user payload
     req.user = user;
@@ -203,7 +203,7 @@ app.get('/api/carparks/:carparkId/bays', async (req, res) => {
 // Fetch details of a specific car park by its ID along with all associated bays
 app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
   const { carparkId } = req.params;
-  
+
   try {
     const carPark = await db.CarPark.findOne({
       where: { carpark_id: carparkId },
@@ -228,24 +228,54 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 // Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
   // Extract booking details from the request body
-  const { bay_id, carpark_id, startTime, endTime, cost } = req.body;
+  const { bay_id, carpark_id, startTime, endTime, cost, stripeToken } = req.body;
   const user_id = req.user.userId;
-
-   // Check bay availability again before proceeding
-   const isAvailable = await checkBayAvailability(bay_id, startTime, endTime);
-   if (!isAvailable) {
-     return res.status(400).json({ error: "The requested bay is no longer available." });
-   }
 
   // Validate the provided cost
   if (typeof cost !== 'number' || cost <= 0) {
     return res.status(400).json({ error: "Invalid cost provided." });
+  }  
+
+  // Check bay availability again before proceeding
+  const isAvailable = await checkBayAvailability(bay_id, startTime, endTime);
+  if (!isAvailable) {
+    return res.status(400).json({ error: "The requested bay is no longer available." });
   }
 
-  // Check for existing bookings that might overlap with the requested time
+  // Create a Stripe charge
+  try {''
+    const charge = await stripe.charges.create({
+      amount: cost,
+      currency: 'gbp',
+      source: stripeToken,
+      description: `Charge for parking at bay ${bay_id} in carpark ${carpark_id}`
+    });
+
+    if (charge && charge.paid) {
+      // Proceed to log the booking if the charge is successful
+      const booking = await db.CarParkLog.create({
+        bay_id,
+        carpark_id,
+        user_id,
+        startTime,
+        endTime,
+        cost
+      });
+      res.json({ message: "Booking successful", bookingId: booking.log_id, chargeId: charge.id, charge: charge });
+    } else {
+      throw new Error("Stripe charge was not successful.");
+    }
+  } catch (error) {
+    console.error("Error during booking or payment:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check for existing bookings that might overlap with the requested time
+async function checkBayAvailability(bayId, startTime, endTime) {
   const overlappingBookings = await db.CarParkLog.count({
     where: {
-      bay_id,
+      bay_id: bayId,
       [Op.or]: [
         {
           [Op.and]: [
@@ -253,49 +283,52 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
             { endTime: { [Op.gt]: startTime } }
           ]
         }
-      ]
-    }
+      ],
+    },
+  });
+  return overlappingBookings === 0;
+}
+
+
+// Check for existing bookings that might overlap with the requested time
+async function checkBayAvailability(bayId, startTime, endTime) {
+  const overlappingBookings = await db.CarParkLog.count({
+    where: {
+      bay_id: bayId,
+      [Op.or]: [
+        {
+          [Op.and]: [
+            { startTime: { [Op.lt]: endTime } },
+            { endTime: { [Op.gt]: startTime } }
+          ]
+        }
+      ],
+    },
+  });
+  return overlappingBookings === 0;
+}
+
+// If overlapping bookings are found, return an error
+if (overlappingBookings > 0) {
+  return res.status(400).json({ error: "The requested time slot for the bay is already booked." });
+}
+
+// Proceed to create the booking if no overlap is found
+try {
+  const booking = await db.CarParkLog.create({
+    bay_id,
+    carpark_id,
+    user_id,
+    startTime,
+    endTime,
+    cost
   });
 
-  //Ensures that the bay is not already booked.
-  async function checkBayAvailability(bayId, startTime, endTime) {
-    const overlappingBookings = await db.CarParkLog.count({
-      where: {
-        bay_id: bayId,
-        [Op.or]: [
-          {
-            [Op.and]: [
-              { startTime: { [Op.lt]: endTime } },
-              { endTime: { [Op.gt]: startTime } }
-            ]
-          }
-        ],
-      },
-    });
-    return overlappingBookings === 0;
-  }
-
-  // If overlapping bookings are found, return an error
-  if (overlappingBookings > 0) {
-    return res.status(400).json({ error: "The requested time slot for the bay is already booked." });
-  }
-
-  // Proceed to create the booking if no overlap is found
-  try {
-    const booking = await db.CarParkLog.create({
-      bay_id,
-      carpark_id,
-      user_id,
-      startTime,
-      endTime,
-      cost
-    });
-    res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
-  } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({ error: "An error occurred while booking the bay." });
-  }
-});
+  res.json({ message: "Booking successful", bookingId: booking.log_id, cost: booking.cost });
+} catch (error) {
+  console.error("Error creating booking:", error);
+  res.status(500).json({ error: "An error occurred while booking the bay." });
+};
 
 // Schedule a task to run every minute
 cron.schedule('* * * * *', async () => {
@@ -303,27 +336,27 @@ cron.schedule('* * * * *', async () => {
 
   const now = new Date();
   const expiredBookings = await db.CarParkLog.findAll({
-      where: {
-          endTime: {
-              [Op.lt]: now // endTime is less than current time
-          },
+    where: {
+      endTime: {
+        [Op.lt]: now // endTime is less than current time
       },
-      include: [{
-          model: db.Bay,
-          as: 'bay',
-          where: {
-              isAvailable: false // Only include bookings where the associated bay is not already marked as available
-          }
-      }]
+    },
+    include: [{
+      model: db.Bay,
+      as: 'bay',
+      where: {
+        isAvailable: false // Only include bookings where the associated bay is not already marked as available
+      }
+    }]
   });
 
   for (const booking of expiredBookings) {
-      await db.Bay.update({ isAvailable: true }, { 
-          where: { 
-              bay_id: booking.bay_id,
-              isAvailable: false // Double-check to avoid unnecessary updates
-          } 
-      });
+    await db.Bay.update({ isAvailable: true }, {
+      where: {
+        bay_id: booking.bay_id,
+        isAvailable: false // Double-check to avoid unnecessary updates
+      }
+    });
   }
 });
 
@@ -395,7 +428,7 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     const transaction = await db.sequelize.transaction();
 
     // Update user with validation and transaction control
-    const result = await db.User.update(updatedFields, { 
+    const result = await db.User.update(updatedFields, {
       where: { user_id: userId },
       transaction
     });
@@ -427,28 +460,5 @@ app.get('/user-details', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user details:', error);
     res.status(500).send('Internal Server Error');
-  }
-});
-
-//Stripe payment API
-app.post('/api/create-charge', async (req, res) => {
-  const { amount, stripeToken } = req.body;
-
-  if (!stripeToken || !amount) {
-      return res.status(400).json({ error: 'Request must include amount and stripeToken' });
-  }
-
-  try {
-      const charge = await stripe.charges.create({
-          amount: amount,  // ensure amount is in smallest currency unit (e.g., pence)
-          currency: 'gbp',
-          source: stripeToken,
-          description: 'Charge for parking bay'
-      });
-
-      res.json({ success: true, charge: charge });
-  } catch (error) {
-      console.error("Error creating charge:", error);
-      res.status(500).json({ error: error.message });
   }
 });

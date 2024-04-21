@@ -81,7 +81,7 @@
 </template>
 
 <script>
-import { fetchCarParkDetails, bookBay, fetchBayAvailability, createCharge } from '@/services/carParkService';
+import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
 import { loadStripe } from '@stripe/stripe-js';
 
 export default {
@@ -212,66 +212,61 @@ export default {
   async submitBooking() {
   if (!this.isDepartureValid || !this.selectedBay) {
     this.submitError = "Please ensure all fields are correctly filled.";
+    console.error("Booking Error:", this.submitError);
     return;
   }
 
+  // Reset any existing errors
   this.submitError = '';
+  
+  // Create Stripe token
   const { token, error } = await this.stripe.createToken(this.cardNumberElement);
   if (error) {
     this.submitError = error.message;
-    console.error("Error creating Stripe token:", error.message);
+    console.error("Stripe Error: Error creating Stripe token:", error.message);
     return;
   }
 
   if (!token) {
     this.submitError = "Failed to create payment token.";
-    console.error("Stripe token creation failed without an error message.");
+    console.error("Stripe Error: Stripe token creation failed without an error message.");
     return;
   }
 
-  console.log("Stripe Token Generated:", token.id); // Logging the token for debugging
+  console.log("Stripe Token Generated:", token.id); // Always log the Stripe token
 
-  const amount = Math.round(this.calculatedCost * 100);  // Convert pounds to pence
-  console.log("Amount to charge (in pence):", amount); // Logging the amount for debugging
+  const amount = Math.round(this.calculatedCost * 100); // Convert pounds to pence
+  console.log("Amount to charge (in pence):", amount); // Always log the amount to charge
 
   if (amount <= 0) {
     this.submitError = "Invalid amount to charge.";
+    console.error("Charge Error:", this.submitError);
     return;
   }
 
-  const chargeData = {
-    amount: amount,  // Ensure this matches the expected format on the backend
+  const bookingData = {
+    bayId: this.selectedBay.bay_id,
+    carparkId: this.carparkId,
+    startTime: this.arrivalTime,
+    endTime: this.departureTime,
+    cost: amount,
     stripeToken: token.id
   };
 
   try {
-    const chargeResult = await createCharge(chargeData);
-    console.log("Stripe Charge Result:", chargeResult); // Log the charge result for debugging
-    if (chargeResult.success) {
-      const bookingData = {
-        bayId: this.selectedBay.bay_id,
-        carparkId: this.carparkId,
-        startTime: this.arrivalTime,
-        endTime: this.departureTime,
-        cost: amount,
-        stripeToken: token.id
-      };
-      const result = await bookBay(bookingData);
-      console.log("Booking Result:", result); // Log the booking result for debugging
-      this.bookingSuccessMessage = 'Successfully booked bay and charged. Booking ID: ' + result.bookingId;
+    const bookingResult = await bookBay(bookingData);
+    if (bookingResult.message) {
+      this.bookingSuccessMessage = `Successfully booked bay and charged. Booking ID: ${bookingResult.bookingId}`;
       this.paymentSuccessful = true;
       this.resetForm();
     } else {
-      throw new Error('Charge was not successful', chargeResult);
+      throw new Error('Booking was not successful', bookingResult);
     }
   } catch (error) {
     this.submitError = error.message || "An unexpected error occurred.";
-    console.error("Error during charge creation:", error);
+    console.error("Booking Error:", this.submitError, error);
   }
 },
-
-
-
 
     resetForm() {
       this.selectedBay = null;
