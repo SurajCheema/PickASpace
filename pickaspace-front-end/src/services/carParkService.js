@@ -7,13 +7,13 @@ export const createCarPark = async (carParkData) => {
   const url = `${API_BASE_URL}/create-carpark`;
   try {
     // Retrieve the stored token
-    const token = localStorage.getItem('token'); 
+    const token = localStorage.getItem('token');
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         // Include the token in the Authorization header
-        'Authorization': `Bearer ${token}` 
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(carParkData),
     });
@@ -58,7 +58,7 @@ export const fetchCarParkBays = async (carparkId) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
     if (!response.ok) {
@@ -99,32 +99,32 @@ export const bookBay = async (bookingData) => {
 
   console.log("Booking data being sent:", bookingData);
   try {
-      const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            bay_id: bookingData.bayId,
-            carpark_id: bookingData.carparkId,
-            startTime: bookingData.startTime,
-            endTime: bookingData.endTime,
-            cost: bookingData.cost,
-            stripeToken: bookingData.stripeToken  // Include the Stripe token in the request body
-          })
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        bay_id: bookingData.bayId,
+        carpark_id: bookingData.carparkId,
+        startTime: bookingData.startTime,
+        endTime: bookingData.endTime,
+        cost: bookingData.cost,
+        stripeToken: bookingData.stripeToken  // Include the Stripe token in the request body
+      })
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to book the bay');
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error('Error booking the bay:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || errorData.error || 'Failed to book the bay');
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error booking the bay:', error);
+    throw error;
+  }
 };
 
 
