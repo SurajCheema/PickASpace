@@ -219,15 +219,21 @@ export default {
   const { token, error } = await this.stripe.createToken(this.cardNumberElement);
   if (error) {
     this.submitError = error.message;
+    console.error("Error creating Stripe token:", error.message);
     return;
   }
 
   if (!token) {
     this.submitError = "Failed to create payment token.";
+    console.error("Stripe token creation failed without an error message.");
     return;
   }
 
-  const amount = this.calculatedCost;  // Assuming this is the final amount to charge
+  console.log("Stripe Token Generated:", token.id); // Logging the token for debugging
+
+  const amount = Math.round(this.calculatedCost * 100);  // Convert pounds to pence
+  console.log("Amount to charge (in pence):", amount); // Logging the amount for debugging
+
   if (amount <= 0) {
     this.submitError = "Invalid amount to charge.";
     return;
@@ -240,6 +246,7 @@ export default {
 
   try {
     const chargeResult = await createCharge(chargeData);
+    console.log("Stripe Charge Result:", chargeResult); // Log the charge result for debugging
     if (chargeResult.success) {
       const bookingData = {
         bayId: this.selectedBay.bay_id,
@@ -250,14 +257,16 @@ export default {
         stripeToken: token.id
       };
       const result = await bookBay(bookingData);
+      console.log("Booking Result:", result); // Log the booking result for debugging
       this.bookingSuccessMessage = 'Successfully booked bay and charged. Booking ID: ' + result.bookingId;
       this.paymentSuccessful = true;
       this.resetForm();
     } else {
-      throw new Error('Charge was not successful');
+      throw new Error('Charge was not successful', chargeResult);
     }
   } catch (error) {
     this.submitError = error.message || "An unexpected error occurred.";
+    console.error("Error during charge creation:", error);
   }
 },
 

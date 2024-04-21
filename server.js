@@ -7,7 +7,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
 const { Op } = require('sequelize');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 require('dotenv').config();
 
@@ -19,6 +18,11 @@ if (!JWT_SECRET) {
   process.exit(1); // Exit the application if the JWT_SECRET is not defined
 }
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('STRIPE_SECRET_KEY is not defined. Check your .env file.');
+  process.exit(1);  // Exit the application if the STRIPE_SECRET_KEY is not defined
+}
 
 // Enable CORS for all routes
 app.use(cors());
@@ -406,17 +410,21 @@ app.get('/user-details', authenticateToken, async (req, res) => {
 app.post('/api/create-charge', async (req, res) => {
   const { amount, stripeToken } = req.body;
 
-  try {
-    const charge = await stripe.charges.create({
-      amount: amount,  // Ensure amount is already in pence when sent from frontend
-      currency: 'gbp',
-      source: stripeToken,  // Token passed from frontend
-      description: 'Charge for parking bay'
-    });
+  if (!stripeToken || !amount) {
+      return res.status(400).json({ error: 'Request must include amount and stripeToken' });
+  }
 
-    res.json({ success: true, charge: charge });
+  try {
+      const charge = await stripe.charges.create({
+          amount: amount,  // ensure amount is in smallest currency unit (e.g., pence)
+          currency: 'gbp',
+          source: stripeToken,
+          description: 'Charge for parking bay'
+      });
+
+      res.json({ success: true, charge: charge });
   } catch (error) {
-    console.error("Error creating charge:", error);
-    res.status(500).send("Failed to create charge: " + error.message);
+      console.error("Error creating charge:", error);
+      res.status(500).json({ error: error.message });
   }
 });
