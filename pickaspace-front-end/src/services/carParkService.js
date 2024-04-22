@@ -148,3 +148,19 @@ export const fetchBayAvailability = async (bayId, startTime, endTime) => {
     throw error;  // Re-throw to be handled or alerted in the calling method
   }
 };
+
+// Fetch booking logs for a user
+export const fetchUserBookings = async () => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/user/bookings`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch bookings');
+  }
+  return await response.json();
+};

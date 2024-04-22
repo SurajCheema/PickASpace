@@ -1,21 +1,19 @@
 <template>
   <div class="user-booking-logs">
-    <b-tabs content-class="mt-3">
-      <b-tab title="Current" active>
-        <booking-list :bookings="currentBookings" />
-      </b-tab>
-      <b-tab title="Upcoming">
-        <booking-list :bookings="upcomingBookings" />
-      </b-tab>
-      <b-tab title="Past">
-        <booking-list :bookings="pastBookings" />
-      </b-tab>
-    </b-tabs>
+    <div class="text-center mb-4">
+      <button class="btn btn-primary mx-2" @click="setActive('current')">Current</button>
+      <button class="btn btn-primary mx-2" @click="setActive('upcoming')">Upcoming</button>
+      <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
+    </div>
+    <div>
+      <booking-list :bookings="activeBookings" />
+    </div>
   </div>
 </template>
 
 <script>
-import BookingList from '../components/BookingList.vue'
+import BookingList from '../components/BookingList.vue';
+import { fetchUserBookings } from '@/services/carParkService'; 
 
 export default {
   components: {
@@ -25,20 +23,38 @@ export default {
     return {
       currentBookings: [],
       upcomingBookings: [],
-      pastBookings: []
+      pastBookings: [],
+      activeBookings: [],
+      activeType: 'current'
     }
   },
   created() {
-    // Here you would fetch the data from the backend
-    this.currentBookings = this.fetchBookings('current');
-    this.upcomingBookings = this.fetchBookings('upcoming');
-    this.pastBookings = this.fetchBookings('past');
+    this.fetchBookings();
   },
   methods: {
-    fetchBookings(type) {
-      // This function will eventually make HTTP requests to fetch data
-      // Returning mock data for now
-      return [{ id: 1, summary: 'Booking 1', date: '2024-04-20' }];
+    async fetchBookings() {
+      try {
+        const bookings = await fetchUserBookings(); 
+        this.currentBookings = bookings.current;
+        this.upcomingBookings = bookings.upcoming;
+        this.pastBookings = bookings.past;
+        this.updateActiveBookings();
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      }
+    },
+    updateActiveBookings() {
+      if (this.activeType === 'current') {
+        this.activeBookings = this.currentBookings;
+      } else if (this.activeType === 'upcoming') {
+        this.activeBookings = this.upcomingBookings;
+      } else if (this.activeType === 'past') {
+        this.activeBookings = this.pastBookings;
+      }
+    },
+    setActive(type) {
+      this.activeType = type;
+      this.updateActiveBookings();
     }
   }
 }

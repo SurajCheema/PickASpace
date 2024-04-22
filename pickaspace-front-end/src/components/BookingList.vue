@@ -1,22 +1,20 @@
 <template>
     <div>
-      <b-list-group>
+      <b-list-group flush>
         <b-list-group-item
           v-for="booking in bookings"
-          :key="booking.id"
+          :key="booking.log_id"
           button
+          class="mb-3"
           @click="showDetails(booking)"
         >
-          {{ booking.summary }}
+          <div class="d-flex flex-column align-items-start">
+            <h5 class="mb-1">Booking ID: {{ booking.log_id }}</h5>
+            <p class="mb-1">{{ booking.carPark.addressLine1 }}</p>
+            <p>{{ booking.carPark.city }}</p>
+          </div>
         </b-list-group-item>
       </b-list-group>
-  
-      <b-modal>
-        v-model="modalShow"
-        title="Booking Details"
-      
-        <p><strong>Date:</strong> {{ selectedBooking.date }}</p>
-      </b-modal>
     </div>
   </template>
   
@@ -26,15 +24,22 @@
     data() {
       return {
         modalShow: false,
-        selectedBooking: null
-      };
+        selectedBooking: {}
+      }
     },
     methods: {
       showDetails(booking) {
         this.selectedBooking = booking;
-        this.modalShow = true;
+        // Modal or detailed view logic will be implemented here later
+        this.modalShow = true; // Placeholder for modal toggle
       }
     }
   }
   </script>
+  
+  <style scoped>
+  .mb-3 {
+    margin-bottom: 1rem !important; 
+  }
+  </style>
   

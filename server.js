@@ -448,3 +448,27 @@ app.get('/user-details', authenticateToken, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Fetch booking logs for a user
+app.get('/api/user/bookings', authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
+  try {
+    const now = new Date();
+    const bookings = await db.CarParkLog.findAll({
+      where: { user_id },
+      include: [{ model: db.Bay, as: 'bay' }, { model: db.CarPark, as: 'carPark' }],
+      order: [['startTime', 'DESC']] // Newest bookings first
+    });
+
+    const formattedBookings = {
+      current: bookings.filter(b => new Date(b.startTime) <= now && new Date(b.endTime) >= now),
+      upcoming: bookings.filter(b => new Date(b.startTime) > now),
+      past: bookings.filter(b => new Date(b.endTime) < now)
+    };
+
+    res.json(formattedBookings);
+  } catch (error) {
+    console.error('Error fetching booking logs:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
