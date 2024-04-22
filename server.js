@@ -263,11 +263,21 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       return res.status(402).json({ error: 'Payment failed.' });
     }
 
+    // Create a payment record
+    const payment = await db.Payment.create({
+      stripePaymentId: charge.id,
+      amount: cost / 100, //Cost is in pence, so we turn it from pence to pounds
+      paymentStatus: 'completed', // Mark as completed since Stripe charge was successful
+      receiptUrl: charge.receipt_url,
+      date_paid: new Date() // Record the payment date
+    }, { transaction });
+
     // Record the booking
     const booking = await db.CarParkLog.create({
       bay_id,
       carpark_id,
       user_id,
+      payment_id: payment.payment_id,
       startTime,
       endTime,
       cost
@@ -277,6 +287,7 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     res.json({
       message: "Booking and payment successful",
       bookingId: booking.log_id,
+      paymentId: payment.payment_id,
       chargeId: charge.id
     });
   } catch (error) {
