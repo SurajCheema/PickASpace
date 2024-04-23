@@ -472,3 +472,21 @@ app.get('/api/user/bookings', authenticateToken, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Cancel booking endpoint
+app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) => {
+  const { bookingId } = req.params;
+  try {
+      const result = await db.CarParkLog.update({ status: 'Cancelled' }, {
+          where: { log_id: bookingId }
+      });
+      if (result[0] > 0) {
+          res.json({ message: "Booking cancelled successfully" });
+      } else {
+          res.status(404).send('Booking not found');
+      }
+  } catch (error) {
+      console.error('Failed to cancel booking:', error);
+      res.status(500).send('Internal Server Error');
+  }
+});

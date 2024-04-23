@@ -162,5 +162,30 @@ export const fetchUserBookings = async () => {
   if (!response.ok) {
     throw new Error('Failed to fetch bookings');
   }
-  return await response.json();
+  const data = await response.json();
+  console.log(data);
+  return data;
+};
+
+//Cancel a booking
+export const cancelBooking = async (bookingId) => {
+  const token = localStorage.getItem('token');
+  try {
+      const response = await fetch(`${API_BASE_URL}/cancel-booking/${bookingId}`, {
+          method: 'PUT',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      });
+      const result = await response.json();
+      if (response.ok) {
+          return result;
+      } else {
+          throw new Error(result.error || 'Failed to cancel booking');
+      }
+  } catch (error) {
+      console.error('Error cancelling booking:', error);
+      throw error;
+  }
 };

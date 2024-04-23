@@ -13,7 +13,7 @@
 
 <script>
 import BookingList from '../components/BookingList.vue';
-import { fetchUserBookings } from '@/services/carParkService'; 
+import { fetchUserBookings } from '@/services/carParkService';
 
 export default {
   components: {
@@ -34,23 +34,36 @@ export default {
   methods: {
     async fetchBookings() {
       try {
-        const bookings = await fetchUserBookings(); 
-        this.currentBookings = bookings.current;
-        this.upcomingBookings = bookings.upcoming;
-        this.pastBookings = bookings.past;
+        const bookings = await fetchUserBookings(); // This returns an object with properties current, upcoming, past
+        const now = new Date();
+
+        this.currentBookings = bookings.current.filter(booking =>
+          new Date(booking.startTime) <= now &&
+          new Date(booking.endTime) >= now &&
+          booking.status !== 'Cancelled' // Exclude cancelled bookings from current
+        );
+
+        this.upcomingBookings = bookings.upcoming.filter(booking =>
+          new Date(booking.startTime) > now &&
+          booking.status !== 'Cancelled' // Exclude cancelled bookings from upcoming
+        );
+
+        this.pastBookings = bookings.past.concat(
+          bookings.current.filter(booking =>
+            booking.status === 'Cancelled' // Include cancelled bookings as past
+          ),
+          bookings.upcoming.filter(booking =>
+            booking.status === 'Cancelled' // Include cancelled bookings as past
+          )
+        );
+
         this.updateActiveBookings();
       } catch (error) {
         console.error('Error fetching bookings:', error);
       }
     },
     updateActiveBookings() {
-      if (this.activeType === 'current') {
-        this.activeBookings = this.currentBookings;
-      } else if (this.activeType === 'upcoming') {
-        this.activeBookings = this.upcomingBookings;
-      } else if (this.activeType === 'past') {
-        this.activeBookings = this.pastBookings;
-      }
+      this.activeBookings = this[this.activeType + 'Bookings'];
     },
     setActive(type) {
       this.activeType = type;
