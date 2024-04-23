@@ -321,45 +321,60 @@ cron.schedule('* * * * *', async () => {
   console.log('Running a task every minute to check for expired bookings and update statuses');
 
   const now = new Date();
+  const transaction = await db.sequelize.transaction();
 
-  // Update bookings to 'Completed' that are past their end time and not cancelled
-  await db.CarParkLog.update(
-    { status: 'Completed' },
-    {
+  try {
+    // Update bookings to 'Completed' that are past their end time and not cancelled
+    const [updated] = await db.CarParkLog.update(
+      { status: 'Completed' },
+      {
+        where: {
+          endTime: {
+            [db.Sequelize.Op.lt]: now
+          },
+          status: {
+            [db.Sequelize.Op.ne]: 'Cancelled'
+          }
+        },
+        transaction: transaction
+      }
+    );
+    console.log(`${updated} bookings updated to 'Completed'`);
+
+    // Find expired bookings to free up bays
+    const expiredBookings = await db.CarParkLog.findAll({
       where: {
         endTime: {
-          [db.Sequelize.Op.lt]: now
+          [db.Sequelize.Op.lt]: now // endTime is less than current time
         },
-        status: {
-          [db.Sequelize.Op.ne]: 'Cancelled'
-        }
-      }
-    }
-  );
-
-  // Find expired bookings to free up bays
-  const expiredBookings = await db.CarParkLog.findAll({
-    where: {
-      endTime: {
-        [db.Sequelize.Op.lt]: now // endTime is less than current time
+        status: 'Completed'  // Ensuring only completed bookings are processed for freeing bays
       },
-    },
-    include: [{
-      model: db.Bay,
-      as: 'bay',
-      where: {
-        isAvailable: false // Only include bookings where the associated bay is not already marked as available
-      }
-    }]
-  });
-
-  for (const booking of expiredBookings) {
-    await db.Bay.update({ isAvailable: true }, {
-      where: {
-        bay_id: booking.bay_id,
-        isAvailable: false // Double-check to avoid unnecessary updates
-      }
+      include: [{
+        model: db.Bay,
+        as: 'bay',
+        where: {
+          isAvailable: false // Only include bookings where the associated bay is not already marked as available
+        }
+      }],
+      transaction: transaction
     });
+
+    for (const booking of expiredBookings) {
+      await db.Bay.update({ isAvailable: true }, {
+        where: {
+          bay_id: booking.bay_id
+        },
+        transaction: transaction
+      });
+    }
+
+    // Commit the transaction if all updates were successful
+    await transaction.commit();
+    console.log('Transaction committed successfully.');
+  } catch (error) {
+    // Rollback transaction if there are any errors
+    await transaction.rollback();
+    console.error('Error during the scheduled task:', error);
   }
 });
 
@@ -494,16 +509,16 @@ app.get('/api/user/bookings', authenticateToken, async (req, res) => {
 app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) => {
   const { bookingId } = req.params;
   try {
-      const result = await db.CarParkLog.update({ status: 'Cancelled' }, {
-          where: { log_id: bookingId }
-      });
-      if (result[0] > 0) {
-          res.json({ message: "Booking cancelled successfully" });
-      } else {
-          res.status(404).send('Booking not found');
-      }
+    const result = await db.CarParkLog.update({ status: 'Cancelled' }, {
+      where: { log_id: bookingId }
+    });
+    if (result[0] > 0) {
+      res.json({ message: "Booking cancelled successfully" });
+    } else {
+      res.status(404).send('Booking not found');
+    }
   } catch (error) {
-      console.error('Failed to cancel booking:', error);
-      res.status(500).send('Internal Server Error');
+    console.error('Failed to cancel booking:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
