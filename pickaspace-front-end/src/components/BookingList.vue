@@ -11,21 +11,18 @@
             </b-list-group-item>
         </b-list-group>
 
-        <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal">
+        <b-modal v-model="modalShow" title="Booking Details">
             <template #modal-title>
                 <strong>Booking Details (ID: {{ selectedBooking.log_id || 'N/A' }})</strong>
             </template>
             <div>
                 <p>Car Park ID: {{ selectedBooking.carpark_id || 'N/A' }}</p>
-                <p>Full Address: {{ selectedBooking.carPark?.addressLine1 }}, {{
-                selectedBooking.carPark?.addressLine2 }},
+                <p>Full Address: {{ selectedBooking.carPark?.addressLine1 }}, {{ selectedBooking.carPark?.addressLine2 }},
                     {{ selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
                 <p>Bay Number: {{ selectedBooking.bay?.bay_number || 'N/A' }}</p>
                 <p>Cost: £{{ (selectedBooking.cost && selectedBooking.cost.toFixed(2)) || '0.00' }}</p>
-                <p>Start Time: {{ selectedBooking.startTime ? new Date(selectedBooking.startTime).toLocaleString() :
-                'N/A' }}</p>
-                <p>End Time: {{ selectedBooking.endTime ? new Date(selectedBooking.endTime).toLocaleString() : 'N/A' }}
-                </p>
+                <p>Start Time: {{ selectedBooking.startTime ? new Date(selectedBooking.startTime).toLocaleString() : 'N/A' }}</p>
+                <p>End Time: {{ selectedBooking.endTime ? new Date(selectedBooking.endTime).toLocaleString() : 'N/A' }}</p>
                 <p>Status: {{ selectedBooking.status || 'Unknown' }}</p>
                 <p>Vehicle Size: {{ selectedBooking.bay?.vehicleSize || 'N/A' }}</p>
                 <p>EV Charging: {{ selectedBooking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
@@ -38,7 +35,14 @@
 </template>
 
 <script>
+import { BListGroup, BListGroupItem, BModal } from 'bootstrap-vue-next';
+
 export default {
+    components: {
+        BListGroup,
+        BListGroupItem,
+        BModal
+    },
     props: ['bookings'],
     data() {
         return {
@@ -61,12 +65,10 @@ export default {
 <style scoped>
 .mb-3 {
     margin-bottom: 1rem !important;
-    /* Adds space between booking items */
 }
 
 .booking-item {
     cursor: pointer;
     border: 1px solid #dee2e6;
-    /* Adds a border around each booking item */
 }
 </style>
