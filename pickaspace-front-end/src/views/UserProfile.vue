@@ -9,7 +9,7 @@
           Car registration is required.
         </div>
       </div>
-      
+
       <div class="mb-3">
         <label for="firstName" class="form-label">First Name:</label>
         <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
@@ -139,12 +139,12 @@ export default {
           updateData.password = this.newPassword;
         } else {
           delete updateData.password;
-        }        
+        }
         updateUserDetails(updateData).then(() => {
           this.updateSuccess = true;
           setTimeout(() => this.updateSuccess = false, 3000);
         }).catch(error => console.error('Update failed:', error));
-      }''
+      } ''
     }
   },
   computed: {
@@ -156,7 +156,7 @@ export default {
         this.user.last_name &&
         this.user.DOB &&
         (!this.newPassword || (this.newPassword.trim() && this.newPassword === this.passwordConfirm && this.isStrongPassword(this.newPassword)));
-    } 
+    }
   }
 }
 </script>

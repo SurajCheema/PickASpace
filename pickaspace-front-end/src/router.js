@@ -1,7 +1,7 @@
 // src/router.js
 import { createRouter, createWebHistory } from 'vue-router';
-import UserRegister from './views/UserRegister.vue'; 
-import UserLogin from './views/UserLogin.vue'; 
+import UserRegister from './views/UserRegister.vue';
+import UserLogin from './views/UserLogin.vue';
 import CarParkDashboard from './views/CarParkDashboard.vue';
 import UserCreateCarPark from './views/UserCreateCarPark.vue';
 import BayBooking from './views/BayBooking.vue';
@@ -33,16 +33,17 @@ const routes = [
     props: true,
     meta: { requiresAuth: true } // Requires authentication
   },
-  { path: '/', 
-    name: 'Home', 
-    component: HomeView 
+  {
+    path: '/',
+    name: 'Home',
+    component: HomeView
   },
   // User settings routes
   { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
   { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
   { path: '/user/payments', name: 'PaymentLogs', component: PaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
-]; 
+];
 
 const router = createRouter({
   history: createWebHistory(),
