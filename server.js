@@ -280,7 +280,7 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       payment_id: payment.payment_id,
       startTime,
       endTime,
-      cost
+      cost: cost / 100,
     }, { transaction });
 
     await transaction.commit();
