@@ -10,6 +10,7 @@
                     </h5>
                     <p class="mb-1">{{ booking.carPark?.addressLine1 }}</p>
                     <p>{{ booking.carPark?.city }}</p>
+                    <p>{{ formatDateTime(booking.startTime) }} - {{ formatDateTime(booking.endTime) }}</p>
                 </div>
             </b-list-group-item>
         </b-list-group>
@@ -25,18 +26,13 @@
                     {{ selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
                 <p>Bay Number: {{ selectedBooking.bay?.bay_number || 'N/A' }}</p>
                 <p>Cost: £{{ (selectedBooking.cost && selectedBooking.cost.toFixed(2)) || '0.00' }}</p>
-                <p>Start Time: {{ selectedBooking.startTime ? new Date(selectedBooking.startTime).toLocaleString() :
-                'N/A' }}</p>
-                <p>End Time: {{ selectedBooking.endTime ? new Date(selectedBooking.endTime).toLocaleString() : 'N/A' }}
-                </p>
+                <p>Start Time: {{ selectedBooking.startTime ? formatDateTime(selectedBooking.startTime) : 'N/A' }}</p>
+                <p>End Time: {{ selectedBooking.endTime ? formatDateTime(selectedBooking.endTime) : 'N/A' }}</p>
                 <p>Status: {{ selectedBooking.status || 'Unknown' }}</p>
                 <p>Vehicle Size: {{ selectedBooking.bay?.vehicleSize || 'N/A' }}</p>
                 <p>EV Charging: {{ selectedBooking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
                 <p>Disabled Access: {{ selectedBooking.bay?.disabled ? 'Yes' : 'No' }}</p>
                 <p>Description: {{ selectedBooking.bay?.description || 'No description available' }}</p>
-                <button @click="modalShow = false" class="btn btn-primary">Close</button>
-                <button class="btn btn-danger" @click="cancelBooking(selectedBooking)">Cancel Booking</button>
-                <button @click="modalShow = false" class="btn btn-primary">Close</button>
             </div>
         </b-modal>
     </div>
@@ -76,11 +72,14 @@ export default {
                 alert(error.message); // Display errors from the service layer
             }
             this.modalShow = false;  // Close the modal
+        },
+        formatDateTime(datetime) {
+            const date = new Date(datetime);
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
         }
     }
 }
 </script>
-
 
 <style scoped>
 .mb-3 {
@@ -90,5 +89,19 @@ export default {
 .booking-item {
     cursor: pointer;
     border: 1px solid #dee2e6;
+}
+
+.booking-item .city-info {
+    margin-bottom: 0; /* Reduce or remove margin to decrease space */
+}
+
+.booking-item .date-time {
+    margin-top: 0.5rem; /* Adjust top margin to fine-tune space */
+}
+
+/* Apply margin rules specifically within booking-item */
+.booking-item p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 </style>
