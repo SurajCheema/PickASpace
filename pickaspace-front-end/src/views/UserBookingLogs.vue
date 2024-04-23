@@ -44,10 +44,11 @@ export default {
   methods: {
     async fetchBookings() {
       try {
-        const fetchedBookings = await fetchUserBookings(); // This returns an object with properties current, upcoming, past
+        this.isFetching = true;  // Indicate that data is being fetched
+        const fetchedBookings = await fetchUserBookings();
         const now = new Date();
 
-        this.bookings.current = this.sortBookingsByStartDate(
+        const newCurrentBookings = this.sortBookingsByStartDate(
           fetchedBookings.current.filter(booking =>
             new Date(booking.startTime) <= now &&
             new Date(booking.endTime) >= now &&
@@ -55,21 +56,35 @@ export default {
           )
         );
 
-        this.bookings.upcoming = this.sortBookingsByStartDate(
+        const newUpcomingBookings = this.sortBookingsByStartDate(
           fetchedBookings.upcoming.filter(booking =>
             new Date(booking.startTime) > now &&
             booking.status !== 'Cancelled'
           )
         );
 
-        this.bookings.past = this.sortBookingsByStartDate(
+        const newPastBookings = this.sortBookingsByStartDate(
           fetchedBookings.past.concat(
             fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
             fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
           )
         );
+
+        // Only update state if it has actually changed
+        if (JSON.stringify(this.bookings.current) !== JSON.stringify(newCurrentBookings)) {
+          this.bookings.current = newCurrentBookings;
+        }
+        if (JSON.stringify(this.bookings.upcoming) !== JSON.stringify(newUpcomingBookings)) {
+          this.bookings.upcoming = newUpcomingBookings;
+        }
+        if (JSON.stringify(this.bookings.past) !== JSON.stringify(newPastBookings)) {
+          this.bookings.past = newPastBookings;
+        }
+
       } catch (error) {
         console.error('Error fetching bookings:', error);
+      } finally {
+        this.isFetching = false;  // Reset fetching indicator
       }
     },
     sortBookingsByStartDate(bookings) {
