@@ -318,13 +318,30 @@ async function checkBayAvailability(bayId, startTime, endTime, transaction) {
 
 // Schedule a task to run every minute
 cron.schedule('* * * * *', async () => {
-  console.log('Running a task every minute to check for expired bookings');
+  console.log('Running a task every minute to check for expired bookings and update statuses');
 
   const now = new Date();
+
+  // Update bookings to 'Completed' that are past their end time and not cancelled
+  await db.CarParkLog.update(
+    { status: 'Completed' },
+    {
+      where: {
+        endTime: {
+          [db.Sequelize.Op.lt]: now
+        },
+        status: {
+          [db.Sequelize.Op.ne]: 'Cancelled'
+        }
+      }
+    }
+  );
+
+  // Find expired bookings to free up bays
   const expiredBookings = await db.CarParkLog.findAll({
     where: {
       endTime: {
-        [Op.lt]: now // endTime is less than current time
+        [db.Sequelize.Op.lt]: now // endTime is less than current time
       },
     },
     include: [{
