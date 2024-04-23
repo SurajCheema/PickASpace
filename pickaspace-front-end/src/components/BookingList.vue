@@ -17,9 +17,9 @@
             </template>
             <div>
                 <p>Car Park ID: {{ selectedBooking.carpark_id || 'N/A' }}</p>
-                <p>Full Address: {{ selectedBooking.carPark?.addressLine1 }}, {{ selectedBooking.carPark?.addressLine2
-                    }}, {{
-                selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
+                <p>Full Address: {{ selectedBooking.carPark?.addressLine1 }}, {{
+                selectedBooking.carPark?.addressLine2 }},
+                    {{ selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
                 <p>Bay Number: {{ selectedBooking.bay?.bay_number || 'N/A' }}</p>
                 <p>Cost: £{{ (selectedBooking.cost && selectedBooking.cost.toFixed(2)) || '0.00' }}</p>
                 <p>Start Time: {{ selectedBooking.startTime ? new Date(selectedBooking.startTime).toLocaleString() :
@@ -33,17 +33,11 @@
                 <p>Description: {{ selectedBooking.bay?.description || 'No description available' }}</p>
                 <button @click="modalShow = false" class="btn btn-primary">Close</button>
             </div>
-            <template #modal-footer>
-                <b-button variant="primary" @click="hideModal">Close</b-button>
-            </template>
         </b-modal>
     </div>
 </template>
 
 <script>
-import { BModal, BButton } from 'bootstrap-vue';
-
-
 export default {
     props: ['bookings'],
     data() {
@@ -58,11 +52,10 @@ export default {
             this.modalShow = true;
         },
         hideModal() {
-            this.modalShow = false; // This will hide the modal
+            this.modalShow = false;
         }
     }
 }
-
 </script>
 
 <style scoped>
