@@ -48,6 +48,7 @@ export default {
         const fetchedBookings = await fetchUserBookings();
         const now = new Date();
 
+        // Use modified sort function
         const newCurrentBookings = this.sortBookingsByStartDate(
           fetchedBookings.current.filter(booking =>
             new Date(booking.startTime) <= now &&
@@ -63,11 +64,13 @@ export default {
           )
         );
 
+        // Sort past bookings from latest to earliest
         const newPastBookings = this.sortBookingsByStartDate(
           fetchedBookings.past.concat(
             fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
             fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
-          )
+          ),
+          true  // Indicate that this is for past bookings
         );
 
         // Only update state if it has actually changed
@@ -87,7 +90,12 @@ export default {
         this.isFetching = false;  // Reset fetching indicator
       }
     },
-    sortBookingsByStartDate(bookings) {
+    sortBookingsByStartDate(bookings, isPast = false) {
+      if (isPast) {
+        // Sort by startTime in descending order for past bookings
+        return bookings.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+      }
+      // Default sorting for current and upcoming
       return bookings.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
     },
     updateActiveBookings() {

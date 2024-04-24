@@ -15,7 +15,7 @@
             </b-list-group-item>
         </b-list-group>
 
-        <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal">
+        <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal" ok-only>
             <template #modal-title>
                 <strong>Booking Details (ID: {{ selectedBooking.log_id || 'N/A' }})</strong>
             </template>
@@ -26,21 +26,31 @@
                     {{ selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
                 <p>Bay Number: {{ selectedBooking.bay?.bay_number || 'N/A' }}</p>
                 <p>Cost: £{{ (selectedBooking.cost && selectedBooking.cost.toFixed(2)) || '0.00' }}</p>
-                <p>Start Time: {{ selectedBooking.startTime ? formatDateTime(selectedBooking.startTime) : 'N/A' }}</p>
-                <p>End Time: {{ selectedBooking.endTime ? formatDateTime(selectedBooking.endTime) : 'N/A' }}</p>
-                <p>Status: {{ selectedBooking.status || 'Unknown' }}</p>
+                <p>Start Time: {{ formatDateTime(selectedBooking.startTime) }}</p>
+                <p>End Time: {{ formatDateTime(selectedBooking.endTime) }}</p>
+                <p>Status: {{ selectedBooking.status }}</p>
                 <p>Vehicle Size: {{ selectedBooking.bay?.vehicleSize || 'N/A' }}</p>
                 <p>EV Charging: {{ selectedBooking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
                 <p>Disabled Access: {{ selectedBooking.bay?.disabled ? 'Yes' : 'No' }}</p>
                 <p>Description: {{ selectedBooking.bay?.description || 'No description available' }}</p>
+                <!-- Conditionally show the cancel button -->
+                <button v-if="shouldShowCancelButton(selectedBooking)" @click="cancelBooking" class="btn btn-danger">
+                    Cancel Booking
+                </button>
             </div>
+            <template #modal-footer>
+                <!-- Ensure the modal footer only contains the cancel button when conditions are met -->
+                <button v-if="shouldShowCancelButton(selectedBooking)" class="btn btn-danger" @click="cancelBooking">
+                    Cancel Booking
+                </button>
+            </template>
         </b-modal>
     </div>
 </template>
 
 <script>
 import { BListGroup, BListGroupItem, BModal } from 'bootstrap-vue-next';
-import { cancelBooking } from '@/services/carParkService';
+import { cancelBooking as cancelBookingService } from '@/services/carParkService';
 
 export default {
     components: {
@@ -65,17 +75,22 @@ export default {
         },
         async cancelBooking() {
             try {
-                await cancelBooking(this.selectedBooking.log_id);
+                await cancelBookingService(this.selectedBooking.log_id);
                 this.selectedBooking.status = 'Cancelled';  // Update local state
                 alert('Booking cancelled successfully');
+                this.modalShow = false;  // Close the modal after cancel
             } catch (error) {
                 alert(error.message); // Display errors from the service layer
             }
-            this.modalShow = false;  // Close the modal
         },
         formatDateTime(datetime) {
             const date = new Date(datetime);
-            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
+            ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        },
+        shouldShowCancelButton(booking) {
+            const now = new Date();
+            return booking.status === 'reserved' && new Date(booking.endTime) > now;
         }
     }
 }
@@ -92,11 +107,13 @@ export default {
 }
 
 .booking-item .city-info {
-    margin-bottom: 0; /* Reduce or remove margin to decrease space */
+    margin-bottom: 0;
+    /* Reduce or remove margin to decrease space */
 }
 
 .booking-item .date-time {
-    margin-top: 0.5rem; /* Adjust top margin to fine-tune space */
+    margin-top: 0.5rem;
+    /* Adjust top margin to fine-tune space */
 }
 
 /* Apply margin rules specifically within booking-item */
