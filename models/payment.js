@@ -22,12 +22,21 @@ module.exports = (sequelize, DataTypes) => {
         },
         date_paid: {
             type: DataTypes.DATE
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'Users',
+                key: 'user_id'
+            }
         }
     });
 
     Payment.associate = (models) => {
+        Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
         Payment.hasMany(models.CarParkLog, { foreignKey: 'payment_id', as: 'logs' });
     };
-    
+
     return Payment;
 };

@@ -26,6 +26,16 @@ module.exports = {
       date_paid: {
         type: Sequelize.DATE
       },
+      userId: { 
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users',
+          key: 'user_id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
