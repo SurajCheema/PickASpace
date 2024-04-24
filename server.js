@@ -522,3 +522,24 @@ app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) =>
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Fetch all payment records for a logged-in user
+app.get('/api/payments', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId; 
+    const payments = await db.Payment.findAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: db.CarParkLog,
+          as: 'logs'
+        }
+      ],
+      order: [['date_paid', 'DESC']]
+    });
+    res.json(payments);
+  } catch (error) {
+    console.error('Failed to fetch payments:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
