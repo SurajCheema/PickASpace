@@ -523,15 +523,15 @@ app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) =>
 });
 
 // Fetch all payment records for a logged-in user
-app.get('/api/payments', authenticateToken, async (req, res) => {
+app.get('/api/user/payments', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.userId; 
     const payments = await db.Payment.findAll({
       where: { user_id: userId },
       include: [
         {
           model: db.CarParkLog,
-          as: 'logs'
+          as: 'logs' 
         }
       ],
       order: [['date_paid', 'DESC']]

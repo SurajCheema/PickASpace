@@ -4,7 +4,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 export const fetchPayments = async () => {
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(`${API_BASE_URL}/payments`, {
+        const response = await fetch(`${API_BASE_URL}/user/payments`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
