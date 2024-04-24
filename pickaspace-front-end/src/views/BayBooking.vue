@@ -337,8 +337,8 @@ export default {
 
 .col-md-6.text-center {
   display: flex;
-  flexDirection: column;
-  justifyContent: center;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .hidden {
