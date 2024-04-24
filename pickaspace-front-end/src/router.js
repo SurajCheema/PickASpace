@@ -9,7 +9,7 @@ import HomeView from './views/HomeView.vue';
 import UserDashboard from './views/UserDashboard.vue';
 import UserProfile from './views/UserProfile.vue';
 import UserBookingLogs from './views/UserBookingLogs.vue';
-import PaymentLogs from './views/PaymentLogs.vue';
+import UserPaymentLogs from './views/UserPaymentLogs.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -41,7 +41,7 @@ const routes = [
   // User settings routes
   { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
   { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
-  { path: '/user/payments', name: 'PaymentLogs', component: PaymentLogs, meta: { requiresAuth: true } },
+  { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
 ];
 
