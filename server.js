@@ -228,7 +228,7 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 // Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
   const { bay_id, carpark_id, startTime, endTime, cost, stripeToken } = req.body;
-  const user_id = req.user.userId;
+  const user_id = req.user.userId;  // Assuming authenticateToken middleware correctly attaches user to request
 
   // Validate inputs
   if (!stripeToken) {
@@ -238,7 +238,6 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Invalid cost provided.' });
   }
 
-  // Start transaction for database operations
   const transaction = await db.sequelize.transaction();
 
   try {
@@ -266,10 +265,11 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     // Create a payment record
     const payment = await db.Payment.create({
       stripePaymentId: charge.id,
-      amount: cost / 100, //Cost is in pence, so we turn it from pence to pounds
-      paymentStatus: 'completed', // Mark as completed since Stripe charge was successful
+      amount: cost / 100, // Convert cost from pence to pounds
+      paymentStatus: 'completed',
       receiptUrl: charge.receipt_url,
-      date_paid: new Date() // Record the payment date
+      date_paid: new Date(),
+      userId: user_id
     }, { transaction });
 
     // Record the booking
@@ -340,32 +340,31 @@ cron.schedule('* * * * *', async () => {
       }
     );
     console.log(`${updated} bookings updated to 'Completed'`);
-
-    // Find expired bookings to free up bays
-    const expiredBookings = await db.CarParkLog.findAll({
-      where: {
-        endTime: {
-          [db.Sequelize.Op.lt]: now // endTime is less than current time
-        },
-        status: 'Completed'  // Ensuring only completed bookings are processed for freeing bays
-      },
+''
+    // Check and update the bay status based on the current active bookings
+    const baysToUpdate = await db.Bay.findAll({
       include: [{
-        model: db.Bay,
-        as: 'bay',
+        model: db.CarParkLog,
+        as: 'logs',
+        required: true,  // Only include bays that have associated bookings
         where: {
-          isAvailable: false // Only include bookings where the associated bay is not already marked as available
+          endTime: { [db.Sequelize.Op.gt]: now },  // Find bays with ongoing bookings
         }
-      }],
-      transaction: transaction
+      }]
     });
 
-    for (const booking of expiredBookings) {
-      await db.Bay.update({ isAvailable: true }, {
+    // Calculate and set bay availability
+    for (const bay of baysToUpdate) {
+      const activeBookingsCount = await db.CarParkLog.count({
         where: {
-          bay_id: booking.bay_id
-        },
-        transaction: transaction
+          bay_id: bay.bay_id,
+          endTime: { [db.Sequelize.Op.gt]: now }
+        }
       });
+
+      // Update bay availability based on active bookings
+      bay.isAvailable = activeBookingsCount === 0;
+      await bay.save({ transaction });
     }
 
     // Commit the transaction if all updates were successful
@@ -526,7 +525,7 @@ app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) =>
 // Fetch all payment records for a logged-in user
 app.get('/api/payments', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId; 
+    const userId = req.user.userId;
     const payments = await db.Payment.findAll({
       where: { user_id: userId },
       include: [
