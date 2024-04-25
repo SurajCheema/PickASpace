@@ -23,15 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         date_paid: {
             type: DataTypes.DATE
         },
-        user_id: {
+        userId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
             references: { model: 'Users', key: 'user_id' }
         }
     });
 
     Payment.associate = (models) => {
-        Payment.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
         Payment.hasMany(models.CarParkLog, { foreignKey: 'payment_id', as: 'logs' });
     };
 
