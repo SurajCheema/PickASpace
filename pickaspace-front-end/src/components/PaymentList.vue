@@ -2,7 +2,7 @@
     <div>
         <b-list-group>
             <b-list-group-item v-for="payment in payments" :key="payment.payment_id"
-                class="d-flex justify-content-between align-items-center">
+                class="d-flex justify-content-between align-items-center" @click="showDetails(payment)">
                 <div>
                     <h5 class="mb-1">Payment ID: {{ payment.payment_id }}</h5>
                     <p class="mb-1">Status: {{ payment.paymentStatus }}</p>
@@ -10,26 +10,48 @@
                     <p>Date: {{ new Date(payment.date_paid).toLocaleDateString() }}</p>
                 </div>
                 <div>
-                    <b-button v-if="payment.paymentStatus === 'pending'" @click="refund(payment.payment_id)"
+                    <b-button v-if="payment.paymentStatus === 'pending'" @click.stop="refund(payment.payment_id)"
                         variant="danger">Refund</b-button>
                 </div>
             </b-list-group-item>
         </b-list-group>
+
+        <!-- Payment Details Modal -->
+        <b-modal v-model="modalVisible" title="Payment Details" @hide="clearModal">
+            <template v-slot:default>
+                <div>
+                    <p><strong>Payment ID:</strong> {{ selectedPayment.payment_id }}</p>
+                    <p><strong>Amount:</strong> £{{ formatAmount(selectedPayment.amount) }}</p>
+                    <p><strong>Status:</strong> {{ selectedPayment.paymentStatus }}</p>
+                    <p><strong>Date:</strong> {{ new Date(selectedPayment.date_paid).toLocaleDateString() }}</p>
+                    <p><strong>Stripe Payment ID:</strong> {{ selectedPayment.stripePaymentId || 'N/A' }}</p>
+                    <p><strong>Receipt URL:</strong> <a :href="selectedPayment.receiptUrl" target="_blank">View
+                            Receipt</a></p>
+                </div>
+            </template>
+        </b-modal>
     </div>
 </template>
 
 <script>
-import { BListGroup, BListGroupItem, BButton } from 'bootstrap-vue-next';
+import { BListGroup, BListGroupItem, BButton, BModal } from 'bootstrap-vue-next';
 import { refundPayment } from '@/services/paymentService';
 
 export default {
     components: {
         BListGroup,
         BListGroupItem,
-        BButton
+        BButton,
+        BModal
     },
     props: {
         payments: Array
+    },
+    data() {
+        return {
+            modalVisible: false,
+            selectedPayment: {}
+        };
     },
     methods: {
         async refund(paymentId) {
@@ -43,6 +65,14 @@ export default {
         formatAmount(amount) {
             const number = parseFloat(amount);
             return isNaN(number) ? '0.00' : number.toFixed(2);
+        },
+        showDetails(payment) {
+            this.selectedPayment = payment;
+            this.modalVisible = true;
+        },
+        clearModal() {
+            this.selectedPayment = {};
+            this.modalVisible = false;
         }
     }
 }
@@ -52,5 +82,7 @@ export default {
 .list-group-item {
     padding: 1rem;
     border: 1px solid #dee2e6;
+    cursor: pointer;
+    /* Makes it clear the items are interactive */
 }
 </style>
