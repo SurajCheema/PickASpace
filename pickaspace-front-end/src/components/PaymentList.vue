@@ -27,6 +27,8 @@
                     <p><strong>Stripe Payment ID:</strong> {{ selectedPayment.stripePaymentId || 'N/A' }}</p>
                     <p><strong>Receipt URL:</strong> <a :href="selectedPayment.receiptUrl" target="_blank">View
                             Receipt</a></p>
+                    <button @click="viewBooking">View Booking</button>
+
                 </div>
             </template>
         </b-modal>
@@ -73,6 +75,9 @@ export default {
         clearModal() {
             this.selectedPayment = {};
             this.modalVisible = false;
+        },
+        viewBooking() {
+            this.$emit('view-booking', this.selectedPayment);
         }
     }
 }

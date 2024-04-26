@@ -127,8 +127,6 @@ export const bookBay = async (bookingData) => {
   }
 };
 
-
-// Assuming the existence of an API function like this in your services file
 export const fetchBayAvailability = async (bayId, startTime, endTime) => {
   const url = `${API_BASE_URL}/bays/${bayId}/availability?startTime=${startTime}&endTime=${endTime}`;
   try {

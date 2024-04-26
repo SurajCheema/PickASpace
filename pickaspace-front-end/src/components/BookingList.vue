@@ -1,3 +1,4 @@
+// components/BookingList.vue
 <template>
     <div>
         <b-list-group flush>

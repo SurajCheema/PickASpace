@@ -19,12 +19,12 @@ module.exports = (sequelize, DataTypes) => {
         },
         payment_id: {
             type: DataTypes.INTEGER,
-            allowNull: true, 
+            allowNull: true,
             references: {
-              model: 'Payments',
-              key: 'payment_id'
+                model: 'Payments',
+                key: 'payment_id'
             }
-          },
+        },
         startTime: {
             type: DataTypes.DATE,
             allowNull: false

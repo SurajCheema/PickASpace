@@ -526,10 +526,17 @@ app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) =>
 app.get('/api/user/payments', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const payments = await db.Payment.findAll();
+    const payments = await db.Payment.findAll({
+      where: { userId: userId },
+      include: [{
+        model: db.CarParkLog,
+        as: 'log'
+      }]
+    });
     const serializedPayments = payments.map(payment => ({
       ...payment.toJSON(),
-      amount: parseFloat(payment.amount)  // Ensure amount is a floating number
+      amount: parseFloat(payment.amount),  // Ensure amount is a floating number
+      logs: payment.logs  // Include the associated CarParkLog entries
     }));
     res.json(serializedPayments);
   }

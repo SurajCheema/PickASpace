@@ -6,7 +6,9 @@
       <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
     </div>
     <div>
-      <booking-list :bookings="activeBookings" />
+      <booking-list :bookings="filteredBookings" @view-details="showBookingDetailsModal" />
+      <booking-details-modal ref="bookingModal" v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
+        @close="isBookingDetailsModalVisible = false" />
     </div>
   </div>
 </template>
@@ -27,7 +29,9 @@ export default {
         past: []
       },
       activeBookings: [],
-      activeType: 'current'
+      activeType: 'current',
+      isBookingDetailsModalVisible: false,
+      bookingDetails: null
     }
   },
   watch: {
@@ -103,6 +107,10 @@ export default {
     },
     setActive(type) {
       this.activeType = type;
+    },
+    showBookingDetailsModal(booking) {
+      this.bookingDetails = booking;
+      this.isBookingDetailsModalVisible = true;
     }
   }
 }

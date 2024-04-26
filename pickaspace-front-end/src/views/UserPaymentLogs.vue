@@ -8,7 +8,8 @@
             <button class="btn btn-primary" @click="setFilter('refunded')">Refunded</button>
         </div>
         <div>
-            <payment-list :payments="filteredPayments" />
+            <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId" />
+            <booking-details v-if="selectedBookingId" :booking-id="selectedBookingId" @close="selectedBookingId = null" />
         </div>
     </div>
 </template>
@@ -16,16 +17,19 @@
 <script>
 import { ref, onMounted } from 'vue';
 import PaymentList from '../components/PaymentList.vue';
+import BookingDetails from '../components/BookingDetailsModal.vue'; // Import the BookingDetails component
 import { fetchPayments } from '@/services/paymentService';  
 
 export default {
     components: {
-        PaymentList
+        PaymentList,
+        BookingDetails
     },
     setup() {
         const payments = ref([]);
         const filter = ref('all');
         const filteredPayments = ref([]);
+        const selectedBookingId = ref(null);
 
         const fetchPaymentsWrapper = async () => {
             payments.value = await fetchPayments();  
@@ -45,9 +49,13 @@ export default {
             }
         };
 
+        const setSelectedBookingId = (bookingId) => {
+            selectedBookingId.value = bookingId;
+        };
+
         onMounted(fetchPaymentsWrapper); 
 
-        return { filteredPayments, setFilter };
+        return { filteredPayments, setFilter, selectedBookingId, setSelectedBookingId };
     }
 }
 </script>
