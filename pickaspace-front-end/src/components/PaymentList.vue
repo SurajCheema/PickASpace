@@ -77,7 +77,8 @@ export default {
             this.modalVisible = false;
         },
         viewBooking() {
-            this.$emit('view-booking', this.selectedPayment);
+            console.log('Emitting view-booking event with booking ID:', this.selectedPayment.log.log_id);
+            this.$emit('view-booking', this.selectedPayment.log.log_id);
         }
     }
 }

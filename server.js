@@ -528,10 +528,7 @@ app.get('/api/user/payments', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const payments = await db.Payment.findAll({
       where: { userId: userId },
-      include: [{
-        model: db.CarParkLog,
-        as: 'log'
-      }]
+      include: [{ model: db.CarParkLog, as: 'log' }]
     });
     const serializedPayments = payments.map(payment => ({
       ...payment.toJSON(),
@@ -543,5 +540,27 @@ app.get('/api/user/payments', authenticateToken, async (req, res) => {
   catch (error) {
     console.error('Failed to fetch payments:', error);
     res.status(500).send(`Internal Server Error: ${error.message}`);
+  }
+});
+
+// Fetch a single booking by ID for a user
+app.get('/api/user/bookings/:log_id', authenticateToken, async (req, res) => {
+  const { log_id } = req.params;
+  const user_id = req.user.userId;
+  try {
+    const booking = await db.CarParkLog.findOne({
+      where: { log_id: log_id, user_id: user_id },
+      include: [{ model: db.Bay, as: 'bay' }, { model: db.CarPark, as: 'carPark' }]
+    });
+
+    if (!booking) {
+      res.status(404).send('Booking not found');
+      return;
+    }
+
+    res.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    res.status(500).send('Internal Server Error');
   }
 });

@@ -4,9 +4,9 @@
             <strong>Booking Details (ID: {{ booking.log_id || 'N/A' }})</strong>
         </template>
         <div>
-            <p>Car Park ID: {{ booking.carpark_id || 'N/A' }}</p>
-            <p>Full Address: {{ booking.carPark?.addressLine1 }}, {{ booking.carPark?.addressLine2 }},
-                {{ booking.carPark?.city }}, {{ booking.carPark?.postcode }}</p>
+            <p>Car Park ID: {{ booking?.carpark_id || 'N/A' }}</p>
+            <p>Full Address: {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2 }}, {{
+        booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
             <p>Bay Number: {{ booking.bay?.bay_number || 'N/A' }}</p>
             <p>Cost: £{{ (booking.cost && booking.cost.toFixed(2)) || '0.00' }}</p>
             <p>Start Time: {{ formatDateTime(booking.startTime) }}</p>
@@ -54,11 +54,10 @@ export default {
         async cancelBooking() {
             try {
                 await cancelBookingService(this.booking.log_id);
-                this.booking.status = 'Cancelled';  // Update local state
-                alert('Booking cancelled successfully');
-                this.modalShow = false;  // Close the modal after cancel
+                this.$emit('booking-cancelled', this.booking.log_id);
+                this.modalShow = false;
             } catch (error) {
-                alert(error.message); // Display errors from the service layer
+                alert(error.message);
             }
         },
         formatDateTime(datetime) {
@@ -70,8 +69,7 @@ export default {
             const now = new Date();
             return booking.status === 'reserved' && new Date(booking.endTime) > now;
         },
-        openBookingModal()
-        {
+        openBookingModal() {
             this.modalShow = true;
         }
     }

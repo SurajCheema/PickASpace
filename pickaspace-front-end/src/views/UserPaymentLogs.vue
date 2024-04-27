@@ -9,7 +9,8 @@
         </div>
         <div>
             <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId" />
-            <booking-details v-if="selectedBookingId" :booking-id="selectedBookingId" @close="selectedBookingId = null" />
+            <booking-details v-if="selectedBooking" :booking="selectedBooking" @close="selectedBooking = null"
+                @booking-cancelled="handleBookingCancelled" />
         </div>
     </div>
 </template>
@@ -17,8 +18,9 @@
 <script>
 import { ref, onMounted } from 'vue';
 import PaymentList from '../components/PaymentList.vue';
-import BookingDetails from '../components/BookingDetailsModal.vue'; // Import the BookingDetails component
-import { fetchPayments } from '@/services/paymentService';  
+import BookingDetails from '../components/BookingDetailsModal.vue';
+import { fetchPayments } from '@/services/paymentService';
+import { fetchBookingById } from '@/services/carParkService';
 
 export default {
     components: {
@@ -30,9 +32,10 @@ export default {
         const filter = ref('all');
         const filteredPayments = ref([]);
         const selectedBookingId = ref(null);
+        const selectedBooking = ref(null);
 
         const fetchPaymentsWrapper = async () => {
-            payments.value = await fetchPayments();  
+            payments.value = await fetchPayments();
             filterPayments();
         };
 
@@ -49,13 +52,36 @@ export default {
             }
         };
 
-        const setSelectedBookingId = (bookingId) => {
-            selectedBookingId.value = bookingId;
+        const setSelectedBookingId = async (log_id) => {
+            selectedBookingId.value = log_id;
+            if (log_id) {
+                try {
+                    selectedBooking.value = await fetchBookingById(log_id);
+                } catch (error) {
+                    console.error('Error fetching booking details:', error);
+                    selectedBooking.value = null;
+                }
+            } else {
+                selectedBooking.value = null;
+            }
         };
 
-        onMounted(fetchPaymentsWrapper); 
+        const handleBookingCancelled = (bookingId) => {
+            if (selectedBooking.value && selectedBooking.value.log_id === bookingId) {
+                selectedBooking.value.status = 'Cancelled';
+            }
+        };
 
-        return { filteredPayments, setFilter, selectedBookingId, setSelectedBookingId };
+        onMounted(fetchPaymentsWrapper);
+
+        return {
+            filteredPayments,
+            setFilter,
+            selectedBookingId,
+            setSelectedBookingId,
+            selectedBooking,
+            handleBookingCancelled
+        };
     }
 }
 </script>

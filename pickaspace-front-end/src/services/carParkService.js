@@ -169,21 +169,41 @@ export const fetchUserBookings = async () => {
 export const cancelBooking = async (bookingId) => {
   const token = localStorage.getItem('token');
   try {
-      const response = await fetch(`${API_BASE_URL}/cancel-booking/${bookingId}`, {
-          method: 'PUT',
-          headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-          }
-      });
-      const result = await response.json();
-      if (response.ok) {
-          return result;
-      } else {
-          throw new Error(result.error || 'Failed to cancel booking');
+    const response = await fetch(`${API_BASE_URL}/cancel-booking/${bookingId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return result;
+    } else {
+      throw new Error(result.error || 'Failed to cancel booking');
+    }
   } catch (error) {
-      console.error('Error cancelling booking:', error);
-      throw error;
+    console.error('Error cancelling booking:', error);
+    throw error;
   }
+};
+
+// Fetch a single booking log by ID
+export const fetchBookingById = async (log_id) => {
+  console.log('Fetching booking with ID:', log_id);
+  console.log('Type of log_id:', typeof log_id);
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/user/bookings/${log_id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch booking details');
+  }
+  const data = await response.json();
+  console.log('Fetched booking:', data);
+  return data;
 };
