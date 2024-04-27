@@ -1,9 +1,7 @@
 <template>
     <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal" ok-only>
-        <template #modal-title>
-            <strong>Booking Details (ID: {{ booking.log_id || 'N/A' }})</strong>
-        </template>
-        <div>
+        <div v-if="booking">
+            <p>Booking ID: {{ booking.log_id || 'N/A' }}</p>
             <p>Car Park ID: {{ booking?.carpark_id || 'N/A' }}</p>
             <p>Full Address: {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2 }}, {{
         booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
@@ -20,7 +18,7 @@
                 Cancel Booking
             </button>
         </div>
-        <template #modal-footer>
+        <template v-if="booking" #modal-footer>
             <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
                 Cancel Booking
             </button>
@@ -37,12 +35,22 @@ export default {
         BModal
     },
     props: ['booking', 'showViewBookingButton'],
+
+    // In the BookingDetailsModal component
+    watch: {
+        booking(newVal) {
+            console.log('Booking prop changed:', newVal);
+        }
+    },
+
     computed: {
         modalShow: {
             get() {
+                console.log('Computed modalShow getter called, booking:', this.booking);
                 return !!this.booking;
             },
             set(value) {
+                console.log('Computed modalShow setter called, value:', value);
                 if (!value) {
                     this.$emit('close');
                 }
