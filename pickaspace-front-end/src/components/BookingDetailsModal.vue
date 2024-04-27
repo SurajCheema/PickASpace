@@ -37,14 +37,16 @@ export default {
         BModal
     },
     props: ['booking', 'showViewBookingButton'],
-    data() {
-        return {
-            modalShow: false
-        };
-    },
-    watch: {
-        booking() {
-            this.modalShow = !!this.booking;
+    computed: {
+        modalShow: {
+            get() {
+                return !!this.booking;
+            },
+            set(value) {
+                if (!value) {
+                    this.$emit('close');
+                }
+            }
         }
     },
     methods: {
@@ -68,9 +70,6 @@ export default {
         shouldShowCancelButton(booking) {
             const now = new Date();
             return booking.status === 'reserved' && new Date(booking.endTime) > now;
-        },
-        openBookingModal() {
-            this.modalShow = true;
         }
     }
 };
