@@ -6,7 +6,7 @@
       <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
     </div>
     <div>
-      <booking-list :bookings="filteredBookings" @view-details="showBookingDetailsModal" />
+      <booking-list :bookings="activeBookings" @view-details="showBookingDetailsModal" />
       <booking-details-modal ref="bookingModal" v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
         @close="isBookingDetailsModalVisible = false" />
     </div>
@@ -45,55 +45,49 @@ export default {
   created() {
     this.fetchBookings();
   },
+
+  computed: {
+  filteredBookings() {
+    return this.bookings[this.activeType];
+  }
+},
+
   methods: {
     async fetchBookings() {
-      try {
-        this.isFetching = true;  // Indicate that data is being fetched
-        const fetchedBookings = await fetchUserBookings();
-        const now = new Date();
+  try {
+    this.isFetching = true;
+    const fetchedBookings = await fetchUserBookings();
+    const now = new Date();
 
-        // Use modified sort function
-        const newCurrentBookings = this.sortBookingsByStartDate(
-          fetchedBookings.current.filter(booking =>
-            new Date(booking.startTime) <= now &&
-            new Date(booking.endTime) >= now &&
-            booking.status !== 'Cancelled'
-          )
-        );
+    this.bookings.current = this.sortBookingsByStartDate(
+      fetchedBookings.current.filter(booking =>
+        new Date(booking.startTime) <= now &&
+        new Date(booking.endTime) >= now &&
+        booking.status !== 'Cancelled'
+      )
+    );
 
-        const newUpcomingBookings = this.sortBookingsByStartDate(
-          fetchedBookings.upcoming.filter(booking =>
-            new Date(booking.startTime) > now &&
-            booking.status !== 'Cancelled'
-          )
-        );
+    this.bookings.upcoming = this.sortBookingsByStartDate(
+      fetchedBookings.upcoming.filter(booking =>
+        new Date(booking.startTime) > now &&
+        booking.status !== 'Cancelled'
+      )
+    );
 
-        // Sort past bookings from latest to earliest
-        const newPastBookings = this.sortBookingsByStartDate(
-          fetchedBookings.past.concat(
-            fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
-            fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
-          ),
-          true  // Indicate that this is for past bookings
-        );
+    this.bookings.past = this.sortBookingsByStartDate(
+      fetchedBookings.past.concat(
+        fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
+        fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
+      ),
+      true
+    );
 
-        // Only update state if it has actually changed
-        if (JSON.stringify(this.bookings.current) !== JSON.stringify(newCurrentBookings)) {
-          this.bookings.current = newCurrentBookings;
-        }
-        if (JSON.stringify(this.bookings.upcoming) !== JSON.stringify(newUpcomingBookings)) {
-          this.bookings.upcoming = newUpcomingBookings;
-        }
-        if (JSON.stringify(this.bookings.past) !== JSON.stringify(newPastBookings)) {
-          this.bookings.past = newPastBookings;
-        }
-
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-      } finally {
-        this.isFetching = false;  // Reset fetching indicator
-      }
-    },
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+  } finally {
+    this.isFetching = false;
+  }
+},
     sortBookingsByStartDate(bookings, isPast = false) {
       if (isPast) {
         // Sort by startTime in descending order for past bookings
@@ -103,8 +97,8 @@ export default {
       return bookings.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
     },
     updateActiveBookings() {
-      this.activeBookings = this.bookings[this.activeType];
-    },
+  this.activeBookings = this.filteredBookings;
+},
     setActive(type) {
       this.activeType = type;
     },
