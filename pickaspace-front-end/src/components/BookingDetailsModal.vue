@@ -1,19 +1,18 @@
 <template>
     <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal" ok-only>
         <div v-if="booking">
-            <p>Booking ID: {{ booking.log_id || 'N/A' }}</p>
-            <p>Car Park ID: {{ booking?.carpark_id || 'N/A' }}</p>
-            <p>Full Address: {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2 }}, {{
-        booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
-            <p>Bay Number: {{ booking.bay?.bay_number || 'N/A' }}</p>
-            <p>Cost: £{{ (booking.cost && booking.cost.toFixed(2)) || '0.00' }}</p>
-            <p>Start Time: {{ formatDateTime(booking.startTime) }}</p>
-            <p>End Time: {{ formatDateTime(booking.endTime) }}</p>
-            <p>Status: {{ booking.status }}</p>
-            <p>Vehicle Size: {{ booking.bay?.vehicleSize || 'N/A' }}</p>
-            <p>EV Charging: {{ booking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
-            <p>Disabled Access: {{ booking.bay?.disabled ? 'Yes' : 'No' }}</p>
-            <p>Description: {{ booking.bay?.description || 'No description available' }}</p>
+            <p><strong>Booking ID:</strong> {{ booking.log_id || 'N/A' }}</p>
+            <p><strong>Car Park ID:</strong> {{ booking?.carpark_id || 'N/A' }}</p>
+            <p><strong>Full Address:</strong> {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2 }}, {{ booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
+            <p><strong>Bay Number:</strong> {{ booking.bay?.bay_number || 'N/A' }}</p>
+            <p><strong>Cost:</strong> £{{ (booking.cost && booking.cost.toFixed(2)) || '0.00' }}</p>
+            <p><strong>Start Time:</strong> {{ formatDateTime(booking.startTime) }}</p>
+            <p><strong>End Time:</strong> {{ formatDateTime(booking.endTime) }}</p>
+            <p><strong>Status:</strong> {{ booking.status }}</p>
+            <p><strong>Vehicle Size:</strong> {{ booking.bay?.vehicleSize || 'N/A' }}</p>
+            <p><strong>EV Charging:</strong> {{ booking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
+            <p><strong>Disabled Access:</strong> {{ booking.bay?.disabled ? 'Yes' : 'No' }}</p>
+            <p><strong>Description:</strong> {{ booking.bay?.description || 'No description available' }}</p>
             <button v-if="shouldShowCancelButton(booking)" @click="cancelBooking" class="btn btn-danger">
                 Cancel Booking
             </button>
