@@ -1,7 +1,7 @@
 <template>
     <div>
         <b-list-group>
-            <b-list-group-item v-for="payment in payments" :key="payment.payment_id"
+            <b-list-group-item v-for="payment in sortedPayments" :key="payment.payment_id"
                 class="d-flex justify-content-between align-items-center" @click="showDetails(payment)">
                 <div>
                     <h5 class="mb-1">Payment ID: {{ payment.payment_id }}</h5>
@@ -55,6 +55,13 @@ export default {
             selectedPayment: {}
         };
     },
+
+    computed: {
+        sortedPayments() {
+            return this.payments.slice().sort((a, b) => new Date(b.date_paid) - new Date(a.date_paid));
+        },
+    },
+
     methods: {
         async refund(paymentId) {
             try {
