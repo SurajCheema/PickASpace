@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-12 col-md-6" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
+      <div class="col-12 col-md-4" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
         <div class="card mb-3 hover-highlight" style="cursor:pointer" @click="selectCarPark(carPark)">
           <div class="card-body">
             <h5 class="card-title">{{ carPark.addressLine1 }}</h5>
@@ -17,6 +17,9 @@
         </div>
       </div>
     </div>
+    <!-- GOOGLE MAP HERE? -->
+
+ 
 
     <!-- Modal for Car Park Details -->
     <div v-if="showModal" class="modal" tabindex="-1" role="dialog" style="display: block;">
@@ -57,6 +60,9 @@
   </div>
 
 </template>
+
+
+
 
 <script>
 import { fetchCarParks, fetchCarParkBays } from '@/services/carParkService';
@@ -139,6 +145,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .hover-highlight:hover {
