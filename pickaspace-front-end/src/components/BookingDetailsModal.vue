@@ -13,15 +13,18 @@
             <p><strong>EV Charging:</strong> {{ booking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
             <p><strong>Disabled Access:</strong> {{ booking.bay?.disabled ? 'Yes' : 'No' }}</p>
             <p><strong>Description:</strong> {{ booking.bay?.description || 'No description available' }}</p>
-            <button v-if="shouldShowCancelButton(booking)" @click="cancelBooking" class="btn btn-danger">
-                Cancel Booking
+            <button v-if="showViewPaymentButton" @click="viewPayment" class="btn btn-primary mt-3">
+                View Payment
             </button>
         </div>
-        <template v-if="booking" #modal-footer>
-            <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
-                Cancel Booking
-            </button>
-        </template>
+            <template v-if="booking" #modal-footer>
+    <div class="d-flex justify-content-between w-100">
+        <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
+            Cancel Booking
+        </button>
+        <div></div> <!-- Empty div to push the button to the left -->
+    </div>
+</template>
     </b-modal>
 </template>
 
@@ -33,15 +36,21 @@ export default {
     components: {
         BModal
     },
-    props: ['booking', 'showViewBookingButton'],
-
-    // In the BookingDetailsModal component
+    props: {
+        booking: {
+            type: Object,
+            required: true
+        },
+        showViewPaymentButton: {
+            type: Boolean,
+            default: false
+        }
+    },
     watch: {
         booking(newVal) {
             console.log('Booking prop changed:', newVal);
         }
     },
-
     computed: {
         modalShow: {
             get() {
@@ -77,6 +86,9 @@ export default {
         shouldShowCancelButton(booking) {
             const now = new Date();
             return booking.status === 'reserved' && new Date(booking.endTime) > now;
+        },
+        viewPayment() {
+            this.$emit('view-payment', this.booking.payment_id);
         }
     }
 };

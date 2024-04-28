@@ -564,3 +564,40 @@ app.get('/api/user/bookings/:log_id', authenticateToken, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Fetch a single payment by ID for a user
+app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
+  const { paymentId } = req.params;
+  const userId = req.user.userId;
+
+  // Validate the paymentId
+  if (!paymentId || isNaN(paymentId)) {
+    return res.status(400).json({ error: 'Invalid payment ID' });
+  }
+
+  try {
+    // Find the payment by ID and user ID
+    const payment = await db.Payment.findOne({
+      where: { payment_id: paymentId, userId: userId },
+      include: [{ model: db.CarParkLog, as: 'log' }]
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // Return the payment details
+    res.json({
+      payment_id: payment.payment_id,
+      amount: payment.amount,
+      paymentStatus: payment.paymentStatus,
+      date_paid: payment.date_paid,
+      stripePaymentId: payment.stripePaymentId,
+      receiptUrl: payment.receiptUrl,
+      log: payment.log
+    });
+  } catch (error) {
+    console.error('Error fetching payment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});

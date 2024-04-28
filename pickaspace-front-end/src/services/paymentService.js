@@ -21,6 +21,27 @@ export const fetchPayments = async () => {
     }
 };
 
+// Fetch payment by specific ID
+export const fetchPaymentById = async (paymentId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching payment:', error);
+      throw error;
+    }
+  };
+
 // Refund payments
 export const refundPayment = async (paymentId) => {
     const token = localStorage.getItem('token');

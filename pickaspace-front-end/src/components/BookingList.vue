@@ -1,9 +1,8 @@
-// components/BookingList.vue
 <template>
     <div>
         <b-list-group flush>
             <b-list-group-item v-for="booking in bookings" :key="booking.log_id" button class="mb-3 booking-item"
-                @click="showDetails(booking)">
+                @click="$emit('booking-selected', booking)">
                 <div class="d-flex flex-column align-items-start">
                     <h5 class="mb-1">
                         Booking ID: {{ booking.log_id }}
@@ -15,83 +14,22 @@
                 </div>
             </b-list-group-item>
         </b-list-group>
-
-        <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal" ok-only>
-            <template #modal-title>
-                <strong>Booking Details (ID: {{ selectedBooking.log_id || 'N/A' }})</strong>
-            </template>
-            <div>
-                <p>Car Park ID: {{ selectedBooking.carpark_id || 'N/A' }}</p>
-                <p>Full Address: {{ selectedBooking.carPark?.addressLine1 }}, {{ selectedBooking.carPark?.addressLine2
-                    }},
-                    {{ selectedBooking.carPark?.city }}, {{ selectedBooking.carPark?.postcode }}</p>
-                <p>Bay Number: {{ selectedBooking.bay?.bay_number || 'N/A' }}</p>
-                <p>Cost: £{{ (selectedBooking.cost && selectedBooking.cost.toFixed(2)) || '0.00' }}</p>
-                <p>Start Time: {{ formatDateTime(selectedBooking.startTime) }}</p>
-                <p>End Time: {{ formatDateTime(selectedBooking.endTime) }}</p>
-                <p>Status: {{ selectedBooking.status }}</p>
-                <p>Vehicle Size: {{ selectedBooking.bay?.vehicleSize || 'N/A' }}</p>
-                <p>EV Charging: {{ selectedBooking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
-                <p>Disabled Access: {{ selectedBooking.bay?.disabled ? 'Yes' : 'No' }}</p>
-                <p>Description: {{ selectedBooking.bay?.description || 'No description available' }}</p>
-                <!-- Conditionally show the cancel button -->
-                <button v-if="shouldShowCancelButton(selectedBooking)" @click="cancelBooking" class="btn btn-danger">
-                    Cancel Booking
-                </button>
-            </div>
-            <template #modal-footer>
-                <!-- Ensure the modal footer only contains the cancel button when conditions are met -->
-                <button v-if="shouldShowCancelButton(selectedBooking)" class="btn btn-danger" @click="cancelBooking">
-                    Cancel Booking
-                </button>
-            </template>
-        </b-modal>
     </div>
 </template>
-
 <script>
-import { BListGroup, BListGroupItem, BModal } from 'bootstrap-vue-next';
-import { cancelBooking as cancelBookingService } from '@/services/carParkService';
+import { BListGroup, BListGroupItem } from 'bootstrap-vue-next';
 
 export default {
     components: {
         BListGroup,
-        BListGroupItem,
-        BModal
+        BListGroupItem
     },
     props: ['bookings'],
-    data() {
-        return {
-            modalShow: false,
-            selectedBooking: {}
-        };
-    },
     methods: {
-        showDetails(booking) {
-            this.selectedBooking = booking;
-            this.modalShow = true;
-        },
-        hideModal() {
-            this.modalShow = false;
-        },
-        async cancelBooking() {
-            try {
-                await cancelBookingService(this.selectedBooking.log_id);
-                this.selectedBooking.status = 'Cancelled';  // Update local state
-                alert('Booking cancelled successfully');
-                this.modalShow = false;  // Close the modal after cancel
-            } catch (error) {
-                alert(error.message); // Display errors from the service layer
-            }
-        },
         formatDateTime(datetime) {
             const date = new Date(datetime);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
             ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-        },
-        shouldShowCancelButton(booking) {
-            const now = new Date();
-            return booking.status === 'reserved' && new Date(booking.endTime) > now;
         }
     }
 }

@@ -6,20 +6,26 @@
       <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
     </div>
     <div>
-      <booking-list :bookings="activeBookings" @view-details="showBookingDetailsModal" />
-      <booking-details-modal ref="bookingModal" v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
-        @close="isBookingDetailsModalVisible = false" />
+      <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal" />
+      <booking-details-modal v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
+        :show-view-payment-button="true" @close="closeBookingDetailsModal" @view-payment="showPaymentDetailsModal" />
+        <payment-details-modal v-if="isPaymentDetailsModalVisible" :payment="selectedPayment" @close="closePaymentDetailsModal" />
     </div>
   </div>
 </template>
 
 <script>
 import BookingList from '../components/BookingList.vue';
+import BookingDetailsModal from '../components/BookingDetailsModal.vue';
+import PaymentDetailsModal from '../components/PaymentDetailsModal.vue';
 import { fetchUserBookings } from '@/services/carParkService';
+import { fetchPaymentById } from '@/services/paymentService';
 
 export default {
   components: {
-    BookingList
+    BookingList,
+    BookingDetailsModal,
+    PaymentDetailsModal
   },
   data() {
     return {
@@ -31,7 +37,9 @@ export default {
       activeBookings: [],
       activeType: 'current',
       isBookingDetailsModalVisible: false,
-      bookingDetails: null
+      bookingDetails: null,
+      isPaymentDetailsModalVisible: false,
+      selectedPaymentId: null
     }
   },
   watch: {
@@ -47,47 +55,47 @@ export default {
   },
 
   computed: {
-  filteredBookings() {
-    return this.bookings[this.activeType];
-  }
-},
+    filteredBookings() {
+      return this.bookings[this.activeType];
+    }
+  },
 
   methods: {
     async fetchBookings() {
-  try {
-    this.isFetching = true;
-    const fetchedBookings = await fetchUserBookings();
-    const now = new Date();
+      try {
+        this.isFetching = true;
+        const fetchedBookings = await fetchUserBookings();
+        const now = new Date();
 
-    this.bookings.current = this.sortBookingsByStartDate(
-      fetchedBookings.current.filter(booking =>
-        new Date(booking.startTime) <= now &&
-        new Date(booking.endTime) >= now &&
-        booking.status !== 'Cancelled'
-      )
-    );
+        this.bookings.current = this.sortBookingsByStartDate(
+          fetchedBookings.current.filter(booking =>
+            new Date(booking.startTime) <= now &&
+            new Date(booking.endTime) >= now &&
+            booking.status !== 'Cancelled'
+          )
+        );
 
-    this.bookings.upcoming = this.sortBookingsByStartDate(
-      fetchedBookings.upcoming.filter(booking =>
-        new Date(booking.startTime) > now &&
-        booking.status !== 'Cancelled'
-      )
-    );
+        this.bookings.upcoming = this.sortBookingsByStartDate(
+          fetchedBookings.upcoming.filter(booking =>
+            new Date(booking.startTime) > now &&
+            booking.status !== 'Cancelled'
+          )
+        );
 
-    this.bookings.past = this.sortBookingsByStartDate(
-      fetchedBookings.past.concat(
-        fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
-        fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
-      ),
-      true
-    );
+        this.bookings.past = this.sortBookingsByStartDate(
+          fetchedBookings.past.concat(
+            fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
+            fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
+          ),
+          true
+        );
 
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
-  } finally {
-    this.isFetching = false;
-  }
-},
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        this.isFetching = false;
+      }
+    },
     sortBookingsByStartDate(bookings, isPast = false) {
       if (isPast) {
         // Sort by startTime in descending order for past bookings
@@ -97,14 +105,29 @@ export default {
       return bookings.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
     },
     updateActiveBookings() {
-  this.activeBookings = this.filteredBookings;
-},
+      this.activeBookings = this.filteredBookings;
+    },
     setActive(type) {
       this.activeType = type;
     },
     showBookingDetailsModal(booking) {
       this.bookingDetails = booking;
       this.isBookingDetailsModalVisible = true;
+    },
+    closeBookingDetailsModal() {
+      this.isBookingDetailsModalVisible = false;
+    },
+    async showPaymentDetailsModal(paymentId) {
+      try {
+        this.selectedPayment = await fetchPaymentById(paymentId);
+        this.isPaymentDetailsModalVisible = true;
+      } catch (error) {
+        console.error('Error fetching payment details:', error);
+      }
+    },
+    closePaymentDetailsModal() {
+      this.selectedPayment = null;
+      this.isPaymentDetailsModalVisible = false;
     }
   }
 }
