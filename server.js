@@ -53,7 +53,8 @@ app.post('/create-user', async (req, res) => {
       email,
       password,
       phone,
-      DOB
+      DOB,
+      role = 'user' // Default role is 'user'
     } = req.body;
 
     // How intense the hashing will be. Higher = harder to guess but will slow down the process.
@@ -65,11 +66,12 @@ app.post('/create-user', async (req, res) => {
       last_name,
       email,
       password: hashedPassword,
-      phone, // Include phone field
-      DOB
+      phone,
+      DOB,
+      role
     });
 
-    res.json({ message: "User created successfully", userId: newUser.user_id });
+    res.json({ message: "User created successfully", userId: newUser.user_id, role: newUser.role });
   } catch (error) {
     console.error('Failed to create user:', error);
     res.status(500).send('Detailed Error: ' + error.message + ' | Stack: ' + error.stack);
@@ -110,7 +112,7 @@ const authenticateToken = (req, res, next) => {
   jwt.verify(token, JWT_SECRET, (err, user) => {
     // Token not valid
     if (err) return res.sendStatus(403);
-
+    if (user.role !== 'admin') return res.sendStatus(403); // Only allow admins
     console.log(user); // Log the decoded user payload
     req.user = user;
     next();

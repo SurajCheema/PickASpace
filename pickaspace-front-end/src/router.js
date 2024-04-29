@@ -12,6 +12,7 @@ import UserBookingLogs from './views/UserBookingLogs.vue';
 import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import AdminRefundRequests from './views/AdminRefundRequests.vue';
+import jwt_decode from 'jwt-decode';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -44,7 +45,7 @@ const routes = [
   { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
   { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
   { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
-  { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
+  { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } },
 
   // Admin routes
   {
@@ -68,18 +69,28 @@ const router = createRouter({
 
 // Global beforeEach guard to check for routes requiring authentication
 router.beforeEach((to, from, next) => {
-  // Check if the route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    // Assuming 'token' is stored in localStorage when the user is logged in
-    if (!localStorage.getItem('token')) {
-      // User is not authenticated, redirect to login
-      next({ name: 'UserLogin' });
+  // Retrieve the JWT from local storage
+  const token = localStorage.getItem('token');
+
+  // Check if the current route requires authentication
+  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
+    // If the route requires authentication and no token is present,
+    // redirect the user to the login page
+    next({ name: 'UserLogin' });
+  } else if (token) {
+    // If a token is found, decode it to get user details such as the role
+    const decoded = jwt_decode(token);
+
+    // Check if the current route requires admin access and if the user is not an admin
+    if (to.matched.some(record => record.meta.requiresAdmin) && decoded.role !== 'admin') {
+      // Redirect non-admin users trying to access admin-only pages to the user dashboard
+      next({ name: 'UserDashboard' });
     } else {
-      if (to.matched.some(record => record.meta.requiresAdmin) && localStorage.getItem('role') !== 'admin') {
-        // Redirect non-admin users trying to access admin pages
-        next({ name: 'UserDashboard' });    }
+      // Proceed to the next middleware or route if role matches or no specific role is required
+      next();
+    }
   } else {
-    // Route does not require authentication, proceed as normal
+    // If the route does not require authentication, proceed as normal
     next();
   }
 });
