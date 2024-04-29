@@ -1,61 +1,53 @@
 'use strict';
 
-module.exports = {
-    async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Payments', {
-            payment_id: {
-                type: Sequelize.INTEGER,
-                primaryKey: true,
-                autoIncrement: true
-            },
-            stripePaymentId: {
-                type: Sequelize.STRING,
-                allowNull: true
-            },
-            amount: {
-                type: Sequelize.DECIMAL
-            },
-            paymentStatus: {
-                type: Sequelize.STRING,
-                defaultValue: 'pending' // Example values: pending, completed, failed, refunded
-            },
-            refundStatus: {
-                type: Sequelize.STRING,
-                defaultValue: 'none' // Example values: none, requested, approved, processed, denied
-            },
-            stripeRefundId: {
-                type: Sequelize.STRING,
-                allowNull: true
-            },
-            receiptUrl: {
-                type: Sequelize.STRING,
-                allowNull: true
-            },
-            date_paid: {
-                type: Sequelize.DATE
-            },
-            userId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: {
-                    model: 'Users',
-                    key: 'user_id'
-                },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE'
-            },
-            createdAt: {
-                allowNull: false,
-                type: Sequelize.DATE
-            },
-            updatedAt: {
-                allowNull: false,
-                type: Sequelize.DATE
-            },
-        });
+module.exports = (sequelize, DataTypes) => {
+  const Payment = sequelize.define('Payment', {
+    payment_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
+    stripePaymentId: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    amount: {
+      type: DataTypes.DECIMAL
+    },
+    paymentStatus: {
+      type: DataTypes.STRING,
+      defaultValue: 'pending',
+      validate: {
+        isIn: [['pending', 'completed', 'failed', 'refunded']]
+      }
+    },
+    refundStatus: {
+      type: DataTypes.STRING,
+      defaultValue: 'none',
+      validate: {
+        isIn: [['none', 'requested', 'approved', 'processed', 'denied']]
+      }
+    },
+    stripeRefundId: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    receiptUrl: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    date_paid: DataTypes.DATE,
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'user_id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
+    },
+  });
 
-    async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('Payments');
-    }
+  return Payment;
 };

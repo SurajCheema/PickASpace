@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = (sequelize, DataTypes) => {
     const CarPark = sequelize.define('CarPark', {
         carpark_id: {

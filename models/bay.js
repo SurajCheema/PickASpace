@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = (sequelize, DataTypes) => {
   const Bay = sequelize.define('Bay', {
       bay_id: {
