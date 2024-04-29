@@ -107,18 +107,26 @@ const authenticateToken = (req, res, next) => {
   // Bearer TOKEN
   const token = authHeader && authHeader.split(' ')[1];
   // No token found
-  if (token == null) return res.sendStatus(401);
+  if (token == null) {
+    console.log('No token found in the request headers'); // Log the absence of token
+    return res.sendStatus(401);
+  }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     // Token not valid
-    if (err) return res.sendStatus(403);
-    if (user.role !== 'admin') return res.sendStatus(403); // Only allow admins
-    console.log(user); // Log the decoded user payload
+    if (err) {
+      console.error('Error verifying token:', err); // Log the token verification error
+      return res.sendStatus(403);
+    }
+    if (user.role !== 'admin') {
+      console.log('User does not have admin role:', user); // Log the user's role
+      return res.sendStatus(403); // Only allow admins
+    }
+    console.log('Token verified, user:', user); // Log the verified user
     req.user = user;
     next();
   });
 };
-
 // Create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
 

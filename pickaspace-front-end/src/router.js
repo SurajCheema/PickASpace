@@ -1,5 +1,6 @@
 // src/router.js
 import { createRouter, createWebHistory } from 'vue-router';
+import { jwtDecode } from 'jwt-decode';
 import UserRegister from './views/UserRegister.vue';
 import UserLogin from './views/UserLogin.vue';
 import CarParkDashboard from './views/CarParkDashboard.vue';
@@ -12,7 +13,6 @@ import UserBookingLogs from './views/UserBookingLogs.vue';
 import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import AdminRefundRequests from './views/AdminRefundRequests.vue';
-import jwt_decode from 'jwt-decode';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -69,29 +69,50 @@ const router = createRouter({
 
 // Global beforeEach guard to check for routes requiring authentication
 router.beforeEach((to, from, next) => {
-  // Retrieve the JWT from local storage
   const token = localStorage.getItem('token');
 
-  // Check if the current route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
-    // If the route requires authentication and no token is present,
-    // redirect the user to the login page
-    next({ name: 'UserLogin' });
-  } else if (token) {
-    // If a token is found, decode it to get user details such as the role
-    const decoded = jwt_decode(token);
+  console.log('Token:', token); // Log the token
 
-    // Check if the current route requires admin access and if the user is not an admin
-    if (to.matched.some(record => record.meta.requiresAdmin) && decoded.role !== 'admin') {
-      // Redirect non-admin users trying to access admin-only pages to the user dashboard
-      next({ name: 'UserDashboard' });
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!token) {
+      console.log('No token found, redirecting to login'); // Log the redirection
+      if (from.name !== 'UserLogin') {
+        next({ name: 'UserLogin' });
+      } else {
+        next(false); // Stop routing
+      }
     } else {
-      // Proceed to the next middleware or route if role matches or no specific role is required
-      next();
+      // Decode token and check for role if necessary
+      try {
+        const decoded = jwtDecode(token);
+        console.log('Decoded token:', decoded); // Log the decoded token
+
+        const currentTime = Date.now() / 1000; // Convert current time to seconds
+
+        if (decoded.exp < currentTime) {
+          console.log('Token has expired, redirecting to login'); // Log the expiration
+          localStorage.removeItem('token');
+          next({ name: 'UserLogin' });
+        } else if (to.matched.some(record => record.meta.requiresAdmin) && decoded.role !== 'admin') {
+          console.log('Non-admin user, redirecting to user dashboard'); // Log the role mismatch
+          if (from.name !== 'UserDashboard') {
+            next({ name: 'UserDashboard' }); // Redirect non-admin users
+          } else {
+            next(false); // Stop routing
+          }
+        } else {
+          console.log('Token valid, proceeding to route'); // Log the successful authorization
+          next(); // Proceed if role matches
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        localStorage.removeItem('token');
+        next({ name: 'UserLogin' });
+      }
     }
   } else {
-    // If the route does not require authentication, proceed as normal
-    next();
+    console.log('No authentication required, proceeding to route'); // Log the route without authentication
+    next(); // Proceed if no auth required
   }
 });
 
