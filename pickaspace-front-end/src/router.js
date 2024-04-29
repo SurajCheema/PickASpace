@@ -10,6 +10,8 @@ import UserDashboard from './views/UserDashboard.vue';
 import UserProfile from './views/UserProfile.vue';
 import UserBookingLogs from './views/UserBookingLogs.vue';
 import UserPaymentLogs from './views/UserPaymentLogs.vue';
+import AdminDashboard from './views/AdminDashboard.vue';
+import AdminRefundRequests from './views/AdminRefundRequests.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -43,6 +45,20 @@ const routes = [
   { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
   { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } }
+
+  // Admin routes
+  {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/refunds',
+    name: 'AdminRefundRequests',
+    component: AdminRefundRequests,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
 ];
 
 const router = createRouter({
@@ -59,9 +75,9 @@ router.beforeEach((to, from, next) => {
       // User is not authenticated, redirect to login
       next({ name: 'UserLogin' });
     } else {
-      // User is authenticated, proceed to route
-      next();
-    }
+      if (to.matched.some(record => record.meta.requiresAdmin) && localStorage.getItem('role') !== 'admin') {
+        // Redirect non-admin users trying to access admin pages
+        next({ name: 'UserDashboard' });    }
   } else {
     // Route does not require authentication, proceed as normal
     next();

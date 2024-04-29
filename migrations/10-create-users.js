@@ -11,7 +11,7 @@ module.exports = {
       },
       car_registration: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       email: {
         type: Sequelize.STRING,
@@ -40,6 +40,11 @@ module.exports = {
       address: { 
         type: Sequelize.STRING,
         allowNull: true 
+      },
+      role: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: 'user' // Default is 'user', can also be 'admin' or 'warden'
       },
       createdAt: {
         allowNull: false,

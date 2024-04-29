@@ -1,54 +1,64 @@
-module.exports = (sequelize, DataTypes) => {
-    const CarParkLog = sequelize.define('CarParkLog', {
-        log_id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true
-        },
-        carpark_id: {
-            type: DataTypes.INTEGER,
-            references: { model: 'CarPark', key: 'carpark_id' }
-        },
-        user_id: {
-            type: DataTypes.INTEGER,
-            references: { model: 'User', key: 'user_id' }
-        },
-        bay_id: {
-            type: DataTypes.INTEGER,
-            references: { model: 'Bay', key: 'bay_id' }
-        },
-        payment_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'Payments',
-                key: 'payment_id'
-            }
-        },
-        startTime: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-        endTime: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-        cost: {
-            type: DataTypes.FLOAT,
-            allowNull: false
-        },
-        status: {
-            type: DataTypes.STRING,
-            defaultValue: 'reserved' // reserved, cancelled, completed, refunded
-        }
-    });
+'use strict';
 
-    CarParkLog.associate = (models) => {
-        CarParkLog.belongsTo(models.CarPark, { foreignKey: 'carpark_id', as: 'carPark' });
-        CarParkLog.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-        CarParkLog.belongsTo(models.Bay, { foreignKey: 'bay_id', as: 'bay' });
-        CarParkLog.belongsTo(models.Payment, { foreignKey: 'payment_id', as: 'payment' });
-    };
+module.exports = {
+    async up(queryInterface, Sequelize) {
+        await queryInterface.createTable('CarParkLogs', {
+            log_id: {
+                type: Sequelize.INTEGER,
+                primaryKey: true,
+                autoIncrement: true
+            },
+            carpark_id: {
+                type: Sequelize.INTEGER,
+                references: { model: 'CarParks', key: 'carpark_id' },
+                allowNull: false
+            },
+            user_id: {
+                type: Sequelize.INTEGER,
+                references: { model: 'Users', key: 'user_id' },
+                allowNull: false
+            },
+            bay_id: {
+                type: Sequelize.INTEGER,
+                references: { model: 'Bays', key: 'bay_id' },
+                allowNull: false
+            },
+            payment_id: {
+                type: Sequelize.INTEGER,
+                references: { model: 'Payments', key: 'payment_id' },
+                allowNull: true
+            },
+            startTime: {
+                type: Sequelize.DATE,
+                allowNull: false
+            },
+            endTime: {
+                type: Sequelize.DATE,
+                allowNull: false
+            },
+            cost: {
+                type: Sequelize.FLOAT,
+                allowNull: false
+            },
+            status: {
+                type: Sequelize.STRING,
+                defaultValue: 'reserved', // Example values: reserved, active, cancelled, completed, refunded
+                validate: {
+                    isIn: [['reserved', 'active', 'cancelled', 'completed', 'refunded']]
+                }
+            },
+            createdAt: {
+                allowNull: false,
+                type: Sequelize.DATE
+            },
+            updatedAt: {
+                allowNull: false,
+                type: Sequelize.DATE
+            },
+        });
+    },
 
-    return CarParkLog;
+    async down(queryInterface, Sequelize) {
+        await queryInterface.dropTable('CarParkLogs');
+    }
 };

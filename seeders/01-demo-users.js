@@ -14,12 +14,25 @@ module.exports = {
         DOB: new Date('1990-01-01'),
         car_registration: 'ABC123',
         phone: '+44123456789',
+        role: 'user', // Normal user role
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        email: 'admin@test.com',
+        password: 'test', // Plain password will be hashed below
+        first_name: 'Jane',
+        last_name: 'Admin',
+        DOB: new Date('1985-05-15'),
+        car_registration: null, // Admin might not need a car registration
+        phone: '+44123456700',
+        role: 'admin', // Admin role
         createdAt: new Date(),
         updatedAt: new Date()
       }
     ];
 
-    // Hash password 
+    // Hash passwords
     for (let user of users) {
       user.password = await bcrypt.hash(user.password, saltRounds);
     }
