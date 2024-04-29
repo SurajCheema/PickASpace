@@ -118,15 +118,19 @@ const authenticateToken = (req, res, next) => {
       console.error('Error verifying token:', err); // Log the token verification error
       return res.sendStatus(403);
     }
-    if (user.role !== 'admin') {
-      console.log('User does not have admin role:', user); // Log the user's role
-      return res.sendStatus(403); // Only allow admins
-    }
+
     console.log('Token verified, user:', user); // Log the verified user
     req.user = user;
+
+    // Check if the user has the required role for the route
+    if (req.path.startsWith('/admin') && user.role !== 'admin') {
+      console.log('User does not have admin access:', user); // Log the user's role
+      return res.sendStatus(403); // Deny access to admin routes for non-admin users
+    }
     next();
   });
 };
+
 // Create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
 

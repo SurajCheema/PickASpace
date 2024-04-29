@@ -76,13 +76,8 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!token) {
       console.log('No token found, redirecting to login'); // Log the redirection
-      if (from.name !== 'UserLogin') {
-        next({ name: 'UserLogin' });
-      } else {
-        next(false); // Stop routing
-      }
+      next({ name: 'UserLogin' });
     } else {
-      // Decode token and check for role if necessary
       try {
         const decoded = jwtDecode(token);
         console.log('Decoded token:', decoded); // Log the decoded token
@@ -94,12 +89,8 @@ router.beforeEach((to, from, next) => {
           localStorage.removeItem('token');
           next({ name: 'UserLogin' });
         } else if (to.matched.some(record => record.meta.requiresAdmin) && decoded.role !== 'admin') {
-          console.log('Non-admin user, redirecting to user dashboard'); // Log the role mismatch
-          if (from.name !== 'UserDashboard') {
-            next({ name: 'UserDashboard' }); // Redirect non-admin users
-          } else {
-            next(false); // Stop routing
-          }
+          console.log('Non-admin user, redirecting to home'); // Log the role mismatch
+          next({ name: 'Home' }); // Redirect non-admin users to home
         } else {
           console.log('Token valid, proceeding to route'); // Log the successful authorization
           next(); // Proceed if role matches
