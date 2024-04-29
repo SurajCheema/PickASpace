@@ -326,20 +326,20 @@ cron.schedule('* * * * *', async () => {
   try {
     // Update bookings to 'Completed' that are past their end time and not cancelled
     const [updated] = await db.CarParkLog.update(
-      { status: 'Completed' },
+      { status: 'completed' },
       {
         where: {
           endTime: {
             [db.Sequelize.Op.lt]: now
           },
           status: {
-            [db.Sequelize.Op.ne]: 'Cancelled'
+            [db.Sequelize.Op.ne]: 'cancelled'
           }
         },
         transaction: transaction
       }
     );
-    console.log(`${updated} bookings updated to 'Completed'`);
+    console.log(`${updated} bookings updated to 'completed'`);
     ''
     // Check and update the bay status based on the current active bookings
     const baysToUpdate = await db.Bay.findAll({
@@ -508,7 +508,7 @@ app.get('/api/user/bookings', authenticateToken, async (req, res) => {
 app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) => {
   const { bookingId } = req.params;
   try {
-    const result = await db.CarParkLog.update({ status: 'Cancelled' }, {
+    const result = await db.CarParkLog.update({ status: 'cancelled' }, {
       where: { log_id: bookingId }
     });
     if (result[0] > 0) {
