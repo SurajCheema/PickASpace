@@ -621,7 +621,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const { paymentId, reason } = req.body;
 
   try {
-      // Validate payment exists and belongs to the user
+      // Validate that the payment exists and belongs to the user
       const payment = await db.Payment.findOne({
           where: {
               payment_id: paymentId,
@@ -633,7 +633,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
           return res.status(404).json({ message: 'Payment not found or does not belong to user' });
       }
 
-      // Check if the payment is already refunded or a refund is processed
+      // Check if a refund request has already been processed or is in progress
       if (payment.paymentStatus === 'refunded' || payment.paymentStatus === 'refunding') {
           return res.status(400).json({ message: 'Refund already processed or in progress for this payment' });
       }
@@ -644,21 +644,10 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
           amount: payment.amount,
           status: 'requested',
           reason: reason,
-          log_id: payment.log_id  // Assuming log_id is stored in the payment model
+          log_id: payment.log_id 
       });
 
-      // Optional: Initiate a refund request with Stripe
-      const stripeRefund = await stripe.refunds.create({
-          payment_intent: payment.stripePaymentId,
-          amount: Math.floor(payment.amount * 100)  // Convert to smallest currency unit
-      });
-
-      // Update the refund record with Stripe information
-      await refund.update({
-          stripeRefundId: stripeRefund.id,
-          status: 'processing'  // Update status based on Stripe's response
-      });
-
+      // Respond with success
       res.json({ message: 'Refund request submitted successfully', refundId: refund.refund_id });
   } catch (error) {
       console.error('Failed to request refund:', error);
