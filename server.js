@@ -622,11 +622,13 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const userId = req.user.userId;  // Derived from the authenticated token
 
   try {
+      // Fetch the payment and ensure it includes related CarParkLog details
       const payment = await db.Payment.findOne({
           where: {
               payment_id: paymentId,
               userId: userId  // Ensure the payment belongs to the user
-          }
+          },
+          include: [{ model: db.CarParkLog, as: 'log' }] // Include the CarParkLog related to the payment
       });
 
       if (!payment) {
@@ -637,12 +639,18 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
           return res.status(400).json({ message: 'Refund already processed or in progress for this payment' });
       }
 
+      // Validate that there is a related log entry
+      if (!payment.log) {
+          return res.status(404).json({ message: 'Booking log not found for this payment' });
+      }
+
+      // Create a refund request with all necessary data
       const refund = await db.Refund.create({
           payment_id: paymentId,
           amount: payment.amount,
           status: 'requested',
           reason: reason,
-          log_id: payment.log_id,
+          log_id: payment.log.log_id, 
           createdBy: userId,
           updatedBy: userId
       });

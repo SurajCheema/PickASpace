@@ -42,25 +42,32 @@ export const fetchPaymentById = async (paymentId) => {
     }
   };
 
-// Refund payments with reason
-export const refundPayment = async (paymentId, reason) => {
+// Request refund for specific payment
+export const requestRefund = async (paymentId, reason) => {
     const token = localStorage.getItem('token');
     try {
+        const body = JSON.stringify({
+            paymentId,
+            reason,
+        });
+
         const response = await fetch(`${API_BASE_URL}/request-refund`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ paymentId, reason })  // Sending paymentId and reason for refund
+            body: body
         });
+
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to process refund');
+            throw new Error(errorData.message || 'Failed to request refund');
         }
+
         return await response.json();
     } catch (error) {
-        console.error('Error processing refund:', error);
+        console.error('Error requesting refund:', error);
         throw error;
     }
 };
