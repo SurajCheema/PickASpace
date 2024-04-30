@@ -638,12 +638,17 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Refund already processed or in progress' });
     }
 
+    // Check if the booking has been cancelled before processing the refund
+    if (payment.log.status !== 'cancelled') {
+      return res.status(400).json({ message: 'Refund requests can only be processed for cancelled bookings' });
+    }
+
     const currentTime = new Date();
     const startTime = new Date(payment.log.startTime);
     const timeDifference = (startTime - currentTime) / (1000 * 60 * 60); // difference in hours
 
     // Check for automatic refund eligibility
-    if (payment.log.status === 'reserved' && timeDifference >= 24) {
+    if (timeDifference >= 24) {
       const refund = await processAutomaticRefund(payment, userId);
       res.json({ message: 'Refund processed automatically', refundId: refund.refund_id });
     } else {
@@ -686,7 +691,7 @@ async function processAutomaticRefund(payment, userId) {
   });
 
   await db.Payment.update({ paymentStatus: 'refunded' }, { where: { payment_id: payment.payment_id } });
-  await db.CarParkLog.update({ status: 'cancelled' }, { where: { log_id: payment.log.log_id } });
+  await db.CarParkLog.update({ status: 'refunded' }, { where: { log_id: payment.log.log_id } });
 
   return refund;
 }
