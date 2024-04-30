@@ -619,52 +619,6 @@ app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
 // Endpoint to request a refund
 app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const { paymentId, reason } = req.body;
-  const userId = req.user.userId;  
-
-  try {
-      // Fetch the payment and ensure it includes related CarParkLog details
-      const payment = await db.Payment.findOne({
-          where: {
-              payment_id: paymentId,
-              userId: userId  // Ensure the payment belongs to the user
-          },
-          include: [{ model: db.CarParkLog, as: 'log' }] // Include the CarParkLog related to the payment
-      });
-
-      if (!payment) {
-          return res.status(404).json({ message: 'Payment not found or does not belong to user' });
-      }
-
-      if (payment.paymentStatus === 'refunded' || payment.paymentStatus === 'refunding') {
-          return res.status(400).json({ message: 'Refund already processed or in progress for this payment' });
-      }
-
-      // Validate that there is a related log entry
-      if (!payment.log) {
-          return res.status(404).json({ message: 'Booking log not found for this payment' });
-      }
-
-      // Create a refund request with all necessary data
-      const refund = await db.Refund.create({
-          payment_id: paymentId,
-          amount: payment.amount,
-          status: 'requested',
-          reason: reason,
-          log_id: payment.log.log_id, 
-          createdBy: userId,
-          updatedBy: userId
-      });
-
-      res.json({ message: 'Refund request submitted successfully', refundId: refund.refund_id });
-  } catch (error) {
-      console.error('Failed to request refund:', error);
-      res.status(500).send({ message: error.message });
-  }
-});
-
-// Endpoint to automatically process refunds for eligible bookings
-app.post('/api/auto-refund', authenticateToken, async (req, res) => {
-  const { paymentId } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -688,34 +642,51 @@ app.post('/api/auto-refund', authenticateToken, async (req, res) => {
     const startTime = new Date(payment.log.startTime);
     const timeDifference = (startTime - currentTime) / (1000 * 60 * 60); // difference in hours
 
+    // Check for automatic refund eligibility
     if (payment.log.status === 'reserved' && timeDifference >= 24) {
-      // Proceed with automatic refund if it's more than 24 hours before the booking starts
-      const stripeRefund = await stripe.refunds.create({
-        payment_intent: payment.stripePaymentId,
-        amount: Math.floor(payment.amount * 100) // assuming amount is stored as a decimal pounds value
-      });
-
+      const refund = await processAutomaticRefund(payment, userId);
+      res.json({ message: 'Refund processed automatically', refundId: refund.refund_id });
+    } else {
+      // Proceed with a normal refund request
       const refund = await db.Refund.create({
         payment_id: paymentId,
         amount: payment.amount,
-        status: 'processed',
-        reason: 'Automatic refund for cancellation more than 24 hours before start time',
+        status: 'requested',
+        reason: reason,
         log_id: payment.log.log_id,
-        stripeRefundId: stripeRefund.id,
-        processedAt: new Date(),
         createdBy: userId,
         updatedBy: userId
       });
 
-      await db.Payment.update({ paymentStatus: 'refunded' }, { where: { payment_id: paymentId } });
-      await db.CarParkLog.update({ status: 'cancelled' }, { where: { log_id: payment.log.log_id } });
-
-      res.json({ message: 'Refund processed successfully', refundId: refund.refund_id });
-    } else {
-      res.status(400).json({ message: 'Refund not eligible due to timing or booking status' });
+      res.json({ message: 'Refund request submitted for review', refundId: refund.refund_id });
     }
   } catch (error) {
-    console.error('Error processing automatic refund:', error);
+    console.error('Failed to request refund:', error);
     res.status(500).send({ message: error.message });
   }
 });
+
+// Helper function to handle automatic refunds
+async function processAutomaticRefund(payment, userId) {
+  const stripeRefund = await stripe.refunds.create({
+    payment_intent: payment.stripePaymentId,
+    amount: Math.floor(payment.amount * 100) // Convert to cents for Stripe API
+  });
+
+  const refund = await db.Refund.create({
+    payment_id: payment.payment_id,
+    amount: payment.amount,
+    status: 'processed',
+    reason: 'Automatic refund for cancellation more than 24 hours before start time',
+    log_id: payment.log.log_id,
+    stripeRefundId: stripeRefund.id,
+    processedAt: new Date(),
+    createdBy: userId,
+    updatedBy: userId
+  });
+
+  await db.Payment.update({ paymentStatus: 'refunded' }, { where: { payment_id: payment.payment_id } });
+  await db.CarParkLog.update({ status: 'cancelled' }, { where: { log_id: payment.log.log_id } });
+
+  return refund;
+}
