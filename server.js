@@ -619,13 +619,13 @@ app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
 // Endpoint to request a refund
 app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const { paymentId, reason } = req.body;
+  const userId = req.user.userId;  // Derived from the authenticated token
 
   try {
-      // Validate that the payment exists and belongs to the user
       const payment = await db.Payment.findOne({
           where: {
               payment_id: paymentId,
-              userId: req.user.userId  // Ensure that the payment belongs to the user
+              userId: userId  // Ensure the payment belongs to the user
           }
       });
 
@@ -633,21 +633,20 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
           return res.status(404).json({ message: 'Payment not found or does not belong to user' });
       }
 
-      // Check if a refund request has already been processed or is in progress
       if (payment.paymentStatus === 'refunded' || payment.paymentStatus === 'refunding') {
           return res.status(400).json({ message: 'Refund already processed or in progress for this payment' });
       }
 
-      // Create a refund request
       const refund = await db.Refund.create({
           payment_id: paymentId,
           amount: payment.amount,
           status: 'requested',
           reason: reason,
-          log_id: payment.log_id 
+          log_id: payment.log_id,
+          createdBy: userId,
+          updatedBy: userId
       });
 
-      // Respond with success
       res.json({ message: 'Refund request submitted successfully', refundId: refund.refund_id });
   } catch (error) {
       console.error('Failed to request refund:', error);
