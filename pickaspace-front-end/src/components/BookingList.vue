@@ -30,6 +30,17 @@ export default {
             const date = new Date(datetime);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
             ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        },
+
+        canCancel(booking) {
+            const now = new Date();
+            const startTime = new Date(booking.startTime);
+            // Allow cancellation if booking is either 'reserved' or 'active'
+            return ['reserved', 'active'].includes(booking.status)
+                && endTime > now; // 24 hours before start time
+        },
+        cancelBooking(booking) {
+            this.$emit('cancel-booking', booking.log_id);
         }
     }
 }

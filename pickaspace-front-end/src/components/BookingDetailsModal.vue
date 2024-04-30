@@ -3,7 +3,8 @@
         <div v-if="booking">
             <p><strong>Booking ID:</strong> {{ booking.log_id || 'N/A' }}</p>
             <p><strong>Car Park ID:</strong> {{ booking?.carpark_id || 'N/A' }}</p>
-            <p><strong>Full Address:</strong> {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2 }}, {{ booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
+            <p><strong>Full Address:</strong> {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2
+                }}, {{ booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
             <p><strong>Bay Number:</strong> {{ booking.bay?.bay_number || 'N/A' }}</p>
             <p><strong>Cost:</strong> £{{ (booking.cost && booking.cost.toFixed(2)) || '0.00' }}</p>
             <p><strong>Start Time:</strong> {{ formatDateTime(booking.startTime) }}</p>
@@ -17,14 +18,14 @@
                 View Payment
             </button>
         </div>
-            <template v-if="booking" #modal-footer>
-    <div class="d-flex justify-content-between w-100">
-        <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
-            Cancel Booking
-        </button>
-        <div></div> <!-- Empty div to push the button to the left -->
-    </div>
-</template>
+        <template v-if="booking" #modal-footer>
+            <div class="d-flex justify-content-between w-100">
+                <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
+                    Cancel Booking
+                </button>
+                <div></div> <!-- Empty div to push the button to the left -->
+            </div>
+        </template>
     </b-modal>
 </template>
 
@@ -85,7 +86,18 @@ export default {
         },
         shouldShowCancelButton(booking) {
             const now = new Date();
-            return booking.status === 'reserved' && new Date(booking.endTime) > now;
+            // Allow cancellation if status is 'reserved' or 'active', and the current time is before the booking end time
+            return ['reserved', 'active'].includes(booking.status) && new Date(booking.endTime) > now;
+        },
+        confirmCancel() {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                this.cancelBooking();
+            }
+        },
+        cancelBooking() {
+            // Implementation may call a service function or emit an event
+            this.$emit('cancel-booking', this.booking.log_id);
+            this.modalShow = false; // Hide modal after cancellation
         },
         viewPayment() {
             this.$emit('view-payment', this.booking.payment_id);
