@@ -21,17 +21,6 @@ module.exports = {
           isIn: [['pending', 'completed', 'failed', 'refunded']]
         }
       },
-      refundStatus: {
-        type: Sequelize.STRING,
-        defaultValue: 'none',
-        validate: {
-          isIn: [['none', 'requested', 'approved', 'processed', 'denied']]
-        }
-      },
-      stripeRefundId: {
-        type: Sequelize.STRING,
-        allowNull: true
-      },
       receiptUrl: {
         type: Sequelize.STRING,
         allowNull: true
