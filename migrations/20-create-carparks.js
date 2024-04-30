@@ -15,7 +15,7 @@ module.exports = {
         type: Sequelize.TIME
       },
       accessInstructions: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: true
       },
       pricing: {
