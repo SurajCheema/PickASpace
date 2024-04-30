@@ -42,16 +42,17 @@ export const fetchPaymentById = async (paymentId) => {
     }
   };
 
-// Refund payments
-export const refundPayment = async (paymentId) => {
+// Refund payments with reason
+export const refundPayment = async (paymentId, reason) => {
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(`${API_BASE_URL}/refund-payment/${paymentId}`, {
+        const response = await fetch(`${API_BASE_URL}/request-refund`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({ paymentId, reason })  // Sending paymentId and reason for refund
         });
         if (!response.ok) {
             const errorData = await response.json();

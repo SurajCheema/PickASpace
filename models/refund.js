@@ -24,14 +24,21 @@ module.exports = (sequelize, DataTypes) => {
     },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isPositive(value) {
+          if (value <= 0) {
+            throw new Error("Refund amount must be greater than zero.");
+          }
+        }
+      }
     },
     status: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'requested',
       validate: {
-        isIn: [['requested', 'approved', 'processed', 'denied']]
+        isIn: [['requested', 'approved', 'processed', 'denied', 'reviewing', 'awaiting approval']]
       }
     },
     reason: {
@@ -49,14 +56,30 @@ module.exports = (sequelize, DataTypes) => {
     processedAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    createdBy: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'user_id'
+      }
+    },
+    updatedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'user_id'
+      }
     }
   });
 
   Refund.associate = function (models) {
-    // Linking Refund to CarParkLog
     Refund.belongsTo(models.CarParkLog, { foreignKey: 'log_id', as: 'carParkLog' });
-    // Linking Refund to Payment
     Refund.belongsTo(models.Payment, { foreignKey: 'payment_id', as: 'payment' });
+    Refund.belongsTo(models.User, { foreignKey: 'createdBy', as: 'creator' });
+    Refund.belongsTo(models.User, { foreignKey: 'updatedBy', as: 'modifier' });
   };
 
   return Refund;
