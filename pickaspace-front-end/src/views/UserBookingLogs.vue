@@ -4,12 +4,16 @@
       <button class="btn btn-primary mx-2" @click="setActive('current')">Current</button>
       <button class="btn btn-primary mx-2" @click="setActive('upcoming')">Upcoming</button>
       <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
+      <button class="btn btn-primary mx-2" @click="setActive('cancelled')">Cancelled</button>
     </div>
     <div>
-      <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal" />
+      <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal"
+        @cancel-booking="cancelBooking" />
       <booking-details-modal v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
-        :show-view-payment-button="true" @close="closeBookingDetailsModal" @view-payment="showPaymentDetailsModal" />
-        <payment-details-modal v-if="isPaymentDetailsModalVisible" :payment="selectedPayment" @close="closePaymentDetailsModal" />
+        :show-view-payment-button="true" @close="closeBookingDetailsModal" @view-payment="showPaymentDetailsModal"
+        @booking-cancelled="handleBookingCancelled" />
+      <payment-details-modal v-if="isPaymentDetailsModalVisible" :payment="selectedPayment"
+        @close="closePaymentDetailsModal" />
     </div>
   </div>
 </template>
@@ -18,7 +22,7 @@
 import BookingList from '../components/BookingList.vue';
 import BookingDetailsModal from '../components/BookingDetailsModal.vue';
 import PaymentDetailsModal from '../components/PaymentDetailsModal.vue';
-import { fetchUserBookings } from '@/services/carParkService';
+import { fetchUserBookings, cancelBooking as cancelBookingService } from '@/services/carParkService';
 import { fetchPaymentById } from '@/services/paymentService';
 
 export default {
@@ -39,7 +43,7 @@ export default {
       isBookingDetailsModalVisible: false,
       bookingDetails: null,
       isPaymentDetailsModalVisible: false,
-      selectedPaymentId: null
+      selectedPayment: null
     }
   },
   watch: {
@@ -71,14 +75,14 @@ export default {
           fetchedBookings.current.filter(booking =>
             new Date(booking.startTime) <= now &&
             new Date(booking.endTime) >= now &&
-            booking.status !== 'Cancelled'
+            booking.status !== 'cancelled'
           )
         );
 
         this.bookings.upcoming = this.sortBookingsByStartDate(
           fetchedBookings.upcoming.filter(booking =>
             new Date(booking.startTime) > now &&
-            booking.status !== 'Cancelled'
+            booking.status !== 'cancelled'
           )
         );
 
@@ -87,6 +91,12 @@ export default {
             fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
             fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
           ),
+          true
+        );
+
+        this.bookings.cancelled = this.sortBookingsByStartDate(
+          fetchedBookings.current.filter(booking => booking.status === 'cancelled')
+            .concat(fetchedBookings.upcoming.filter(booking => booking.status === 'cancelled')),
           true
         );
 
@@ -128,6 +138,36 @@ export default {
     closePaymentDetailsModal() {
       this.selectedPayment = null;
       this.isPaymentDetailsModalVisible = false;
+    },
+    async cancelBooking(bookingId) {
+      try {
+        await cancelBookingService(bookingId);
+        this.fetchBookings(); // Refresh bookings after cancellation
+      } catch (error) {
+        console.error('Error cancelling booking:', error);
+      }
+    },
+    handleBookingCancelled(bookingId) {
+      // Find the cancelled booking in current, upcoming, or past tabs
+      const cancelledBooking = this.bookings.current.find(b => b.log_id === bookingId)
+        || this.bookings.upcoming.find(b => b.log_id === bookingId)
+        || this.bookings.past.find(b => b.log_id === bookingId);
+
+      if (cancelledBooking) {
+        // Update the status of the cancelled booking
+        cancelledBooking.status = 'cancelled';
+
+        // Move the cancelled booking to the cancelled tab
+        this.bookings.cancelled.unshift(cancelledBooking);
+
+        // Remove the cancelled booking from its original tab
+        this.bookings.current = this.bookings.current.filter(b => b.log_id !== bookingId);
+        this.bookings.upcoming = this.bookings.upcoming.filter(b => b.log_id !== bookingId);
+        this.bookings.past = this.bookings.past.filter(b => b.log_id !== bookingId);
+
+        // Update the active bookings
+        this.updateActiveBookings();
+      }
     }
   }
 }

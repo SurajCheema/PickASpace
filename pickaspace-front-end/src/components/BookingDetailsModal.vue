@@ -20,7 +20,7 @@
         </div>
         <template v-if="booking" #modal-footer>
             <div class="d-flex justify-content-between w-100">
-                <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="cancelBooking">
+                <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="confirmCancel">
                     Cancel Booking
                 </button>
                 <div></div> <!-- Empty div to push the button to the left -->
@@ -70,15 +70,6 @@ export default {
         hideModal() {
             this.$emit('close');
         },
-        async cancelBooking() {
-            try {
-                await cancelBookingService(this.booking.log_id);
-                this.$emit('booking-cancelled', this.booking.log_id);
-                this.modalShow = false;
-            } catch (error) {
-                alert(error.message);
-            }
-        },
         formatDateTime(datetime) {
             const date = new Date(datetime);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
@@ -94,10 +85,14 @@ export default {
                 this.cancelBooking();
             }
         },
-        cancelBooking() {
-            // Implementation may call a service function or emit an event
-            this.$emit('cancel-booking', this.booking.log_id);
-            this.modalShow = false; // Hide modal after cancellation
+        async cancelBooking() {
+            try {
+                await cancelBookingService(this.booking.log_id);
+                this.$emit('booking-cancelled', this.booking.log_id);
+                this.modalShow = false; // Hide modal after cancellation
+            } catch (error) {
+                alert(error.message);
+            }
         },
         viewPayment() {
             this.$emit('view-payment', this.booking.payment_id);

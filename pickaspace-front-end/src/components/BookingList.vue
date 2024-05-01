@@ -12,6 +12,9 @@
                     <p>{{ booking.carPark?.city }}</p>
                     <p>{{ formatDateTime(booking.startTime) }} - {{ formatDateTime(booking.endTime) }}</p>
                 </div>
+                <button v-if="canCancel(booking)" @click.stop="cancelBooking(booking)" class="btn btn-danger mt-2">
+                    Cancel Booking
+                </button>
             </b-list-group-item>
         </b-list-group>
     </div>
@@ -34,10 +37,10 @@ export default {
 
         canCancel(booking) {
             const now = new Date();
-            const startTime = new Date(booking.startTime);
+            const endTime = new Date(booking.endTime);
             // Allow cancellation if booking is either 'reserved' or 'active'
             return ['reserved', 'active'].includes(booking.status)
-                && endTime > now; // 24 hours before start time
+                && endTime > now; // Current time is before end time
         },
         cancelBooking(booking) {
             this.$emit('cancel-booking', booking.log_id);
