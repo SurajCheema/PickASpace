@@ -7,7 +7,8 @@
                     <div class="booking-info d-flex flex-column align-items-start">
                         <h5 class="mb-1">
                             Booking ID: {{ booking.log_id }}
-                            <span v-if="booking.status === 'Cancelled'" class="text-danger">(Cancelled)</span>
+                            <!-- Ensure the condition matches the exact case from backend -->
+                            <span v-if="booking.status.toLowerCase() === 'cancelled'" class="text-danger">(Cancelled)</span>
                         </h5>
                         <p class="mb-1">{{ booking.carPark?.addressLine1 }}</p>
                         <p>{{ booking.carPark?.city }}</p>
@@ -31,19 +32,21 @@ export default {
         BListGroupItem
     },
     props: ['bookings'],
+    mounted() {
+        // Log statuses for debugging
+        this.bookings.forEach(booking => console.log(`Booking ID: ${booking.log_id}, Status: ${booking.status}`));
+    },
     methods: {
         formatDateTime(datetime) {
             const date = new Date(datetime);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
             ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
         },
-
         canCancel(booking) {
             const now = new Date();
             const endTime = new Date(booking.endTime);
             // Allow cancellation if booking is either 'reserved' or 'active'
-            return ['reserved', 'active'].includes(booking.status)
-                && endTime > now; // Current time is before end time
+            return ['reserved', 'active'].includes(booking.status) && endTime > now;
         },
         cancelBooking(booking) {
             this.$emit('cancel-booking', booking.log_id);
