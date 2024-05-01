@@ -5,7 +5,7 @@ module.exports = {
     await queryInterface.bulkInsert('Payments', [
       {
         stripePaymentId: 'ch_1IZL3YE82hoNmS4N0GbKrZuQ', // Example Stripe Payment ID for past log
-        amount: 20.00, // Match cost in CarParkLog
+        amount: 10.00, // Match cost in CarParkLog
         paymentStatus: 'completed',
         receiptUrl: 'http://example.com/receipt1',
         date_paid: new Date(new Date().getTime() - 3600 * 1000), // 1 hour ago
@@ -25,8 +25,8 @@ module.exports = {
       },
       {
         stripePaymentId: 'ch_1IZL3YE82hoNmS4N0GbKrZuQ3', // Example Stripe Payment ID for future log
-        amount: 20.00, // Match cost in CarParkLog
-        paymentStatus: 'pending',
+        amount: 30.00, // Match cost in CarParkLog
+        paymentStatus: 'completed',
         receiptUrl: 'http://example.com/receipt3',
         date_paid: new Date(new Date().getTime() + 24 * 3600 * 1000), // 24 hours from now
         userId: 1,

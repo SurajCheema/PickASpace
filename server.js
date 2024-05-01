@@ -521,12 +521,15 @@ app.get('/api/user/bookings', authenticateToken, async (req, res) => {
 // Cancel booking endpoint
 app.put('/api/cancel-booking/:bookingId', authenticateToken, async (req, res) => {
   const { bookingId } = req.params;
+  console.log(`Received request to cancel booking with ID: ${bookingId}`);
   try {
-    const result = await db.CarParkLog.update({ status: 'cancelled' }, {
-      where: { log_id: bookingId }
-    });
-    if (result[0] > 0) {
-      res.json({ message: "Booking cancelled successfully" });
+    const [updatedCount, updatedBookings] = await db.CarParkLog.update(
+      { status: 'cancelled', cancelledAt: new Date() },
+      { where: { log_id: bookingId }, returning: true }
+    );
+    if (updatedCount > 0) {
+      console.log('Booking cancelled successfully:', updatedBookings[0]);
+      res.json({ message: "Booking cancelled successfully", booking: updatedBookings[0] });
     } else {
       res.status(404).send('Booking not found');
     }
@@ -638,17 +641,17 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Refund already processed or in progress' });
     }
 
-    // Check if the booking has been cancelled before processing the refund
-    if (payment.log.status !== 'cancelled') {
+    // Check if the booking has been cancelled and recorded the cancellation time
+    if (payment.log.status !== 'cancelled' || !payment.log.cancelledAt) {
       return res.status(400).json({ message: 'Refund requests can only be processed for cancelled bookings' });
     }
 
-    const currentTime = new Date();
+    const cancellationTime = new Date(payment.log.cancelledAt);
     const startTime = new Date(payment.log.startTime);
-    const timeDifference = (startTime - currentTime) / (1000 * 60 * 60); // difference in hours
+    const hoursDifference = (startTime - cancellationTime) / (1000 * 60 * 60);
 
     // Check for automatic refund eligibility
-    if (timeDifference >= 24) {
+    if (hoursDifference >= 24) {
       const refund = await processAutomaticRefund(payment, userId);
       res.json({ message: 'Refund processed automatically', refundId: refund.refund_id });
     } else {

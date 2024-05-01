@@ -7,14 +7,15 @@
                     <div class="booking-info d-flex flex-column align-items-start">
                         <h5 class="mb-1">
                             Booking ID: {{ booking.log_id }}
-                            <!-- Ensure the condition matches the exact case from backend -->
-                            <span v-if="booking.status.toLowerCase() === 'cancelled'" class="text-danger">(Cancelled)</span>
+                            <span v-if="booking.status.toLowerCase() === 'cancelled'"
+                                class="text-danger">(Cancelled)</span>
                         </h5>
                         <p class="mb-1">{{ booking.carPark?.addressLine1 }}</p>
                         <p>{{ booking.carPark?.city }}</p>
                         <p>{{ formatDateTime(booking.startTime) }} - {{ formatDateTime(booking.endTime) }}</p>
                     </div>
-                    <button v-if="canCancel(booking)" @click.stop="cancelBooking(booking)" class="btn btn-danger cancel-btn">
+                    <button v-if="canCancel(booking)" @click.stop="confirmCancel(booking)"
+                        class="btn btn-danger cancel-btn">
                         Cancel Booking
                     </button>
                 </div>
@@ -25,6 +26,7 @@
 
 <script>
 import { BListGroup, BListGroupItem } from 'bootstrap-vue-next';
+import { cancelBooking as cancelBookingService } from '@/services/carParkService';
 
 export default {
     components: {
@@ -32,10 +34,6 @@ export default {
         BListGroupItem
     },
     props: ['bookings'],
-    mounted() {
-        // Log statuses for debugging
-        this.bookings.forEach(booking => console.log(`Booking ID: ${booking.log_id}, Status: ${booking.status}`));
-    },
     methods: {
         formatDateTime(datetime) {
             const date = new Date(datetime);
@@ -45,11 +43,23 @@ export default {
         canCancel(booking) {
             const now = new Date();
             const endTime = new Date(booking.endTime);
-            // Allow cancellation if booking is either 'reserved' or 'active'
             return ['reserved', 'active'].includes(booking.status) && endTime > now;
         },
-        cancelBooking(booking) {
-            this.$emit('cancel-booking', booking.log_id);
+        confirmCancel(booking) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                this.cancelBooking(booking);
+            }
+        },
+        async cancelBooking(booking) {
+            try {
+                const cancelledBooking = await cancelBookingService(booking.log_id);
+                this.$emit('booking-cancelled', cancelledBooking);  // Emit an event with the cancelled booking data
+                alert('Booking cancelled successfully.');
+                location.reload();  // Reload the page to reflect changes
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                alert('Error cancelling booking: ' + error.message);
+            }
         }
     }
 }
@@ -66,25 +76,25 @@ export default {
 }
 
 .booking-info {
-    flex-grow: 1; /* Allows details to take up as much space as possible */
-    padding-bottom: 0; /* Removes padding at the bottom */
+    flex-grow: 1;
+    padding-bottom: 0;
 }
 
 .booking-info h5,
 .booking-info p {
-    margin-bottom: 0.25rem; /* Reduces spacing between lines */
+    margin-bottom: 0.25rem;
 }
 
 .booking-info p:last-of-type {
-    margin-bottom: 0; /* Removes bottom margin from the last paragraph */
+    margin-bottom: 0;
 }
 
 .cancel-btn {
-    white-space: nowrap; /* Prevents the button from wrapping onto the next line */
-    margin-left: 1rem; /* Adds some spacing between the details and the button */
+    white-space: nowrap;
+    margin-left: 1rem;
 }
 
 .text-danger {
-    color: #dc3545 !important; /* Ensures cancelled text is red */
+    color: #dc3545 !important;
 }
 </style>

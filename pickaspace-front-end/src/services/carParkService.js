@@ -165,7 +165,7 @@ export const fetchUserBookings = async () => {
   return data;
 };
 
-//Cancel a booking
+// Cancel a booking
 export const cancelBooking = async (bookingId) => {
   const token = localStorage.getItem('token');
   try {
@@ -176,15 +176,16 @@ export const cancelBooking = async (bookingId) => {
         'Content-Type': 'application/json'
       }
     });
-    const result = await response.json();
+
     if (response.ok) {
-      return result;
+      return await response.json();  // Parse the response as JSON if it's successful
     } else {
-      throw new Error(result.error || 'Failed to cancel booking');
+      const errorText = await response.text();  // Get the error message as plain text
+      throw new Error(errorText || 'Failed to cancel booking');
     }
   } catch (error) {
     console.error('Error cancelling booking:', error);
-    throw error;
+    throw error;  // Rethrowing the error to be handled by the caller
   }
 };
 

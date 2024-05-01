@@ -3,7 +3,7 @@
         <div v-if="booking">
             <p><strong>Booking ID:</strong> {{ booking.log_id }}</p>
             <p><strong>Car Park ID:</strong> {{ booking.carpark_id }}</p>
-            <p><strong>Full Address:</strong> {{ booking.carPark.addressLine1 }}, {{ booking.carPark.addressLine2 }}, 
+            <p><strong>Full Address:</strong> {{ booking.carPark.addressLine1 }}, {{ booking.carPark.addressLine2 }},
                 {{ booking.carPark.city }}, {{ booking.carPark.postcode }}</p>
             <p><strong>Bay Number:</strong> {{ booking.bay.bay_number }}</p>
             <p><strong>Cost:</strong> £{{ booking.cost.toFixed(2) }}</p>
@@ -79,12 +79,17 @@ export default {
         },
         async cancelBooking() {
             try {
-                await cancelBookingService(this.booking.log_id);
-                console.log('Booking cancelled:', this.booking.log_id); // Log for debugging
-                this.$emit('booking-cancelled', this.booking.log_id);
+                console.log(`Attempting to cancel booking with ID: ${this.booking.log_id}`);
+                const data = await cancelBookingService(this.booking.log_id);
+
+                console.log('Cancellation response:', data);
+                const cancelledBooking = { ...this.booking, ...data.booking };
+                console.log('Updated booking after cancellation:', cancelledBooking);
+                this.$emit('booking-cancelled', cancelledBooking);
                 this.modalShow = false; // Hide modal after cancellation
             } catch (error) {
-                alert(error.message);
+                console.error('Error cancelling booking:', error);
+                alert('Error cancelling booking: ' + error.message);
             }
         },
         viewPayment() {

@@ -8,7 +8,7 @@
     </div>
     <div>
       <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal"
-        @cancel-booking="cancelBooking" />
+        @booking-cancelled="handleBookingCancelled" />
       <booking-details-modal v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
         :show-view-payment-button="true" @close="closeBookingDetailsModal" @view-payment="showPaymentDetailsModal"
         @booking-cancelled="handleBookingCancelled" />
@@ -22,7 +22,7 @@
 import BookingList from '../components/BookingList.vue';
 import BookingDetailsModal from '../components/BookingDetailsModal.vue';
 import PaymentDetailsModal from '../components/PaymentDetailsModal.vue';
-import { fetchUserBookings, cancelBooking as cancelBookingService } from '@/services/carParkService';
+import { fetchUserBookings, cancelBooking as cancelBookingService } from '@/services/carParkService'; 
 import { fetchPaymentById } from '@/services/paymentService';
 
 export default {
@@ -36,7 +36,8 @@ export default {
       bookings: {
         current: [],
         upcoming: [],
-        past: []
+        past: [],
+        cancelled: []
       },
       activeBookings: [],
       activeType: 'current',
@@ -57,68 +58,45 @@ export default {
   created() {
     this.fetchBookings();
   },
-
   computed: {
     filteredBookings() {
       return this.bookings[this.activeType];
     }
   },
-
   methods: {
     async fetchBookings() {
       try {
         this.isFetching = true;
         const fetchedBookings = await fetchUserBookings();
-        const now = new Date();
-
-        this.bookings.current = this.sortBookingsByStartDate(
-          fetchedBookings.current.filter(booking =>
-            new Date(booking.startTime) <= now &&
-            new Date(booking.endTime) >= now &&
-            booking.status !== 'cancelled'
-          )
-        );
-
-        this.bookings.upcoming = this.sortBookingsByStartDate(
-          fetchedBookings.upcoming.filter(booking =>
-            new Date(booking.startTime) > now &&
-            booking.status !== 'cancelled'
-          )
-        );
-
-        this.bookings.past = this.sortBookingsByStartDate(
-          fetchedBookings.past.concat(
-            fetchedBookings.current.filter(booking => booking.status === 'Cancelled'),
-            fetchedBookings.upcoming.filter(booking => booking.status === 'Cancelled')
-          ),
-          true
-        );
-
-        this.bookings.cancelled = this.sortBookingsByStartDate(
-          fetchedBookings.current.filter(booking => booking.status === 'cancelled')
-            .concat(fetchedBookings.upcoming.filter(booking => booking.status === 'cancelled')),
-          true
-        );
-
+        console.log("Fetched Bookings:", fetchedBookings); // Log the fetched bookings to inspect their structure
+        this.processBookings(fetchedBookings);
       } catch (error) {
         console.error('Error fetching bookings:', error);
       } finally {
         this.isFetching = false;
       }
     },
-    sortBookingsByStartDate(bookings, isPast = false) {
-      if (isPast) {
-        // Sort by startTime in descending order for past bookings
-        return bookings.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-      }
-      // Default sorting for current and upcoming
-      return bookings.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+    processBookings(data) {
+      const now = new Date();
+      if (!data) return; // Add a guard clause to handle null or undefined data
+
+      const { current, upcoming, past } = data;
+
+      this.bookings.current = (current || []).filter(b => new Date(b.startTime) <= now && new Date(b.endTime) >= now && b.status !== 'cancelled');
+      this.bookings.upcoming = (upcoming || []).filter(b => new Date(b.startTime) > now && b.status !== 'cancelled');
+      this.bookings.past = (past || []).filter(b => new Date(b.endTime) < now && b.status !== 'cancelled');
+      this.bookings.cancelled = [...current, ...upcoming, ...past].filter(b => b.status === 'cancelled');
+
+      this.updateActiveBookings();
     },
+
     updateActiveBookings() {
       this.activeBookings = this.filteredBookings;
     },
     setActive(type) {
       this.activeType = type;
+      this.updateActiveBookings();
     },
     showBookingDetailsModal(booking) {
       this.bookingDetails = booking;
@@ -141,33 +119,26 @@ export default {
     },
     async cancelBooking(bookingId) {
       try {
-        await cancelBookingService(bookingId);
-        this.fetchBookings(); // Refresh bookings after cancellation
+        const cancelledBooking = await cancelBookingService(bookingId);
+        this.handleBookingCancelled(cancelledBooking);
       } catch (error) {
         console.error('Error cancelling booking:', error);
       }
     },
-    handleBookingCancelled(bookingId) {
-      // Find the cancelled booking in current, upcoming, or past tabs
-      const cancelledBooking = this.bookings.current.find(b => b.log_id === bookingId)
-        || this.bookings.upcoming.find(b => b.log_id === bookingId)
-        || this.bookings.past.find(b => b.log_id === bookingId);
-
-      if (cancelledBooking) {
-        // Update the status of the cancelled booking
-        cancelledBooking.status = 'cancelled';
-
-        // Move the cancelled booking to the cancelled tab
+    handleBookingCancelled(cancelledBooking) {
+      const bookingType = this.getBookingType(cancelledBooking);
+      const index = this.bookings[bookingType].findIndex(b => b.log_id === cancelledBooking.log_id);
+      if (index !== -1) {
+        this.bookings[bookingType].splice(index, 1);
         this.bookings.cancelled.unshift(cancelledBooking);
-
-        // Remove the cancelled booking from its original tab
-        this.bookings.current = this.bookings.current.filter(b => b.log_id !== bookingId);
-        this.bookings.upcoming = this.bookings.upcoming.filter(b => b.log_id !== bookingId);
-        this.bookings.past = this.bookings.past.filter(b => b.log_id !== bookingId);
-
-        // Update the active bookings
         this.updateActiveBookings();
       }
+    },
+    getBookingType(booking) {
+      const now = new Date();
+      if (new Date(booking.startTime) > now) return 'upcoming';
+      if (new Date(booking.endTime) < now) return 'past';
+      return 'current';
     }
   }
 }

@@ -58,6 +58,10 @@ module.exports = {
           isIn: [['reserved', 'active', 'cancelled', 'completed', 'refunded']]
         }
       },
+      cancelledAt: {
+        type: Sequelize.DATE,
+        allowNull: true // This field is null until the booking is cancelled
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -65,11 +69,7 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
-      },
-      cancelledAt: {
-        type: Sequelize.DATE,
-        allowNull: true // This field is null until the booking is cancelled
-      },
+      }
     });
   },
   async down(queryInterface, Sequelize) {
