@@ -8,9 +8,12 @@
             <button class="btn btn-primary" @click="setFilter('refunded')">Refunded</button>
         </div>
         <div>
-            <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId" />
+            <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId"
+                @open-refund-modal="openRefundModal" />
             <booking-details v-if="selectedBooking" :booking="selectedBooking" @close="selectedBooking = null"
                 @booking-cancelled="handleBookingCancelled" />
+            <refund-request-modal :is-visible="isRefundModalVisible" :payment-id="selectedPaymentId"
+                @close="handleModalClose" @request-refund="handleRefundRequest" />
         </div>
     </div>
 </template>
@@ -21,14 +24,18 @@ import PaymentList from '../components/PaymentList.vue';
 import BookingDetails from '../components/BookingDetailsModal.vue';
 import { fetchPayments } from '@/services/paymentService';
 import { fetchBookingById } from '@/services/carParkService';
+import RefundRequestModal from '../components/RefundRequestModal.vue';
 
 export default {
     components: {
         PaymentList,
-        BookingDetails
+        BookingDetails,
+        RefundRequestModal
     },
     setup() {
         const payments = ref([]);
+        const isRefundModalVisible = ref(false);  // Reactive variable to control modal visibility
+        const selectedPaymentId = ref(null);
         const filter = ref('all');
         const filteredPayments = ref([]);
         const selectedBookingId = ref(null);
@@ -74,6 +81,11 @@ export default {
             }
         };
 
+        function openRefundModal(paymentId) {
+            selectedPaymentId.value = paymentId;
+            isRefundModalVisible.value = true;  // Set modal to visible
+        }
+
         onMounted(fetchPaymentsWrapper);
 
         return {
@@ -82,7 +94,10 @@ export default {
             selectedBookingId,
             setSelectedBookingId,
             selectedBooking,
-            handleBookingCancelled
+            handleBookingCancelled,
+            isRefundModalVisible,
+            selectedPaymentId,
+            openRefundModal,
         };
     },
 }
