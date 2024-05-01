@@ -33,7 +33,9 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: 'requested'
+        validate: {
+          isIn: [['requested', 'approved', 'processed', 'denied', 'reviewing', 'awaiting approval']]
+        }
       },
       reason: {
         type: Sequelize.TEXT,

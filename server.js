@@ -677,7 +677,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
 // Helper function to handle automatic refunds
 async function processAutomaticRefund(payment, userId) {
   const stripeRefund = await stripe.refunds.create({
-    payment_intent: payment.stripePaymentId,
+    charge: payment.stripePaymentId, 
     amount: Math.floor(payment.amount * 100) // Convert to pence for Stripe API
   });
 
