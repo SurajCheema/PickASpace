@@ -1,31 +1,26 @@
 <template>
     <b-modal v-model="modalShow" title="Booking Details" @hide="hideModal" ok-only>
         <div v-if="booking">
-            <p><strong>Booking ID:</strong> {{ booking.log_id || 'N/A' }}</p>
-            <p><strong>Car Park ID:</strong> {{ booking?.carpark_id || 'N/A' }}</p>
-            <p><strong>Full Address:</strong> {{ booking?.carPark?.addressLine1 }}, {{ booking?.carPark?.addressLine2
-                }}, {{ booking?.carPark?.city }}, {{ booking?.carPark?.postcode }}</p>
-            <p><strong>Bay Number:</strong> {{ booking.bay?.bay_number || 'N/A' }}</p>
-            <p><strong>Cost:</strong> £{{ (booking.cost && booking.cost.toFixed(2)) || '0.00' }}</p>
+            <p><strong>Booking ID:</strong> {{ booking.log_id }}</p>
+            <p><strong>Car Park ID:</strong> {{ booking.carpark_id }}</p>
+            <p><strong>Full Address:</strong> {{ booking.carPark.addressLine1 }}, {{ booking.carPark.addressLine2 }}, 
+                {{ booking.carPark.city }}, {{ booking.carPark.postcode }}</p>
+            <p><strong>Bay Number:</strong> {{ booking.bay.bay_number }}</p>
+            <p><strong>Cost:</strong> £{{ booking.cost.toFixed(2) }}</p>
             <p><strong>Start Time:</strong> {{ formatDateTime(booking.startTime) }}</p>
             <p><strong>End Time:</strong> {{ formatDateTime(booking.endTime) }}</p>
             <p><strong>Status:</strong> {{ booking.status }}</p>
-            <p><strong>Vehicle Size:</strong> {{ booking.bay?.vehicleSize || 'N/A' }}</p>
-            <p><strong>EV Charging:</strong> {{ booking.bay?.hasEVCharging ? 'Yes' : 'No' }}</p>
-            <p><strong>Disabled Access:</strong> {{ booking.bay?.disabled ? 'Yes' : 'No' }}</p>
-            <p><strong>Description:</strong> {{ booking.bay?.description || 'No description available' }}</p>
+            <p><strong>Vehicle Size:</strong> {{ booking.bay.vehicleSize }}</p>
+            <p><strong>EV Charging:</strong> {{ booking.bay.hasEVCharging ? 'Yes' : 'No' }}</p>
+            <p><strong>Disabled Access:</strong> {{ booking.bay.disabled ? 'Yes' : 'No' }}</p>
+            <p><strong>Description:</strong> {{ booking.bay.description }}</p>
             <button v-if="showViewPaymentButton" @click="viewPayment" class="btn btn-primary mt-3">
                 View Payment
             </button>
+            <button v-if="shouldShowCancelButton(booking)" @click="confirmCancel" class="btn btn-danger mt-3">
+                Cancel Booking
+            </button>
         </div>
-        <template v-if="booking" #modal-footer>
-            <div class="d-flex justify-content-between w-100">
-                <button v-if="shouldShowCancelButton(booking)" class="btn btn-danger" @click="confirmCancel">
-                    Cancel Booking
-                </button>
-                <div></div> <!-- Empty div to push the button to the left -->
-            </div>
-        </template>
     </b-modal>
 </template>
 
@@ -55,11 +50,9 @@ export default {
     computed: {
         modalShow: {
             get() {
-                console.log('Computed modalShow getter called, booking:', this.booking);
                 return !!this.booking;
             },
             set(value) {
-                console.log('Computed modalShow setter called, value:', value);
                 if (!value) {
                     this.$emit('close');
                 }
@@ -77,7 +70,6 @@ export default {
         },
         shouldShowCancelButton(booking) {
             const now = new Date();
-            // Allow cancellation if status is 'reserved' or 'active', and the current time is before the booking end time
             return ['reserved', 'active'].includes(booking.status) && new Date(booking.endTime) > now;
         },
         confirmCancel() {
@@ -88,6 +80,7 @@ export default {
         async cancelBooking() {
             try {
                 await cancelBookingService(this.booking.log_id);
+                console.log('Booking cancelled:', this.booking.log_id); // Log for debugging
                 this.$emit('booking-cancelled', this.booking.log_id);
                 this.modalShow = false; // Hide modal after cancellation
             } catch (error) {
