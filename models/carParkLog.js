@@ -58,6 +58,10 @@ module.exports = (sequelize, DataTypes) => {
         isIn: [['reserved', 'active', 'cancelled', 'completed', 'refunded']]
       }
     },
+    cancelledAt: {
+      type: DataTypes.DATE,
+      allowNull: true // This field is null until the booking is cancelled
+    },
   });
 
   CarParkLog.associate = (models) => {

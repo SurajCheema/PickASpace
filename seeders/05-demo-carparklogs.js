@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     const hourlyRate = 10; // Hourly rate
     const durationHours = 2; // Duration in hours
     const cost = hourlyRate * durationHours; // Calculate total cost based on duration and hourly rate
@@ -38,8 +38,10 @@ module.exports = {
         user_id: 1,
         bay_id: 1,
         payment_id: 3, // Corresponds to the third payment
-        startTime: new Date(now.getTime() + (24 * 60 * 60 * 1000)), // Starts in 24 hours
-        endTime: new Date(now.getTime() + (26 * 60 * 60 * 1000)), // Ends in 26 hours
+        // Set startTime to 2 days from now
+        startTime: new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000)), // Starts in 48 hours
+        // Set endTime to 2 hours after startTime
+        endTime: new Date(now.getTime() + (50 * 60 * 60 * 1000)), // Ends in 50 hours
         cost: cost,
         status: 'reserved', // Future reservation
         createdAt: now,
@@ -48,7 +50,7 @@ module.exports = {
     ], {});
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     await queryInterface.bulkDelete('CarParkLogs', null, {});
   }
 };

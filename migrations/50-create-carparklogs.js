@@ -66,6 +66,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
+      cancelledAt: {
+        type: Sequelize.DATE,
+        allowNull: true // This field is null until the booking is cancelled
+      },
     });
   },
   async down(queryInterface, Sequelize) {
