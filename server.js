@@ -742,7 +742,7 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
       include: [{ model: db.Payment, as: 'payment', include: [{ model: db.CarParkLog, as: 'log' }] }]
     });
 
-    if (!refund) return res.status(404).send('Refund request not found or already approved');
+    if (!refund) return res.status(404).send('Refund request not found or already processed');
 
     const stripeRefund = await stripe.refunds.create({
       charge: refund.payment.stripePaymentId,
@@ -804,7 +804,7 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
       where: { refund_id: refundId, status: ['requested'] }
     });
 
-    if (!refund) return res.status(404).send('Refund not found or already denied/approved');
+    if (!refund) return res.status(404).send('Refund request not found or already processed');
 
     // Start a new transaction
     const transaction = await db.sequelize.transaction();
