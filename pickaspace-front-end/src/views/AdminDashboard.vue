@@ -15,7 +15,7 @@
     },
     methods: {
       goToRefunds() {
-        this.$router.push({ name: 'AdminRefundRequests' });
+        this.$router.push({ name: 'AdminRefundManagement' });
       }
     }
   }

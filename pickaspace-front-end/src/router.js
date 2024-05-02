@@ -12,7 +12,7 @@ import UserProfile from './views/UserProfile.vue';
 import UserBookingLogs from './views/UserBookingLogs.vue';
 import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
-import AdminRefundRequests from './views/AdminRefundRequests.vue';
+import AdminRefundManagement from './views/AdminRefundManagement.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -56,8 +56,8 @@ const routes = [
   },
   {
     path: '/admin/refunds',
-    name: 'AdminRefundRequests',
-    component: AdminRefundRequests,
+    name: 'AdminRefundManagement',
+    component: AdminRefundManagement,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
 ];

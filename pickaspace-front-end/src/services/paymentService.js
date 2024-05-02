@@ -75,22 +75,50 @@ export const requestRefund = async (paymentId, reason) => {
 // Fetch refunds from backend
 export const fetchRefunds = async (filters) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/refunds`, { params: filters });
-        return response.data;
+      const url = new URL(`${API_BASE_URL}/api/refunds`);
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          url.searchParams.append(key, value);
+        }
+      });
+  
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+  
+      return await response.json();
     } catch (error) {
-        console.error('Error fetching refunds:', error);
-        throw new Error(error.response.data.message || 'Could not fetch refunds');
+      console.error('Error fetching refunds:', error);
+      throw new Error('Could not fetch refunds');
     }
-};
-
-// Update refund status
-export const updateRefund = async (refundId, decision, status) => {
+  };
+  
+  // Update refund status
+  export const updateRefund = async (refundId, decision, status) => {
     try {
-        const body = { decision, status };
-        const response = await axios.put(`${API_BASE_URL}/refunds/${refundId}`, body);
-        return response.data;
+      const body = JSON.stringify({ decision });
+      const response = await fetch(`${API_BASE_URL}/api/refunds/${refundId}/${status}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body,
+      });
+  
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+  
+      return await response.json();
     } catch (error) {
-        console.error('Error updating refund:', error);
-        throw new Error(error.response.data.message || 'Could not update refund');
+      console.error('Error updating refund:', error);
+      throw new Error('Could not update refund');
     }
-};
+  };
