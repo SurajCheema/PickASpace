@@ -10,7 +10,6 @@
 
         <div class="mt-3">
           <button type="submit" class="btn btn-danger">Submit Refund Request</button>
-          <button type="button" @click="closeModal" class="btn btn-secondary ml-2">Cancel</button>
         </div>
       </form>
     </template>

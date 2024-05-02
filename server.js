@@ -652,7 +652,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
 
     // Check for automatic refund eligibility
     if (hoursDifference >= 24) {
-      const refund = await processAutomaticRefund(payment, userId);
+      const refund = await processAutomaticRefund(payment, userId, reason);
       res.json({ message: 'Refund processed automatically', refundId: refund.refund_id });
     } else {
       // Proceed with a normal refund request
@@ -661,6 +661,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
         amount: payment.amount,
         status: 'requested',
         reason: reason,
+        decision: null, // Decision to be made later by an admin
         log_id: payment.log.log_id,
         createdBy: userId,
         updatedBy: userId
@@ -675,7 +676,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
 });
 
 // Helper function to handle automatic refunds
-async function processAutomaticRefund(payment, userId) {
+async function processAutomaticRefund(payment, userId, reason) {
   const stripeRefund = await stripe.refunds.create({
     charge: payment.stripePaymentId, 
     amount: Math.floor(payment.amount * 100) // Convert to pence for Stripe API
@@ -684,8 +685,9 @@ async function processAutomaticRefund(payment, userId) {
   const refund = await db.Refund.create({
     payment_id: payment.payment_id,
     amount: payment.amount,
-    status: 'processed',
-    reason: 'Automatic refund for cancellation more than 24 hours before start time',
+    status: 'approved',
+    reason: reason,
+    decision: 'Automatic refund for cancellation more than 24 hours before start time',
     log_id: payment.log.log_id,
     stripeRefundId: stripeRefund.id,
     processedAt: new Date(),
