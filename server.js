@@ -711,24 +711,24 @@ app.get('/api/refunds', authenticateToken, verifyRole(['admin']), async (req, re
   const { status, paymentId, userId, startDate, endDate } = req.query;
 
   try {
-      const whereClause = {
-          ...(status && { status }),
-          ...(paymentId && { payment_id: paymentId }),
-          ...(userId && { '$payment.user_id$': userId }),
-          ...(startDate && endDate && { createdAt: { [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)] } })
-      };
+    const whereClause = {
+      ...(status && { status }),
+      ...(paymentId && { payment_id: paymentId }),
+      ...(userId && { '$payment.user_id$': userId }),
+      ...(startDate && endDate && { createdAt: { [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)] } })
+    };
 
-      const refunds = await db.Refund.findAll({
-          where: whereClause,
-          include: [
-              { model: db.Payment, as: 'payment', include: [{ model: db.User, as: 'user' }] }
-          ]
-      });
+    const refunds = await db.Refund.findAll({
+      where: whereClause,
+      include: [
+        { model: db.Payment, as: 'payment', include: [{ model: db.User, as: 'user' }] }
+      ]
+    });
 
-      res.json(refunds);
+    res.json(refunds);
   } catch (error) {
-      console.error('Error fetching refunds:', error);
-      res.status(500).send('Failed to fetch refunds');
+    console.error('Error fetching refunds:', error);
+    res.status(500).send('Failed to fetch refunds');
   }
 });
 
@@ -736,12 +736,13 @@ app.get('/api/refunds', authenticateToken, verifyRole(['admin']), async (req, re
 app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { refundId } = req.params;
   try {
+    // Only find refunds that are 'requested' or 'denied'
     const refund = await db.Refund.findOne({
       where: { refund_id: refundId, status: ['requested', 'denied'] },
       include: [{ model: db.Payment, as: 'payment', include: [{ model: db.CarParkLog, as: 'log' }] }]
     });
 
-    if (!refund) return res.status(404).send('Refund not found');
+    if (!refund) return res.status(404).send('Refund request not found or already approved');
 
     const stripeRefund = await stripe.refunds.create({
       charge: refund.payment.stripePaymentId,
@@ -767,7 +768,7 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
         { where: { payment_id: refund.payment_id } },
         { transaction }
       );
-      
+
       if (refund.payment.log) {
         await db.CarParkLog.update(
           { status: 'refunded' },
@@ -800,10 +801,10 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
 
   try {
     const refund = await db.Refund.findOne({
-      where: { refund_id: refundId, status: ['requested', 'denied'] }
+      where: { refund_id: refundId, status: ['requested'] }
     });
 
-    if (!refund) return res.status(404).send('Refund not found');
+    if (!refund) return res.status(404).send('Refund not found or already denied/approved');
 
     // Start a new transaction
     const transaction = await db.sequelize.transaction();
