@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: 'requested',
       validate: {
-        isIn: [['requested', 'approved', 'processed', 'denied', 'reviewing', 'awaiting approval']]
+        isIn: [['requested', 'approved', 'denied']]
       }
     },
     reason: {

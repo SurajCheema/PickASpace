@@ -813,6 +813,7 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
       await refund.update({
         status: 'denied',
         decision: reason,
+        processedAt: new Date(),
         updatedBy: req.user.userId
       }, { transaction });
 
@@ -828,5 +829,32 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
   } catch (error) {
     console.error('Failed to deny refund:', error);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+// Admin function to fetch a specific refund by ID
+app.get('/api/refunds/:refundId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  // Extract the refundId from the request parameters
+  const { refundId } = req.params;
+
+  try {
+    // Use the findOne method to fetch the refund with the given ID from the database
+    // Include the associated Payment and User records in the fetched data
+    const refund = await db.Refund.findOne({
+      where: { refund_id: refundId },
+      include: [
+        { model: db.Payment, as: 'payment', include: [{ model: db.User, as: 'user' }] }
+      ]
+    });
+
+    // If the refund is not found, send a 404 Not Found response
+    if (!refund) return res.status(404).send('Refund not found');
+
+    // If the refund is found, send the refund data in the response
+    res.json(refund);
+  } catch (error) {
+    // If there's an error in fetching the refund, log the error and send a 500 Error response
+    console.error('Error fetching refund:', error);
+    res.status(500).send('Failed to fetch refund');
   }
 });

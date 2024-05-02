@@ -34,7 +34,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [['requested', 'approved', 'processed', 'denied', 'reviewing', 'awaiting approval']]
+          isIn: [['requested', 'approved', 'denied']]
         }
       },
       reason: {
