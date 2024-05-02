@@ -2,25 +2,13 @@
   <div class="admin-refund-management container">
     <h2 class="text-center mb-4">Refund Management</h2>
 
-    <b-form class="mb-4">
-      <b-row>
-        <b-col cols="12" md="3">
-          <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID"></b-form-input>
-        </b-col>
-        <b-col cols="12" md="3">
-          <b-form-select v-model="selectedStatus" :options="statusOptions"></b-form-select>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-datepicker v-model="startDate" placeholder="Start Date"></b-form-datepicker>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-datepicker v-model="endDate" placeholder="End Date"></b-form-datepicker>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-button variant="primary" @click="fetchRefunds">Apply Filters</b-button>
-        </b-col>
-      </b-row>
-    </b-form>
+    <div class="filters mb-4">
+      <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID" class="mr-2"></b-form-input>
+      <b-form-select v-model="selectedStatus" :options="statusOptions" class="mr-2"></b-form-select>
+      <b-form-datepicker v-model="startDate" placeholder="Start Date" class="mr-2"></b-form-datepicker>
+      <b-form-datepicker v-model="endDate" placeholder="End Date" class="mr-2"></b-form-datepicker>
+      <b-button variant="primary" @click="fetchRefunds">Apply Filters</b-button>
+    </div>
 
     <b-list-group>
       <b-list-group-item v-for="refund in filteredRefunds" :key="refund.refund_id" class="d-flex justify-content-between align-items-center">
@@ -46,11 +34,18 @@
 </template>
 
 <script>
+import { BListGroup, BListGroupItem, BButton, BFormInput, BFormSelect, BFormDatepicker } from 'bootstrap-vue-next';
 import { fetchRefunds } from '@/services/paymentService';
 import RefundDetailsModal from '@/components/RefundDetailsModal.vue';
 
 export default {
   components: {
+    BListGroup,
+    BListGroupItem,
+    BButton,
+    BFormInput,
+    BFormSelect,
+    BFormDatepicker,
     RefundDetailsModal,
   },
   data() {
@@ -77,7 +72,15 @@ export default {
   methods: {
     async fetchRefunds() {
       try {
-        this.refunds = await fetchRefunds();
+        const filters = {
+          paymentId: this.searchTerm,
+          userId: this.searchTerm,
+          status: this.selectedStatus,
+          startDate: this.startDate,
+          endDate: this.endDate,
+        };
+
+        this.refunds = await fetchRefunds(filters);
         this.applyFilters();
       } catch (error) {
         console.error('Failed to fetch refunds:', error);

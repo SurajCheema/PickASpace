@@ -74,36 +74,36 @@ export const requestRefund = async (paymentId, reason) => {
 
 // Fetch refunds from backend
 export const fetchRefunds = async (filters) => {
-    try {
-      const url = new URL(`${API_BASE_URL}/api/refunds`);
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          url.searchParams.append(key, value);
-        }
-      });
-  
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error(response.statusText);
+  try {
+    const url = new URL(`${API_BASE_URL}/refunds`);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        url.searchParams.append(key, value);
       }
-  
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching refunds:', error);
-      throw new Error('Could not fetch refunds');
+    });
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
     }
-  };
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching refunds:', error);
+    throw new Error('Could not fetch refunds');
+  }
+};
   
   // Update refund status
   export const updateRefund = async (refundId, decision, status) => {
     try {
       const body = JSON.stringify({ decision });
-      const response = await fetch(`${API_BASE_URL}/api/refunds/${refundId}/${status}`, {
+      const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/${status}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
