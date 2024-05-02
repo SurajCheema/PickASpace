@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
-const { Op } = require('sequelize');
+const { Op, or } = require('sequelize');
 
 require('dotenv').config();
 
@@ -706,107 +706,125 @@ async function processAutomaticRefund(payment, userId, reason) {
   return refund;
 }
 
-// Endpoint to fetch refunds with optional filters
-app.get('/api/refunds', authenticateToken, async (req, res) => {
+// Admin route to fetch all refunds with optional filters and admin verification
+app.get('/api/refunds', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { status, paymentId, userId, startDate, endDate } = req.query;
 
   try {
-    const whereClause = {
-      ...(status && { status }),
-      ...(paymentId && { payment_id: paymentId }),
-      ...(userId && { '$payment.user_id$': userId }),
-      ...(startDate && endDate && { createdAt: { [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)] } })
-    };
+      const whereClause = {
+          ...(status && { status }),
+          ...(paymentId && { payment_id: paymentId }),
+          ...(userId && { '$payment.user_id$': userId }),
+          ...(startDate && endDate && { createdAt: { [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)] } })
+      };
 
-    const refunds = await db.Refund.findAll({
-      where: whereClause,
-      include: [{
-        model: db.Payment,
-        as: 'payment',
-        include: [{ model: db.User, as: 'user' }]
-      }]
-    });
+      const refunds = await db.Refund.findAll({
+          where: whereClause,
+          include: [
+              { model: db.Payment, as: 'payment', include: [{ model: db.User, as: 'user' }] }
+          ]
+      });
 
-    res.json(refunds);
+      res.json(refunds);
   } catch (error) {
-    console.error('Error fetching refunds:', error);
-    res.status(500).send({ message: 'Failed to fetch refunds' });
+      console.error('Error fetching refunds:', error);
+      res.status(500).send('Failed to fetch refunds');
   }
 });
 
-// Endpoint to approve a refund
-app.post('/api/refunds/:refundId/approve', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).send('Access denied');
-  }
-
+// Admin function for approving refunds
+app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { refundId } = req.params;
   try {
     const refund = await db.Refund.findOne({
-      where: { refund_id: refundId },
-      include: [{ model: db.Payment, as: 'payment' }]
+      where: { refund_id: refundId, status: ['requested', 'denied'] },
+      include: [{ model: db.Payment, as: 'payment', include: [{ model: db.CarParkLog, as: 'log' }] }]
     });
 
-    if (!refund) {
-      return res.status(404).send('Refund not found');
-    }
+    if (!refund) return res.status(404).send('Refund not found');
 
-    if (refund.status !== 'requested') {
-      return res.status(400).send('Refund is not in a request state');
-    }
-
-    // Process the refund through Stripe
     const stripeRefund = await stripe.refunds.create({
       charge: refund.payment.stripePaymentId,
-      amount: Math.floor(refund.amount * 100)  // Convert amount to cents for Stripe API
+      amount: Math.floor(refund.amount * 100)
     });
 
-    // Update the refund record with Stripe details and approval
-    await refund.update({
-      stripeRefundId: stripeRefund.id,
-      status: 'approved',
-      decision: 'Refund approved by admin',
-      processedAt: new Date(),
-      updatedBy: req.user.userId  // Assumes you have this field to track who last updated the record
-    });
+    // Start a new transaction
+    const transaction = await db.sequelize.transaction();
 
-    res.json({ message: 'Refund approved successfully', refund });
+    try {
+      // Update the Refund record
+      await refund.update({
+        stripeRefundId: stripeRefund.id,
+        status: 'approved',
+        decision: req.body.decision || 'Approved by Admin',
+        processedAt: new Date(),
+        updatedBy: req.user.userId
+      }, { transaction });
+
+      // Update the associated Payment and CarParkLog
+      await db.Payment.update(
+        { paymentStatus: 'refunded' },
+        { where: { payment_id: refund.payment_id } },
+        { transaction }
+      );
+      
+      if (refund.payment.log) {
+        await db.CarParkLog.update(
+          { status: 'refunded' },
+          { where: { log_id: refund.payment.log.log_id } },
+          { transaction }
+        );
+      }
+
+      // Commit the transaction
+      await transaction.commit();
+
+      res.json({ message: 'Refund approved successfully', refund });
+    } catch (error) {
+      // If there is a failure, rollback the transaction
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error('Failed to approve refund:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Endpoint to deny a refund
-app.post('/api/refunds/:refundId/deny', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).send('Access denied');
-  }
-
+// Admin function for denying refunds
+app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { refundId } = req.params;
-  const { reason } = req.body; // Admin provides a reason for denial
+  const { reason } = req.body;
+
+  if (!reason) return res.status(400).send('Reason for denial is required');
 
   try {
     const refund = await db.Refund.findOne({
-      where: { refund_id: refundId }
+      where: { refund_id: refundId, status: ['requested', 'denied'] }
     });
 
-    if (!refund) {
-      return res.status(404).send('Refund not found');
+    if (!refund) return res.status(404).send('Refund not found');
+
+    // Start a new transaction
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      // Update the Refund record
+      await refund.update({
+        status: 'denied',
+        decision: reason,
+        updatedBy: req.user.userId
+      }, { transaction });
+
+      // Commit the transaction
+      await transaction.commit();
+
+      res.json({ message: 'Refund denied successfully', refund });
+    } catch (error) {
+      // If there is a failure, rollback the transaction
+      await transaction.rollback();
+      throw error;
     }
-
-    if (refund.status !== 'requested') {
-      return res.status(400).send('Refund is not in a request state');
-    }
-
-    // Update the refund record to reflect denial
-    await refund.update({
-      status: 'denied',
-      decision: reason,
-      updatedBy: req.user.userId  // Track who denied the refund
-    });
-
-    res.json({ message: 'Refund denied successfully', refund });
   } catch (error) {
     console.error('Failed to deny refund:', error);
     res.status(500).send('Internal Server Error');
