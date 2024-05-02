@@ -72,7 +72,11 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Users',
         key: 'user_id'
       }
-    }
+    },
+    decision: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
   });
 
   Refund.associate = function (models) {

@@ -18,13 +18,21 @@
 </template>
 
 <script>
+import { BModal } from 'bootstrap-vue-next';
+
 export default {
+  components: {
+    BModal,
+  },
   props: {
     isVisible: {
       type: Boolean,
       default: false
     },
-    paymentId: String,
+    paymentId: {
+      type: [String, Number],
+      required: true,
+    },
   },
   data() {
     return {
@@ -34,15 +42,17 @@ export default {
   },
   watch: {
     isVisible(newVal) {
-        this.localIsVisible = newVal; 
+      this.localIsVisible = newVal;
     }
   },
   methods: {
     closeModal() {
-      this.localIsVisible = false; 
-      this.$emit('close'); // Emit close event to parent
+      this.localIsVisible = false;
+      this.$emit('close');
     },
     submitRefund() {
+      this.$emit('request-refund', this.paymentId.toString(), this.reason);
+      this.closeModal();
     }
   },
 };

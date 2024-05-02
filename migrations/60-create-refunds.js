@@ -71,6 +71,10 @@ module.exports = {
           key: 'user_id'
         }
       },
+      decision: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
