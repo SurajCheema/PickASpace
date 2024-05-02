@@ -71,3 +71,26 @@ export const requestRefund = async (paymentId, reason) => {
         throw error;
     }
 };
+
+// Fetch refunds from backend
+export const fetchRefunds = async (filters) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/refunds`, { params: filters });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching refunds:', error);
+        throw new Error(error.response.data.message || 'Could not fetch refunds');
+    }
+};
+
+// Update refund status
+export const updateRefund = async (refundId, decision, status) => {
+    try {
+        const body = { decision, status };
+        const response = await axios.put(`${API_BASE_URL}/refunds/${refundId}`, body);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating refund:', error);
+        throw new Error(error.response.data.message || 'Could not update refund');
+    }
+};

@@ -102,33 +102,38 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Authentication Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  // Bearer TOKEN
+  const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
-  // No token found
-  if (token == null) {
-    console.log('No token found in the request headers'); // Log the absence of token
-    return res.sendStatus(401);
+
+  if (!token) {
+    console.log('Authentication failed: No token provided');
+    return res.status(401).send('Token is required');
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    // Token not valid
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      console.error('Error verifying token:', err); // Log the token verification error
-      return res.sendStatus(403);
+      console.log(`Token verification failed: ${err.message}`);
+      return res.status(403).send('Invalid Token');
     }
 
-    console.log('Token verified, user:', user); // Log the verified user
+    console.log(`Token verified successfully: User ID ${user.userId} with role ${user.role}`);
     req.user = user;
-
-    // Check if the user has the required role for the route
-    if (req.path.startsWith('/admin') && user.role !== 'admin') {
-      console.log('User does not have admin access:', user); // Log the user's role
-      return res.sendStatus(403); // Deny access to admin routes for non-admin users
-    }
     next();
   });
+};
+
+// Middleware to verify user role
+const verifyRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      console.log(`Access denied: User role ${req.user.role} not permitted on this route`);
+      return res.status(403).send('Access denied: You do not have permission to access this resource');
+    }
+    console.log(`Access granted for user role ${req.user.role}`);
+    next();
+  };
 };
 
 // Create a new car park
@@ -678,7 +683,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
 // Helper function to handle automatic refunds
 async function processAutomaticRefund(payment, userId, reason) {
   const stripeRefund = await stripe.refunds.create({
-    charge: payment.stripePaymentId, 
+    charge: payment.stripePaymentId,
     amount: Math.floor(payment.amount * 100) // Convert to pence for Stripe API
   });
 
@@ -700,3 +705,110 @@ async function processAutomaticRefund(payment, userId, reason) {
 
   return refund;
 }
+
+// Endpoint to fetch refunds with optional filters
+app.get('/api/refunds', authenticateToken, async (req, res) => {
+  const { status, paymentId, userId, startDate, endDate } = req.query;
+
+  try {
+    const whereClause = {
+      ...(status && { status }),
+      ...(paymentId && { payment_id: paymentId }),
+      ...(userId && { '$payment.user_id$': userId }),
+      ...(startDate && endDate && { createdAt: { [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)] } })
+    };
+
+    const refunds = await db.Refund.findAll({
+      where: whereClause,
+      include: [{
+        model: db.Payment,
+        as: 'payment',
+        include: [{ model: db.User, as: 'user' }]
+      }]
+    });
+
+    res.json(refunds);
+  } catch (error) {
+    console.error('Error fetching refunds:', error);
+    res.status(500).send({ message: 'Failed to fetch refunds' });
+  }
+});
+
+// Endpoint to approve a refund
+app.post('/api/refunds/:refundId/approve', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+
+  const { refundId } = req.params;
+  try {
+    const refund = await db.Refund.findOne({
+      where: { refund_id: refundId },
+      include: [{ model: db.Payment, as: 'payment' }]
+    });
+
+    if (!refund) {
+      return res.status(404).send('Refund not found');
+    }
+
+    if (refund.status !== 'requested') {
+      return res.status(400).send('Refund is not in a request state');
+    }
+
+    // Process the refund through Stripe
+    const stripeRefund = await stripe.refunds.create({
+      charge: refund.payment.stripePaymentId,
+      amount: Math.floor(refund.amount * 100)  // Convert amount to cents for Stripe API
+    });
+
+    // Update the refund record with Stripe details and approval
+    await refund.update({
+      stripeRefundId: stripeRefund.id,
+      status: 'approved',
+      decision: 'Refund approved by admin',
+      processedAt: new Date(),
+      updatedBy: req.user.userId  // Assumes you have this field to track who last updated the record
+    });
+
+    res.json({ message: 'Refund approved successfully', refund });
+  } catch (error) {
+    console.error('Failed to approve refund:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Endpoint to deny a refund
+app.post('/api/refunds/:refundId/deny', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+
+  const { refundId } = req.params;
+  const { reason } = req.body; // Admin provides a reason for denial
+
+  try {
+    const refund = await db.Refund.findOne({
+      where: { refund_id: refundId }
+    });
+
+    if (!refund) {
+      return res.status(404).send('Refund not found');
+    }
+
+    if (refund.status !== 'requested') {
+      return res.status(400).send('Refund is not in a request state');
+    }
+
+    // Update the refund record to reflect denial
+    await refund.update({
+      status: 'denied',
+      decision: reason,
+      updatedBy: req.user.userId  // Track who denied the refund
+    });
+
+    res.json({ message: 'Refund denied successfully', refund });
+  } catch (error) {
+    console.error('Failed to deny refund:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
