@@ -1,90 +1,90 @@
 <template>
-    <div>
-      <b-list-group>
-        <b-list-group-item v-for="payment in sortedPayments" :key="payment.payment_id"
-          class="d-flex justify-content-between align-items-center" @click="showDetails(payment)">
-          <div>
-            <h5 class="mb-1">Payment ID: {{ payment.payment_id }}</h5>
-            <p class="mb-1">Status: {{ payment.paymentStatus }}</p>
-            <p>Amount: £{{ formatAmount(payment.amount) }}</p>
-            <p>Date: {{ new Date(payment.date_paid).toLocaleDateString() }}</p>
-          </div>
-          <div>
-            <b-button
-              v-if="payment.paymentStatus === 'completed' && payment.log && payment.log.status === 'cancelled'"
-              @click.stop.prevent="openRefundModal(payment.payment_id)" variant="danger">Refund</b-button>
-          </div>
-        </b-list-group-item>
-      </b-list-group>
-  
-      <!-- Payment Details Modal -->
-      <b-modal v-model="modalVisible" title="Payment Details" @hide="clearModal">
-        <template v-slot:default>
-          <div>
-            <p><strong>Payment ID:</strong> {{ selectedPayment.payment_id }}</p>
-            <p><strong>Amount:</strong> £{{ formatAmount(selectedPayment.amount) }}</p>
-            <p><strong>Status:</strong> {{ selectedPayment.paymentStatus }}</p>
-            <p><strong>Date:</strong> {{ new Date(selectedPayment.date_paid).toLocaleDateString() }}</p>
-            <p><strong>Stripe Payment ID:</strong> {{ selectedPayment.stripePaymentId || 'N/A' }}</p>
-            <p><strong>Receipt URL:</strong> <a :href="selectedPayment.receiptUrl" target="_blank">View Receipt</a></p>
-            <button @click="viewBooking">View Booking</button>
-          </div>
-        </template>
-      </b-modal>
-    </div>
-  </template>
-  
-  <script>
-  import { BListGroup, BListGroupItem, BButton, BModal } from 'bootstrap-vue-next';
-  
-  export default {
-    components: {
-      BListGroup,
-      BListGroupItem,
-      BButton,
-      BModal
+  <div>
+    <b-list-group>
+      <b-list-group-item v-for="payment in sortedPayments" :key="payment.payment_id"
+        class="d-flex justify-content-between align-items-center" @click="showDetails(payment)">
+        <div>
+          <h5 class="mb-1">Payment ID: {{ payment.payment_id }}</h5>
+          <p class="mb-1">Status: {{ payment.paymentStatus }}</p>
+          <p>Amount: £{{ formatAmount(payment.amount) }}</p>
+          <p>Date: {{ new Date(payment.date_paid).toLocaleDateString() }}</p>
+        </div>
+        <div>
+          <b-button v-if="payment.paymentStatus === 'completed' && payment.log && payment.log.status === 'cancelled'"
+            @click.stop.prevent="openRefundModal(payment.payment_id)" variant="danger">Refund</b-button>
+        </div>
+      </b-list-group-item>
+    </b-list-group>
+
+    <!-- Payment Details Modal -->
+    <b-modal v-model="modalVisible" title="Payment Details" @hide="clearModal">
+      <template v-slot:default>
+        <div>
+          <p><strong>Payment ID:</strong> {{ selectedPayment.payment_id }}</p>
+          <p><strong>Amount:</strong> £{{ formatAmount(selectedPayment.amount) }}</p>
+          <p><strong>Status:</strong> {{ selectedPayment.paymentStatus }}</p>
+          <p><strong>Date:</strong> {{ new Date(selectedPayment.date_paid).toLocaleDateString() }}</p>
+          <p><strong>Stripe Payment ID:</strong> {{ selectedPayment.stripePaymentId || 'N/A' }}</p>
+          <p><strong>Receipt URL:</strong> <a :href="selectedPayment.receiptUrl" target="_blank">View Receipt</a></p>
+          <button @click="viewBooking">View Booking</button>
+        </div>
+      </template>
+    </b-modal>
+  </div>
+</template>
+
+<script>
+import { BListGroup, BListGroupItem, BButton, BModal } from 'bootstrap-vue-next';
+
+export default {
+  components: {
+    BListGroup,
+    BListGroupItem,
+    BButton,
+    BModal
+  },
+  props: {
+    payments: Array
+  },
+  data() {
+    return {
+      modalVisible: false,
+      selectedPayment: {},
+    };
+  },
+  computed: {
+    sortedPayments() {
+      return this.payments.slice().sort((a, b) => new Date(b.date_paid) - new Date(a.date_paid));
     },
-    props: {
-      payments: Array
+  },
+  methods: {
+    openRefundModal(paymentId) {
+      this.$emit('open-refund-modal', paymentId);
     },
-    data() {
-      return {
-        modalVisible: false,
-        selectedPayment: {},
-      };
+    formatAmount(amount) {
+      const number = parseFloat(amount);
+      return isNaN(number) ? '0.00' : number.toFixed(2);
     },
-    computed: {
-      sortedPayments() {
-        return this.payments.slice().sort((a, b) => new Date(b.date_paid) - new Date(a.date_paid));
-      },
+    showDetails(payment) {
+      console.log('Showing payment details:', payment);
+      this.selectedPayment = payment;
+      this.modalVisible = true;
     },
-    methods: {
-      openRefundModal(paymentId) {
-        this.$emit('open-refund-modal', paymentId);
-      },
-      formatAmount(amount) {
-        const number = parseFloat(amount);
-        return isNaN(number) ? '0.00' : number.toFixed(2);
-      },
-      showDetails(payment) {
-        this.selectedPayment = payment;
-        this.modalVisible = true;
-      },
-      clearModal() {
-        this.selectedPayment = {};
-        this.modalVisible = false;
-      },
-      viewBooking() {
-        this.$emit('view-booking', this.selectedPayment.log.log_id);
-      },
-    }
+    clearModal() {
+      this.selectedPayment = {};
+      this.modalVisible = false;
+    },
+    viewBooking() {
+      this.$emit('view-booking', this.selectedPayment.log.log_id);
+    },
   }
-  </script>
-  
-  <style scoped>
-  .list-group-item {
-    padding: 1rem;
-    border: 1px solid #dee2e6;
-    cursor: pointer;
-  }
-  </style>
+}
+</script>
+
+<style scoped>
+.list-group-item {
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  cursor: pointer;
+}
+</style>

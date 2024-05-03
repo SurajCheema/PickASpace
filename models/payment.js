@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Payment.associate = (models) => {
     Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    Payment.hasOne(models.Refund, { foreignKey: 'payment_id', as: 'refund' }); // Association added here
     Payment.hasOne(models.CarParkLog, { foreignKey: 'payment_id', as: 'log' });
   };
 

@@ -4,7 +4,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 export const fetchPayments = async () => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`${API_BASE_URL}/user/payments`, {
+    const response = await fetch(`${API_BASE_URL}/user/payments?include=refund`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -14,7 +14,9 @@ export const fetchPayments = async () => {
     if (!response.ok) {
       throw new Error('Failed to fetch payments');
     }
-    return await response.json();
+    const payments = await response.json();
+    console.log('Fetched payments:', payments);
+    return payments;
   } catch (error) {
     console.error('Error fetching payments:', error);
     throw error;
@@ -25,7 +27,7 @@ export const fetchPayments = async () => {
 export const fetchPaymentById = async (paymentId) => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+    const response = await fetch(`${API_BASE_URL}/payments/${paymentId}?include=refund`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -35,7 +37,9 @@ export const fetchPaymentById = async (paymentId) => {
     if (!response.ok) {
       throw new Error('Failed to fetch payment');
     }
-    return await response.json();
+    const payment = await response.json();
+    console.log('Fetched payment:', payment);
+    return payment;
   } catch (error) {
     console.error('Error fetching payment:', error);
     throw error;
@@ -123,5 +127,58 @@ export const updateRefund = async (refundId, decision, status) => {
   } catch (error) {
     console.error('Error updating refund:', error);
     throw new Error('Could not update refund');
+  }
+};
+
+// Fetch refund by payment ID
+export const fetchRefundByPaymentId = async (paymentId) => {
+  try {
+    console.log('Fetching refund for payment ID:', paymentId);
+    const response = await fetch(`${API_BASE_URL}/refunds/payment/${paymentId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    if (response.status === 404) {
+      console.log('No refund found for payment ID:', paymentId);
+      return null; // Return null if no refund is found
+    }
+
+    if (!response.ok) {
+      console.error('Error fetching refund:', response.statusText);
+      throw new Error(response.statusText);
+    }
+
+    const refund = await response.json();
+    console.log('Refund fetched successfully:', refund);
+    return refund;
+  } catch (error) {
+    console.error('Error fetching refund:', error);
+    throw new Error('Could not fetch refund');
+  }
+};
+
+// Resubmit refund
+export const resubmitRefund = async (refundId, reason) => {
+  try {
+    const body = JSON.stringify({ reason });
+    const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/resubmit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error resubmitting refund:', error);
+    throw new Error('Could not resubmit refund');
   }
 };
