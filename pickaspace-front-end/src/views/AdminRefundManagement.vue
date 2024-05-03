@@ -3,38 +3,35 @@
     <h2 class="text-center mb-4">Refund Management</h2>
 
     <div class="filters mb-4">
-      <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID" class="mr-2"></b-form-input>
-      <b-form-select v-model="selectedStatus" :options="statusOptions" class="mr-2"></b-form-select>
-      <b-form-datepicker v-model="startDate" placeholder="Start Date" class="mr-2"></b-form-datepicker>
-      <b-form-datepicker v-model="endDate" placeholder="End Date" class="mr-2"></b-form-datepicker>
-      <b-button variant="primary" @click="fetchRefunds">Apply Filters</b-button>
+      <div class="d-flex justify-content-center align-items-center filter-group">
+        <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID"
+          class="filter-input mr-2"></b-form-input>
+        <b-form-select v-model="selectedStatus" :options="statusOptions" class="filter-input mr-2"></b-form-select>
+        <b-button variant="primary" size="sm" @click="fetchRefunds">Apply</b-button>
+      </div>
     </div>
 
-    <b-list-group>
-      <b-list-group-item v-for="refund in filteredRefunds" :key="refund.refund_id" class="d-flex justify-content-between align-items-center">
-        <div>
-          <strong>Refund ID:</strong> {{ refund.refund_id }}<br>
-          <strong>Payment ID:</strong> {{ refund.payment_id }}<br>
-          <strong>User ID:</strong> {{ refund.payment.user.user_id }}<br>
-          <strong>Amount:</strong> {{ refund.amount }}<br>
-          <strong>Status:</strong> {{ refund.status }}<br>
-          <strong>Requested At:</strong> {{ refund.createdAt }}
+    <b-list-group class="list-container">
+      <b-list-group-item v-for="refund in filteredRefunds" :key="refund.refund_id"
+        class="d-flex justify-content-between align-items-center refund-item">
+        <div class="refund-info text-left">
+          <div><strong>Refund ID:</strong> {{ refund.refund_id }}</div>
+          <div><strong>User ID:</strong> {{ refund.payment.user.user_id }}</div>
+          <div><strong>Amount:</strong> {{ refund.amount }}</div>
+          <div><strong>Status:</strong> {{ refund.status }}</div>
+          <div><strong>Requested At:</strong> {{ formatDate(refund.createdAt) }}</div>
         </div>
         <b-button variant="info" size="sm" @click="openRefundModal(refund)">View Details</b-button>
       </b-list-group-item>
     </b-list-group>
 
-    <refund-details-modal
-      :refund="selectedRefund"
-      :show-modal="showModal"
-      @close="closeRefundModal"
-      @refund-updated="fetchRefunds"
-    ></refund-details-modal>
+    <refund-details-modal :refund="selectedRefund" v-model="showModal"
+      @refund-updated="fetchRefunds"></refund-details-modal>
   </div>
 </template>
 
 <script>
-import { BListGroup, BListGroupItem, BButton, BFormInput, BFormSelect, BFormDatepicker } from 'bootstrap-vue-next';
+import { BListGroup, BListGroupItem, BButton, BFormInput, BFormSelect } from 'bootstrap-vue-next';
 import { fetchRefunds } from '@/services/paymentService';
 import RefundDetailsModal from '@/components/RefundDetailsModal.vue';
 
@@ -45,7 +42,6 @@ export default {
     BButton,
     BFormInput,
     BFormSelect,
-    BFormDatepicker,
     RefundDetailsModal,
   },
   data() {
@@ -84,7 +80,6 @@ export default {
         this.applyFilters();
       } catch (error) {
         console.error('Failed to fetch refunds:', error);
-        alert('Failed to fetch refunds. Please try again.');
       }
     },
     applyFilters() {
@@ -100,17 +95,71 @@ export default {
       });
     },
     openRefundModal(refund) {
-      this.selectedRefund = refund;
-      this.showModal = true;
+      if (refund) {
+        console.log('Selected refund:', refund);
+        this.selectedRefund = refund; 
+        this.showModal = true;
+        console.log('Show modal:', this.showModal);
+      }
     },
     closeRefundModal() {
-      this.selectedRefund = null;
+      console.log('Closing refund modal');
       this.showModal = false;
+    },
+    handleRefundRequest(refundId, reason) {
+      console.log('Refund request submitted for refund ID:', refundId, 'with reason:', reason);
+      this.closeRefundModal();
+    },
+    formatDate(date) {
+      return new Date(date).toLocaleDateString();
     },
   },
 };
 </script>
 
 <style scoped>
-/* Add your custom styles here */
+.admin-refund-management {
+  max-width: 600px;
+  /* Adjust width for overall form width */
+  margin: 0 auto;
+  /* Centers the entire component on the page */
+}
+
+.filters {
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  margin-right: 20px;
+  /* Adjust spacing between inputs */
+  width: 150px;
+  /* Adjust width of input elements */
+}
+
+.list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.refund-item {
+  width: 100%;
+  /* Make refund items match the width of the container */
+  margin-bottom: 10px;
+  /* Space between items */
+}
+
+.refund-info {
+  text-align: left;
+}
+
+.refund-info div {
+  margin-bottom: 5px;
+}
 </style>

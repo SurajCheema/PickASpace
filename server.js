@@ -735,6 +735,10 @@ app.get('/api/refunds', authenticateToken, verifyRole(['admin']), async (req, re
 // Admin function for approving refunds
 app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { refundId } = req.params;
+  const { decision } = req.body;
+
+  if (!decision) return res.status(400).send('Decision for approval is required');
+
   try {
     // Only find refunds that are 'requested' or 'denied'
     const refund = await db.Refund.findOne({
@@ -795,38 +799,32 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
 // Admin function for denying refunds
 app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { refundId } = req.params;
-  const { reason } = req.body;
+  const { decision } = req.body;
 
-  if (!reason) return res.status(400).send('Reason for denial is required');
+  if (!decision) {
+    console.log("Denial decision missing in request:", req.body);
+    return res.status(400).send('Decision for denial is required');
+  }
 
   try {
     const refund = await db.Refund.findOne({
       where: { refund_id: refundId, status: ['requested'] }
     });
 
-    if (!refund) return res.status(404).send('Refund request not found or already processed');
-
-    // Start a new transaction
-    const transaction = await db.sequelize.transaction();
-
-    try {
-      // Update the Refund record
-      await refund.update({
-        status: 'denied',
-        decision: reason,
-        processedAt: new Date(),
-        updatedBy: req.user.userId
-      }, { transaction });
-
-      // Commit the transaction
-      await transaction.commit();
-
-      res.json({ message: 'Refund denied successfully', refund });
-    } catch (error) {
-      // If there is a failure, rollback the transaction
-      await transaction.rollback();
-      throw error;
+    if (!refund) {
+      console.log(`Refund ID ${refundId} not found or already processed.`);
+      return res.status(404).send('Refund request not found or already processed');
     }
+
+    await refund.update({
+      status: 'denied',
+      decision: decision,
+      processedAt: new Date(),
+      updatedBy: req.user.userId
+    });
+
+    console.log(`Refund ID ${refundId} denied successfully.`);
+    res.json({ message: 'Refund denied successfully', refund });
   } catch (error) {
     console.error('Failed to deny refund:', error);
     res.status(500).send('Internal Server Error');

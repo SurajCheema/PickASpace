@@ -73,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
         key: 'user_id'
       }
     },
-    decision: {
+    decision: { // Decision made by admin on refund request
       type: DataTypes.TEXT,
       allowNull: true
     },

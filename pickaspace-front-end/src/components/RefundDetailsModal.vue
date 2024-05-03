@@ -1,5 +1,5 @@
 <template>
-  <b-modal :visible="showModal" title="Refund Details" @hidden="closeModal">
+  <b-modal :visible="showModal" title="Refund Details" @hidden="$emit('update:showModal', false)">
     <div v-if="refund">
       <p><strong>Refund ID:</strong> {{ refund.refund_id }}</p>
       <p><strong>Payment ID:</strong> {{ refund.payment_id }}</p>
@@ -11,7 +11,7 @@
 
       <div v-if="refund.status === 'requested'">
         <h4>Admin Decision</h4>
-        <b-form-textarea v-model="adminDecision" placeholder="Enter decision reason"></b-form-textarea>
+        <b-form-textarea v-model="decision" placeholder="Enter decision reason"></b-form-textarea>
         <b-button variant="success" @click="approveRefund(refund.refund_id)">Approve</b-button>
         <b-button variant="danger" @click="denyRefund(refund.refund_id)">Deny</b-button>
       </div>
@@ -41,35 +41,31 @@ export default {
   },
   data() {
     return {
-      adminDecision: '',
+      decision: '',
     };
   },
   methods: {
     closeModal() {
-      this.$emit('close');
+      this.$emit('update:showModal', false);
     },
     async approveRefund(refundId) {
-      try {
-        await updateRefund(refundId, this.adminDecision, 'approved');
-        alert('Refund approved successfully.');
-        this.$emit('refund-updated');
-        this.closeModal();
-      } catch (error) {
-        console.error('Failed to approve refund:', error);
-        alert('Failed to approve refund. Please try again.');
-      }
+      this.processRefund(refundId, 'approve');
     },
     async denyRefund(refundId) {
+      this.processRefund(refundId, 'deny');
+    },
+    async processRefund(refundId, status) {
       try {
-        await updateRefund(refundId, this.adminDecision, 'denied');
-        alert('Refund denied successfully.');
+        const response = await updateRefund(refundId, this.decision, status);
+        alert(`Refund ${status} successfully.`);
+        console.log(response);
         this.$emit('refund-updated');
         this.closeModal();
       } catch (error) {
-        console.error('Failed to deny refund:', error);
-        alert('Failed to deny refund. Please try again.');
+        console.error(`Failed to ${status} refund:`, error);
+        alert(`Failed to ${status} refund. Please try again.`);
       }
-    },
+    }
   },
 };
 </script>
