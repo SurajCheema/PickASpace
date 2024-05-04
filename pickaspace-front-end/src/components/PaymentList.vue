@@ -62,6 +62,16 @@
       </template>
     </b-modal>
   </div>
+
+  <!-- Success Modal -->
+<b-modal ref="successModal" title="Success" ok-only ok-variant="success" @ok="$refs.successModal.hide()">
+  Refund request resubmitted successfully.
+</b-modal>
+
+<!-- Error Modal -->
+<b-modal ref="errorModal" title="Error" ok-only ok-variant="danger" @ok="$refs.errorModal.hide()">
+  Failed to resubmit refund request. Please try again.
+</b-modal>
 </template>
 
 <script>
@@ -130,26 +140,10 @@ export default {
           this.resubmitReason = '';
           this.showResubmitForm = false;
           this.$emit('refund-resubmitted');
-          this.$bvModal.msgBoxOk('Refund request resubmitted successfully.', {
-            title: 'Success',
-            size: 'sm',
-            buttonSize: 'sm',
-            okVariant: 'success',
-            headerClass: 'p-2 border-bottom-0',
-            footerClass: 'p-2 border-top-0',
-            centered: true
-          });
+          this.$refs.successModal.show();
         } catch (error) {
           console.error('Failed to resubmit refund request:', error);
-          this.$bvModal.msgBoxOk('Failed to resubmit refund request. Please try again.', {
-            title: 'Error',
-            size: 'sm',
-            buttonSize: 'sm',
-            okVariant: 'danger',
-            headerClass: 'p-2 border-bottom-0',
-            footerClass: 'p-2 border-top-0',
-            centered: true
-          });
+          this.$refs.errorModal.show();
         }
       }
     }
