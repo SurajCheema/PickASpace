@@ -49,6 +49,14 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
       },
+      latitude: {
+        type: Sequelize.DECIMAL(10, 8),
+        allowNull: true,
+      },
+      longitude: {
+        type: Sequelize.DECIMAL(11, 8),
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -57,7 +65,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-  });
+    });
   },
 
   async down (queryInterface, Sequelize) {

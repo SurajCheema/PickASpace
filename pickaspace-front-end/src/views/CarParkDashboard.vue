@@ -8,6 +8,26 @@
       </div>
     </div>
     <div class="row">
+      <div class="col-12">
+        <div class="card mb-3">
+          <div class="card-body">
+            <GoogleMap
+              :center="mapCenter"
+              :zoom="12"
+              style="width: 100%; height: 400px"
+            >
+              <Marker
+                v-for="carPark in filteredCarParks"
+                :key="carPark.carpark_id"
+                :position="getPosition(carPark)"
+                @click="selectCarPark(carPark)"
+              />
+            </GoogleMap>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
       <div class="col-12 col-md-4" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
         <div class="card mb-3 hover-highlight" style="cursor:pointer" @click="selectCarPark(carPark)">
           <div class="card-body">
@@ -17,9 +37,6 @@
         </div>
       </div>
     </div>
-    <!-- GOOGLE MAP HERE? -->
-
- 
 
     <!-- Modal for Car Park Details -->
     <div v-if="showModal" class="modal" tabindex="-1" role="dialog" style="display: block;">
@@ -58,14 +75,11 @@
       </div>
     </div>
   </div>
-
 </template>
-
-
-
 
 <script>
 import { fetchCarParks, fetchCarParkBays } from '@/services/carParkService';
+import { GoogleMap, Marker } from 'vue3-google-map';
 
 const vehicleSizeMapping = {
   "Small": 1,
@@ -82,16 +96,20 @@ const vehicleSizeName = {
   4: "Van & Minibus"
 };
 
-
 export default {
   name: 'UserDashboard',
+  components: {
+    GoogleMap,
+    Marker,
+  },
   data() {
     return {
-      searchQuery: '', // Search query string
-      carParks: [], // Array to hold car parks fetched from the backend
-      selectedCarPark: null, // Object to hold the currently selected car park details
-      bays: [], // Placeholder array for car park bays, to be filled once fetched from the backend
+      searchQuery: '',
+      carParks: [],
+      selectedCarPark: null,
+      bays: [],
       showModal: false,
+      mapCenter: { lat: 51.5074, lng: -0.1278 }, // Default map center (London)
     };
   },
   computed: {
@@ -110,6 +128,9 @@ export default {
       try {
         const carParks = await fetchCarParks(searchParams);
         this.carParks = carParks;
+        if (carParks.length > 0) {
+          this.mapCenter = this.getPosition(carParks[0]);
+        }
       } catch (error) {
         alert('Failed to fetch car parks. Please try again later.');
       }
@@ -118,26 +139,24 @@ export default {
       this.selectedCarPark = carPark;
       try {
         const bays = await fetchCarParkBays(carPark.carpark_id);
-        // Update the selectedCarPark object with fetched bays
         this.selectedCarPark.bays = bays;
         this.selectedCarPark.baysWithEVCharging = bays.filter(bay => bay.hasEVCharging).length;
         this.selectedCarPark.baysWithDisabledAccess = bays.filter(bay => bay.disabled).length;
-        // Determine the largest vehicle size
         const maxVehicleSize = Math.max(...bays.map(bay => vehicleSizeMapping[bay.vehicleSize] || 0));
         this.selectedCarPark.largestVehicleSize = vehicleSizeName[maxVehicleSize] || 'Not Available';
-
         this.showModal = true;
       } catch (error) {
         console.error('Error fetching bays:', error);
       }
     },
-
     closeModal() {
-      this.showModal = false; // Correctly placed inside methods
+      this.showModal = false;
     },
-
     bookCarPark() {
       this.$router.push({ name: 'BayBooking', params: { carparkId: this.selectedCarPark.carpark_id } });
+    },
+    getPosition(carPark) {
+      return { lat: parseFloat(carPark.latitude), lng: parseFloat(carPark.longitude) };
     },
   },
   mounted() {
@@ -145,7 +164,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .hover-highlight:hover {

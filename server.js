@@ -138,7 +138,6 @@ const verifyRole = (allowedRoles) => {
 
 // Create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
-
   console.log(req.user); // Log to confirm the structure
 
   // Extracted from the token by the middleware
@@ -148,29 +147,51 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
   try {
     const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
 
-    // Create car park with dynamic user_id from JWT
-    const newCarPark = await db.CarPark.create({
-      user_id,
-      addressLine1,
-      addressLine2,
-      city,
-      postcode,
-      openTime,
-      closeTime,
-      accessInstructions,
-      pricing
-    }, { transaction });
+    const geocoder = new google.maps.Geocoder();
+    const address = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
 
-    // Create bays associated with the car park
-    for (const bay of bays) {
-      await db.Bay.create({
-        ...bay,
-        carpark_id: newCarPark.carpark_id
+    try {
+      const response = await new Promise((resolve, reject) => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status === 'OK') {
+            resolve(results[0].geometry.location);
+          } else {
+            reject(new Error(`Geocode was not successful for the following reason: ${status}`));
+          }
+        });
+      });
+
+      const { lat, lng } = response;
+
+      const newCarPark = await db.CarPark.create({
+        user_id,
+        addressLine1,
+        addressLine2,
+        city,
+        postcode,
+        openTime,
+        closeTime,
+        accessInstructions,
+        pricing,
+        latitude: lat,
+        longitude: lng,
       }, { transaction });
-    }
 
-    await transaction.commit();
-    res.json({ message: "Car park created successfully", carparkId: newCarPark.carpark_id });
+      // Create bays associated with the car park
+      for (const bay of bays) {
+        await db.Bay.create({
+          ...bay,
+          carpark_id: newCarPark.carpark_id
+        }, { transaction });
+      }
+
+      await transaction.commit();
+      res.json({ message: "Car park created successfully", carparkId: newCarPark.carpark_id });
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      await transaction.rollback();
+      res.status(500).send('Error creating car park');
+    }
   } catch (error) {
     await transaction.rollback();
     console.error("Failed to create car park:", error);

@@ -41,7 +41,15 @@ module.exports = (sequelize, DataTypes) => {
     user_id: {
       type: DataTypes.INTEGER,
       references: { model: 'Users', key: 'user_id' }
-    }
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+    },
   });
 
   // Define associations
