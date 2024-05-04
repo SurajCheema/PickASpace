@@ -43,8 +43,8 @@
         <p><strong>Processed At:</strong> {{ formatDate(selectedRefund.processedAt) }}</p>
         <p><strong>User Reason:</strong> {{ selectedRefund.reason }}</p>
         <p><strong>Admin Decision:</strong> {{ selectedRefund.decision }}</p>
-        <b-button v-if="selectedRefund.status === 'denied'" @click="resubmitRefund" variant="primary">Resubmit Refund
-          Request</b-button>
+        <b-button v-if="selectedRefund.status === 'denied' && !showResubmitForm" @click="toggleResubmitForm"
+          variant="primary">Resubmit Refund Request</b-button>
       </template>
       <template v-else>
         <p>No refund details available.</p>
@@ -52,7 +52,7 @@
       <template v-if="selectedRefund && selectedRefund.status === 'denied' && showResubmitForm">
         <hr>
         <h5>Resubmit Refund Request</h5>
-        <b-form @submit.prevent="resubmitRefund">
+        <b-form @submit.prevent="handleResubmitRefund">
           <b-form-group label="Reason:" label-for="resubmit-reason">
             <b-form-textarea id="resubmit-reason" v-model="resubmitReason" required></b-form-textarea>
           </b-form-group>
@@ -121,7 +121,7 @@ export default {
         this.resubmitReason = '';
       }
     },
-    async resubmitRefund() {
+    async handleResubmitRefund() {
       const refundId = this.selectedRefund.refund_id;
       const reason = this.resubmitReason;
       if (reason) {
@@ -151,10 +151,10 @@ export default {
             centered: true
           });
         }
-        }
       }
     }
-    }
+  }
+}
 </script>
 
 <style scoped>
