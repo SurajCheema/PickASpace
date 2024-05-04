@@ -1,4 +1,5 @@
 import { eventBus } from '../eventBus'; 
+import store from '../store';
 
 const API_URL = 'http://localhost:3000';
 
@@ -33,7 +34,8 @@ export const loginUser = async (userData) => {
 
   const data = await response.json();
   saveAuthToken(data.token);
-  eventBus.emit('login'); // Emit login event
+  store.dispatch('loginUser', data.token); 
+  eventBus.emit('login');
   return data;
 };
   

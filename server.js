@@ -550,16 +550,21 @@ app.get('/api/user/payments', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const payments = await db.Payment.findAll({
       where: { userId: userId },
-      include: [{ model: db.CarParkLog, as: 'log' }]
+      include: [
+        { model: db.CarParkLog, as: 'log' },
+        { model: db.Refund, as: 'refund' }
+      ]
     });
+
     const serializedPayments = payments.map(payment => ({
       ...payment.toJSON(),
-      amount: parseFloat(payment.amount),  // Ensure amount is a floating number
-      logs: payment.logs  // Include the associated CarParkLog entries
+      amount: parseFloat(payment.amount),
+      log: payment.log,
+      refund: payment.refund
     }));
+
     res.json(serializedPayments);
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to fetch payments:', error);
     res.status(500).send(`Internal Server Error: ${error.message}`);
   }
@@ -587,40 +592,39 @@ app.get('/api/user/bookings/:log_id', authenticateToken, async (req, res) => {
   }
 });
 
-// Fetch a single payment by ID for a user
+// Endpoint to fetch a specific payment by ID
 app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
   const { paymentId } = req.params;
-  const userId = req.user.userId;
-
-  // Validate the paymentId
-  if (!paymentId || isNaN(paymentId)) {
-    return res.status(400).json({ error: 'Invalid payment ID' });
-  }
+  const { include } = req.query;
 
   try {
-    // Find the payment by ID and user ID
-    const payment = await db.Payment.findOne({
-      where: { payment_id: paymentId, userId: userId },
-      include: [{ model: db.CarParkLog, as: 'log' }]
-    });
+    const options = {
+      where: { payment_id: paymentId },
+      include: [
+        { model: db.User, as: 'user' },
+        { model: db.CarParkLog, as: 'log' }
+      ]
+    };
 
-    if (!payment) {
-      return res.status(404).json({ error: 'Payment not found' });
+    if (include === 'refund') {
+      options.include.push({ model: db.Refund, as: 'refund' });
     }
 
-    // Return the payment details
-    res.json({
-      payment_id: payment.payment_id,
-      amount: payment.amount,
-      paymentStatus: payment.paymentStatus,
-      date_paid: payment.date_paid,
-      stripePaymentId: payment.stripePaymentId,
-      receiptUrl: payment.receiptUrl,
-      log: payment.log
-    });
+    const payment = await db.Payment.findOne(options);
+
+    if (!payment) {
+      return res.status(404).send('Payment not found');
+    }
+
+    // Check if the authenticated user is the owner of the payment or an admin
+    if (req.user.userId !== payment.userId && req.user.role !== 'admin') {
+      return res.status(403).send('Forbidden: You do not have permission to access this payment');
+    }
+
+    res.json(payment);
   } catch (error) {
     console.error('Error fetching payment:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).send('Failed to fetch payment');
   }
 });
 
@@ -830,14 +834,11 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
   }
 });
 
-// Admin function to fetch a specific refund by ID
-app.get('/api/refunds/:refundId', authenticateToken, verifyRole(['admin']), async (req, res) => {
-  // Extract the refundId from the request parameters
+// Function to fetch a specific refund by ID (admin and user)
+app.get('/api/refunds/:refundId', authenticateToken, async (req, res) => {
   const { refundId } = req.params;
 
   try {
-    // Use the findOne method to fetch the refund with the given ID from the database
-    // Include the associated Payment and User records in the fetched data
     const refund = await db.Refund.findOne({
       where: { refund_id: refundId },
       include: [
@@ -845,14 +846,71 @@ app.get('/api/refunds/:refundId', authenticateToken, verifyRole(['admin']), asyn
       ]
     });
 
-    // If the refund is not found, send a 404 Not Found response
     if (!refund) return res.status(404).send('Refund not found');
 
-    // If the refund is found, send the refund data in the response
+    // Check if the user is an admin or the refund belongs to the user
+    if (req.user.role !== 'admin' && refund.payment.user.user_id !== req.user.userId) {
+      return res.status(403).send('Forbidden');
+    }
+
     res.json(refund);
   } catch (error) {
-    // If there's an error in fetching the refund, log the error and send a 500 Error response
     console.error('Error fetching refund:', error);
     res.status(500).send('Failed to fetch refund');
+  }
+});
+
+// User function to resubmit a refund request
+app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) => {
+  const { refundId } = req.params;
+  const { reason } = req.body;
+
+  try {
+    const refund = await db.Refund.findOne({
+      where: { refund_id: refundId, status: 'denied' }
+    });
+
+    if (!refund) {
+      return res.status(404).send('Refund request not found or not in denied status');
+    }
+
+    await refund.update({
+      status: 'requested',
+      reason: reason,
+      processedAt: null,
+      updatedBy: req.user.userId
+    });
+
+    res.json({ message: 'Refund request resubmitted successfully', refund });
+  } catch (error) {
+    console.error('Failed to resubmit refund:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// User function to resubmit a refund request
+app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) => {
+  const { refundId } = req.params;
+  const { reason } = req.body;
+
+  try {
+    const refund = await db.Refund.findOne({
+      where: { refund_id: refundId, status: 'denied' }
+    });
+
+    if (!refund) {
+      return res.status(404).send('Refund request not found or not in denied status');
+    }
+
+    await refund.update({
+      status: 'requested',
+      reason: reason,
+      updatedBy: req.user.userId
+    });
+
+    res.json({ message: 'Refund request resubmitted successfully', refund });
+  } catch (error) {
+    console.error('Failed to resubmit refund:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
