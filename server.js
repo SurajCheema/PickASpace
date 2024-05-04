@@ -624,7 +624,6 @@ app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
   }
 });
 
-// Endpoint to request a refund
 app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const { paymentId, reason } = req.body;
   const userId = req.user.userId;
@@ -666,7 +665,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
         amount: payment.amount,
         status: 'requested',
         reason: reason,
-        decision: null, // Decision to be made later by an admin
+        receiptUrl: payment.receiptUrl,
         log_id: payment.log.log_id,
         createdBy: userId,
         updatedBy: userId
@@ -679,6 +678,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 });
+
 
 // Helper function to handle automatic refunds
 async function processAutomaticRefund(payment, userId, reason) {
@@ -802,18 +802,18 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
   const { decision } = req.body;
 
   if (!decision) {
-    console.log("Denial decision missing in request:", req.body);
     return res.status(400).send('Decision for denial is required');
   }
 
   try {
     const refund = await db.Refund.findOne({
-      where: { refund_id: refundId, status: ['requested'] }
+      where: { refund_id: refundId }
     });
 
     if (!refund) {
-      console.log(`Refund ID ${refundId} not found or already processed.`);
-      return res.status(404).send('Refund request not found or already processed');
+      return res.status(404).send('Refund request not found');
+    } else if (refund.status === 'denied') {
+      return res.status(409).send('Refund is already denied');  // Using HTTP status code 409 Conflict for logical conflict
     }
 
     await refund.update({
@@ -823,7 +823,6 @@ app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin'])
       updatedBy: req.user.userId
     });
 
-    console.log(`Refund ID ${refundId} denied successfully.`);
     res.json({ message: 'Refund denied successfully', refund });
   } catch (error) {
     console.error('Failed to deny refund:', error);

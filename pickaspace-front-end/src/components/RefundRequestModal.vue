@@ -32,6 +32,10 @@ export default {
       type: [String, Number],
       required: true,
     },
+    receiptUrl: { 
+      type: String,
+      default: ''
+    }
   },
   data() {
     return {
@@ -50,7 +54,8 @@ export default {
       this.$emit('close');
     },
     submitRefund() {
-      this.$emit('request-refund', this.paymentId.toString(), this.reason);
+      // Include receiptUrl in the emitted event
+      this.$emit('request-refund', this.paymentId.toString(), this.reason, this.receiptUrl);
       this.closeModal();
     }
   },

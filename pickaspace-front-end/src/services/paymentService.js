@@ -43,12 +43,13 @@ export const fetchPaymentById = async (paymentId) => {
 };
 
 // Request refund for specific payment
-export const requestRefund = async (paymentId, reason) => {
+export const requestRefund = async (paymentId, reason, receiptUrl) => {
   const token = localStorage.getItem('token');
   try {
     const body = JSON.stringify({
       paymentId,
       reason,
+      receiptUrl
     });
 
     const response = await fetch(`${API_BASE_URL}/request-refund`, {
