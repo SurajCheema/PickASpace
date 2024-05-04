@@ -9,7 +9,8 @@
     </div>
     <div>
       <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId"
-        @open-refund-modal="openRefundModal" />
+        @open-refund-modal="openRefundModal" @open-refund-status-modal="openRefundStatusModal"
+        @refund-resubmitted="fetchPaymentsWrapper" />
       <booking-details v-if="selectedBooking" :booking="selectedBooking" @close="selectedBooking = null"
         @booking-cancelled="handleBookingCancelled" />
       <refund-request-modal :is-visible="isRefundModalVisible" :payment-id="selectedPaymentId" @close="closeRefundModal"
@@ -23,9 +24,8 @@ import { ref, onMounted } from 'vue';
 import PaymentList from '../components/PaymentList.vue';
 import BookingDetails from '../components/BookingDetailsModal.vue';
 import RefundRequestModal from '../components/RefundRequestModal.vue';
-import { fetchPayments } from '@/services/paymentService';
+import { fetchPayments, fetchRefundByPaymentId, requestRefund } from '@/services/paymentService';
 import { fetchBookingById } from '@/services/carParkService';
-import { requestRefund } from '@/services/paymentService';
 
 export default {
   components: {
@@ -43,9 +43,14 @@ export default {
     const selectedBooking = ref(null);
 
     const fetchPaymentsWrapper = async () => {
-      payments.value = await fetchPayments();
-      console.log('Fetched payments in UserPaymentLogs:', payments.value);
-      filterPayments();
+      try {
+        payments.value = await fetchPayments();
+        console.log('Fetched payments in UserPaymentLogs:', payments.value);
+        filterPayments();
+      } catch (error) {
+        console.error('Failed to fetch payments:', error);
+        alert('Failed to fetch payments. Please try again.');
+      }
     };
 
     const setFilter = (f) => {
@@ -54,11 +59,7 @@ export default {
     };
 
     const filterPayments = () => {
-      if (filter.value === 'all') {
-        filteredPayments.value = payments.value;
-      } else {
-        filteredPayments.value = payments.value.filter(p => p.paymentStatus === filter.value);
-      }
+      filteredPayments.value = payments.value.filter(p => filter.value === 'all' || p.paymentStatus === filter.value);
     };
 
     const setSelectedBookingId = async (log_id) => {
@@ -86,13 +87,29 @@ export default {
       isRefundModalVisible.value = true;
     };
 
+    const openRefundStatusModal = async (paymentId) => {
+      console.log('Opening refund status modal for payment ID:', paymentId);
+      try {
+        const refund = await fetchRefundByPaymentId(paymentId);
+        if (refund) {
+          console.log('Refund details fetched:', refund);
+        } else {
+          console.error('No refund found for payment ID:', paymentId);
+          alert('No refund details found for the selected payment.');
+        }
+      } catch (error) {
+        console.error('Failed to fetch refund details:', error);
+        alert('Failed to fetch refund details. Please try again.');
+      }
+    };
+
     const closeRefundModal = () => {
       isRefundModalVisible.value = false;
     };
 
-    const handleRefundRequest = async (paymentId, reason) => {
+    const handleRefundRequest = async (paymentId, reason, receiptUrl) => {
       try {
-        await requestRefund(paymentId, reason);
+        await requestRefund(paymentId, reason, receiptUrl);
         fetchPaymentsWrapper();
         alert('Refund request submitted successfully.');
       } catch (error) {
@@ -115,9 +132,10 @@ export default {
       selectedPaymentId,
       openRefundModal,
       closeRefundModal,
-      handleRefundRequest,
+      openRefundStatusModal,
+      handleRefundRequest
     };
-  },
+  }
 }
 </script>
 

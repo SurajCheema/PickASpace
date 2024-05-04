@@ -865,6 +865,10 @@ app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) 
   const { refundId } = req.params;
   const { reason } = req.body;
 
+  if (!reason) {
+    return res.status(400).send('Reason is required for resubmitting a refund request');
+  }
+
   try {
     const refund = await db.Refund.findOne({
       where: { refund_id: refundId, status: 'denied' }
@@ -877,10 +881,10 @@ app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) 
     await refund.update({
       status: 'requested',
       reason: reason,
-      processedAt: null,
       updatedBy: req.user.userId
     });
 
+    console.log('Refund request resubmitted successfully:', refund);
     res.json({ message: 'Refund request resubmitted successfully', refund });
   } catch (error) {
     console.error('Failed to resubmit refund:', error);
@@ -888,29 +892,20 @@ app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) 
   }
 });
 
-// User function to resubmit a refund request
-app.post('/api/refunds/:refundId/resubmit', authenticateToken, async (req, res) => {
-  const { refundId } = req.params;
-  const { reason } = req.body;
-
+// Endpoint to fetch a refund by Payment ID
+app.get('/api/refunds/payment/:paymentId', authenticateToken, async (req, res) => {
+  const { paymentId } = req.params;
   try {
     const refund = await db.Refund.findOne({
-      where: { refund_id: refundId, status: 'denied' }
+      where: { payment_id: paymentId },
+      include: [{ model: db.Payment, as: 'payment' }]
     });
-
     if (!refund) {
-      return res.status(404).send('Refund request not found or not in denied status');
+      return res.status(404).send('Refund not found for the given payment ID');
     }
-
-    await refund.update({
-      status: 'requested',
-      reason: reason,
-      updatedBy: req.user.userId
-    });
-
-    res.json({ message: 'Refund request resubmitted successfully', refund });
+    res.json(refund);
   } catch (error) {
-    console.error('Failed to resubmit refund:', error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error fetching refund by payment ID:', error);
+    res.status(500).send('Server error');
   }
 });
