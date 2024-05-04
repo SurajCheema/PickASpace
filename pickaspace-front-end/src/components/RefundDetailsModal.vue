@@ -1,6 +1,6 @@
 <template>
   <b-modal :visible="showModal" title="Refund Details" @hidden="$emit('update:showModal', false)">
-    <div v-if="refund" class="modal-content">
+    <div v-if="refund">
       <!-- Expanded Refund Details -->
       <p><strong>Refund ID:</strong> {{ refund.refund_id }}</p>
       <p><strong>Payment ID:</strong> {{ refund.payment_id }}</p>
@@ -76,8 +76,8 @@ export default {
       this.updateRefund(refundId, this.decision, status).then(response => {
         alert(`Refund ${status} successfully.`);
         console.log(response);
-        this.closeModal();
         this.$emit('refund-updated');
+        this.closeModal();
       }).catch(error => {
         if (error.message.includes('Refund is already denied')) {
           alert('Refund is already denied.');
@@ -116,19 +116,18 @@ export default {
 </script>
 
 <style scoped>
-.modal-content {
-  max-height: calc(100vh - 210px);
-  overflow-y: auto;
-}
-
 .receipt-link {
   color: #007bff;
   text-decoration: underline;
-  cursor: pointer;
 }
 
 .receipt-link:hover {
   color: #0056b3;
+}
+
+.modal-content {
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
 }
 
 p {
