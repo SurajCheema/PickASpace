@@ -52,14 +52,14 @@
             <div class="text-center">
               <h6><strong>Pricing:</strong></h6>
               <ul class="list-unstyled">
-                <li v-if="selectedCarPark.pricing"><strong>Hourly:</strong> £{{
+                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.hourly"><strong>Hourly:</strong> £{{
         selectedCarPark.pricing.hourly.toFixed(2) }}</li>
-                <li v-if="selectedCarPark.pricing"><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2)
-                  }}</li>
-                <li v-if="selectedCarPark.pricing"><strong>Weekly:</strong> £{{
+                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.daily"><strong>Daily:</strong> £{{
+        selectedCarPark.pricing.daily.toFixed(2) }}</li>
+                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.weekly"><strong>Weekly:</strong> £{{
         selectedCarPark.pricing.weekly.toFixed(2) }}</li>
-                <li v-if="selectedCarPark.pricing"><strong>Monthly:</strong> £{{
-                  selectedCarPark.pricing.monthly.toFixed(2) }}</li>
+                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.monthly"><strong>Monthly:</strong> £{{
+        selectedCarPark.pricing.monthly.toFixed(2) }}</li>
               </ul>
             </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>

@@ -121,7 +121,7 @@ router.post('/request-password-reset', async (req, res) => {
   if (!user) {
     return res.status(404).send('No account with that email found.');
   }
-  
+
   const token = crypto.randomBytes(20).toString('hex');
 
   user.reset_password_token = token;
@@ -137,9 +137,9 @@ router.post('/request-password-reset', async (req, res) => {
     from: 'johnredgolf16@gmail.com',
     subject: 'Password Reset PickASpace',
     text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
-          `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
-          `http://localhost:3000/reset-password/${token}\n\n` +
-          `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+      `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
+      `http://localhost:3000/reset-password/${token}\n\n` +
+      `If you did not request this, please ignore this email and your password will remain unchanged.\n`
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
