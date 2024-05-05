@@ -1,3 +1,5 @@
+const { Client } = require("@googlemaps/google-maps-services-js");
+const client = new Client({});
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -138,33 +140,37 @@ const verifyRole = (allowedRoles) => {
 
 // Create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
-  console.log(req.user); // Log to confirm the structure
+  const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
 
-  // Extracted from the token by the middleware
-  const user_id = req.user.userId;
+  // Validate required fields
+  if (!addressLine1 || !city || !postcode || !openTime || !closeTime || !pricing || !bays || bays.length === 0) {
+    return res.status(400).send('Missing required fields');
+  }
 
-  const transaction = await db.sequelize.transaction();
+  // Construct full address from parts
+  const fullAddress = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
+
   try {
-    const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
+    const response = await client.geocode({
+      params: {
+        address: fullAddress,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    });
 
-    const geocoder = new google.maps.Geocoder();
-    const address = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
+    if (response.data.status !== 'OK') {
+      if (response.data.status === 'ZERO_RESULTS') {
+        return res.status(400).send('Invalid address. Please provide a valid address.');
+      }
+      throw new Error('Geocoding failed with status: ' + response.data.status);
+    }
 
-    try {
-      const response = await new Promise((resolve, reject) => {
-        geocoder.geocode({ address }, (results, status) => {
-          if (status === 'OK') {
-            resolve(results[0].geometry.location);
-          } else {
-            reject(new Error(`Geocode was not successful for the following reason: ${status}`));
-          }
-        });
-      });
+    const { lat, lng } = response.data.results[0].geometry.location;
 
-      const { lat, lng } = response;
-
+    // Start transaction for database operations
+    const result = await db.sequelize.transaction(async transaction => {
       const newCarPark = await db.CarPark.create({
-        user_id,
+        user_id: req.user.userId,
         addressLine1,
         addressLine2,
         city,
@@ -177,25 +183,27 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
         longitude: lng,
       }, { transaction });
 
-      // Create bays associated with the car park
-      for (const bay of bays) {
-        await db.Bay.create({
-          ...bay,
-          carpark_id: newCarPark.carpark_id
-        }, { transaction });
-      }
+      // Create each bay associated with this car park
+      const bayPromises = bays.map(bay =>
+        db.Bay.create({
+          carpark_id: newCarPark.carpark_id,
+          bay_number: bay.bay_number,
+          vehicleSize: bay.vehicleSize,
+          hasEVCharging: bay.hasEVCharging,
+          disabled: bay.disabled,
+          description: bay.description,
+        }, { transaction })
+      );
 
-      await transaction.commit();
-      res.json({ message: "Car park created successfully", carparkId: newCarPark.carpark_id });
-    } catch (error) {
-      console.error('Error geocoding address:', error);
-      await transaction.rollback();
-      res.status(500).send('Error creating car park');
-    }
+      await Promise.all(bayPromises);
+
+      return newCarPark;
+    });
+
+    res.status(201).json({ message: "Car park created successfully", carparkId: result.carpark_id });
   } catch (error) {
-    await transaction.rollback();
-    console.error("Failed to create car park:", error);
-    res.status(500).send(error.message);
+    console.error('Error creating car park:', error);
+    res.status(500).send('An error occurred while creating the car park.');
   }
 });
 

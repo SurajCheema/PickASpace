@@ -11,11 +11,7 @@
       <div class="col-12">
         <div class="card mb-3">
           <div class="card-body">
-            <GoogleMap
-              :center="mapCenter"
-              :markers="mapMarkers"
-              @marker-click="selectCarPark"
-            />
+            <GoogleMap :center="mapCenter" :markers="mapMarkers" @marker-click="selectCarPark" />
           </div>
         </div>
       </div>
@@ -121,12 +117,12 @@ export default {
       try {
         const carParks = await fetchCarParks(searchParams);
         this.carParks = carParks;
-        if (carParks.length > 0) {
+        if (carParks.length > 0 && this.isValidPosition(this.getPosition(carParks[0]))) {
           this.mapCenter = this.getPosition(carParks[0]);
         }
         this.updateMapMarkers();
       } catch (error) {
-        alert('Failed to fetch car parks. Please try again later.');
+        console.error('Failed to fetch car parks:', error);
       }
     },
     async selectCarPark(carParkOrMarker) {
@@ -151,8 +147,16 @@ export default {
       this.$router.push({ name: 'BayBooking', params: { carparkId: this.selectedCarPark.carpark_id } });
     },
     getPosition(carPark) {
+      if (!carPark || isNaN(carPark.latitude) || isNaN(carPark.longitude)) {
+        console.warn('Invalid car park data', carPark);
+        return { lat: 51.5074, lng: -0.1278 }; // Default position
+      }
       return { lat: parseFloat(carPark.latitude), lng: parseFloat(carPark.longitude) };
     },
+    isValidPosition(position) {
+    return position && typeof position.lat === 'number' && !isNaN(position.lat) &&
+           typeof position.lng === 'number' && !isNaN(position.lng);
+  },
     updateMapMarkers() {
       this.mapMarkers = this.filteredCarParks.map(carPark => ({
         position: this.getPosition(carPark),
