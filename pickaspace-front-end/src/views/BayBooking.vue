@@ -52,6 +52,7 @@
             <div class="spinner hidden" id="spinner"></div>
             <span id="button-text">Pay now</span>
           </button>
+          <div v-if="loading" class="loading-spinner"></div>
           <p id="card-error" role="alert"></p>
           <p class="result-message" v-if="paymentSuccessful">
             Payment succeeded, see the result in your
@@ -62,9 +63,9 @@
       </div>
 
     </div>
-    <div class="row mt-5 bay-cards-row">
+    <div class="row mt-5-bay-cards-row">
       <div class="col-12">
-        <h4>Available Bays</h4>
+        <h4 class="col-12-h4">Available Bays</h4>
         <div class="row">
           <div class="col-md-3" v-for="bay in bays" :key="bay.bay_id"
             :class="{ 'selected-bay': selectedBay && selectedBay.bay_id === bay.bay_id }" @click="selectBay(bay)">
@@ -106,6 +107,7 @@ export default {
       submitError: '',
       bookingSuccessMessage: '',
       paymentSuccessful: false,
+      loading: false
     };
   },
 
@@ -214,9 +216,12 @@ export default {
 
 
     async submitBooking() {
+      this.loading=true
+
       if (!this.isDepartureValid || !this.selectedBay) {
         this.submitError = "Please ensure all fields are correctly filled.";
         console.error("Booking Error:", this.submitError);
+        this.loading=false
         return;
       }
 
@@ -228,12 +233,14 @@ export default {
       if (error) {
         this.submitError = error.message;
         console.error("Stripe Error: Error creating Stripe token:", error.message);
+        this.loading=false
         return;
       }
 
       if (!token) {
         this.submitError = "Failed to create payment token.";
         console.error("Stripe Error: Stripe token creation failed without an error message.");
+        this.loading=false
         return;
       }
 
@@ -245,6 +252,7 @@ export default {
       if (amount <= 0) {
         this.submitError = "Invalid amount to charge.";
         console.error("Charge Error:", this.submitError);
+        this.loading=false
         return;
       }
 
@@ -270,6 +278,7 @@ export default {
         this.submitError = error.message || "An unexpected error occurred.";
         console.error("Booking Error:", this.submitError, error);
       }
+      this.loading=false
     },
 
     resetForm() {
@@ -295,6 +304,21 @@ export default {
 </script>
 
 <style scoped>
+.loading-spinner {
+  /* CSS for the loading spinner */
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #333;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+.form-group {
+  justify-content: center;
+  align-items: center;
+}
+
 .hover-highlight:hover {
   background-color: #f8f9fa;
   /* Slight highlight on hover */
@@ -304,6 +328,13 @@ export default {
   background-color: #f8f9fa;
   /* Light background for selected bay */
 }
+
+
+.col-12-h4 {
+  color: #ffffff;
+  border-radius: 10px;
+}
+
 
 .date-picker {
   width: 100%;
@@ -319,7 +350,7 @@ export default {
 .bay-cards-row {
   margin-top: 5rem;
   /* Increased vertical space from the forms */
-  background-color: #e6f7ff;
+  background-color: #79489c;
   /* Light blue background color for bay cards */
 }
 

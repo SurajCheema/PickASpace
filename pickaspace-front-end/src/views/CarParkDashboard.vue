@@ -49,13 +49,17 @@
               }}</p>
             <p><strong>Largest Vehicle Size:</strong> {{ selectedCarPark.largestVehicleSize }}</p>
             <!-- Pricing details for car park -->
-            <div class="text-center"> <!-- This centers all text within -->
+            <div class="text-center">
               <h6><strong>Pricing:</strong></h6>
-              <ul class="list-unstyled"> <!-- Removes bullet points -->
-                <li><strong>Hourly:</strong> £{{ selectedCarPark.pricing.hourly.toFixed(2) }}</li>
-                <li><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2) }}</li>
-                <li><strong>Weekly:</strong> £{{ selectedCarPark.pricing.weekly.toFixed(2) }}</li>
-                <li><strong>Monthly:</strong> £{{ selectedCarPark.pricing.monthly.toFixed(2) }}</li>
+              <ul class="list-unstyled">
+                <li v-if="selectedCarPark.pricing"><strong>Hourly:</strong> £{{
+        selectedCarPark.pricing.hourly.toFixed(2) }}</li>
+                <li v-if="selectedCarPark.pricing"><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2)
+                  }}</li>
+                <li v-if="selectedCarPark.pricing"><strong>Weekly:</strong> £{{
+        selectedCarPark.pricing.weekly.toFixed(2) }}</li>
+                <li v-if="selectedCarPark.pricing"><strong>Monthly:</strong> £{{
+                  selectedCarPark.pricing.monthly.toFixed(2) }}</li>
               </ul>
             </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
@@ -150,6 +154,9 @@ export default {
             const location = results[0].geometry.location;
             this.mapCenter = { lat: location.lat(), lng: location.lng() };
             resolve();
+          } else if (status === 'ZERO_RESULTS') {
+            console.warn('Geocoding returned no results');
+            resolve(); // Resolve the promise even if no results are found
           } else {
             console.error('Geocoding failed:', status);
             reject(new Error('Geocoding failed'));
@@ -186,9 +193,9 @@ export default {
       return { lat: parseFloat(carPark.latitude), lng: parseFloat(carPark.longitude) };
     },
     isValidPosition(position) {
-    return position && typeof position.lat === 'number' && !isNaN(position.lat) &&
-           typeof position.lng === 'number' && !isNaN(position.lng);
-  },
+      return position && typeof position.lat === 'number' && !isNaN(position.lat) &&
+        typeof position.lng === 'number' && !isNaN(position.lng);
+    },
     updateMapMarkers() {
       this.mapMarkers = this.filteredCarParks.map(carPark => ({
         position: this.getPosition(carPark),
