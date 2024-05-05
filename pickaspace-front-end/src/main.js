@@ -13,5 +13,9 @@ app.use(createBootstrap());
 
 // Use Vue Router
 app.use(router);
-app.use(store); 
+app.use(store);
+
+// Define feature flags explicitly
+app.config.performance = true;
+
 app.mount('#app');

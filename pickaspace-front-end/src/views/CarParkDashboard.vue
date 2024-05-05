@@ -13,16 +13,9 @@
           <div class="card-body">
             <GoogleMap
               :center="mapCenter"
-              :zoom="12"
-              style="width: 100%; height: 400px"
-            >
-              <Marker
-                v-for="carPark in filteredCarParks"
-                :key="carPark.carpark_id"
-                :position="getPosition(carPark)"
-                @click="selectCarPark(carPark)"
-              />
-            </GoogleMap>
+              :markers="mapMarkers"
+              @marker-click="selectCarPark"
+            />
           </div>
         </div>
       </div>
@@ -79,7 +72,7 @@
 
 <script>
 import { fetchCarParks, fetchCarParkBays } from '@/services/carParkService';
-import { GoogleMap, Marker } from 'vue3-google-map';
+import GoogleMap from '@/components/GoogleMap.vue';
 
 const vehicleSizeMapping = {
   "Small": 1,
@@ -100,7 +93,6 @@ export default {
   name: 'UserDashboard',
   components: {
     GoogleMap,
-    Marker,
   },
   data() {
     return {
@@ -109,7 +101,8 @@ export default {
       selectedCarPark: null,
       bays: [],
       showModal: false,
-      mapCenter: { lat: 51.5074, lng: -0.1278 }, // Default map center (London)
+      mapCenter: { lat: 51.5074, lng: -0.1278 },
+      mapMarkers: [],
     };
   },
   computed: {
@@ -131,11 +124,13 @@ export default {
         if (carParks.length > 0) {
           this.mapCenter = this.getPosition(carParks[0]);
         }
+        this.updateMapMarkers();
       } catch (error) {
         alert('Failed to fetch car parks. Please try again later.');
       }
     },
-    async selectCarPark(carPark) {
+    async selectCarPark(carParkOrMarker) {
+      const carPark = carParkOrMarker.carPark || carParkOrMarker;
       this.selectedCarPark = carPark;
       try {
         const bays = await fetchCarParkBays(carPark.carpark_id);
@@ -158,10 +153,21 @@ export default {
     getPosition(carPark) {
       return { lat: parseFloat(carPark.latitude), lng: parseFloat(carPark.longitude) };
     },
+    updateMapMarkers() {
+      this.mapMarkers = this.filteredCarParks.map(carPark => ({
+        position: this.getPosition(carPark),
+        carPark,
+      }));
+    },
   },
   mounted() {
     this.fetchCarParks();
   },
+  watch: {
+    filteredCarParks() {
+      this.updateMapMarkers();
+    },
+  }
 };
 </script>
 
