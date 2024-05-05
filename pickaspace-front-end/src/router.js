@@ -13,6 +13,7 @@ import UserBookingLogs from './views/UserBookingLogs.vue';
 import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import AdminRefundManagement from './views/AdminRefundManagement.vue';
+import RequestPasswordReset from './views/RequestPasswordReset.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -46,6 +47,7 @@ const routes = [
   { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
   { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } },
+  { path: '/user/requestpasswordreset', name: 'RequestPasswordReset', component: RequestPasswordReset, meta: { requiresAuth: false } },
 
   // Admin routes
   {

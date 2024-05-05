@@ -12,6 +12,9 @@
         <input type="password" id="password" v-model="user.password" required>
       </div>
       <p class="error" v-if="loginError">{{ loginError }}</p>
+      <div>
+        <a href="/user/requestpasswordreset" class="password-reset-link">Forgot Password?</a>
+      </div>
       <button type="submit">Login</button>
     </form>
   </div>
@@ -97,5 +100,18 @@ button:hover {
 
 .error {
   color: red;
+}
+
+.password-reset-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #0066cc;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.password-reset-link:hover {
+  text-decoration: underline;
 }
 </style>

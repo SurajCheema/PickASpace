@@ -67,8 +67,10 @@
 </template>
 
 <script>
+/* global google */
 import { fetchCarParks, fetchCarParkBays } from '@/services/carParkService';
 import GoogleMap from '@/components/GoogleMap.vue';
+import { Loader } from '@googlemaps/js-api-loader';
 
 const vehicleSizeMapping = {
   "Small": 1,
@@ -99,6 +101,7 @@ export default {
       showModal: false,
       mapCenter: { lat: 51.5074, lng: -0.1278 },
       mapMarkers: [],
+      geocoder: null,
     };
   },
   computed: {
@@ -117,13 +120,42 @@ export default {
       try {
         const carParks = await fetchCarParks(searchParams);
         this.carParks = carParks;
-        if (carParks.length > 0 && this.isValidPosition(this.getPosition(carParks[0]))) {
+
+        if (this.searchQuery) {
+          await this.geocodeAddress(this.searchQuery);
+        } else if (carParks.length > 0 && this.isValidPosition(this.getPosition(carParks[0]))) {
           this.mapCenter = this.getPosition(carParks[0]);
         }
+
         this.updateMapMarkers();
       } catch (error) {
         console.error('Failed to fetch car parks:', error);
       }
+    },
+    async geocodeAddress(address) {
+      if (!this.geocoder) {
+        const loader = new Loader({
+          apiKey: process.env.VUE_APP_GOOGLE_MAPS_API_KEY,
+          version: 'weekly',
+          libraries: ['places'],
+        });
+
+        await loader.load();
+        this.geocoder = new google.maps.Geocoder();
+      }
+
+      return new Promise((resolve, reject) => {
+        this.geocoder.geocode({ address }, (results, status) => {
+          if (status === 'OK') {
+            const location = results[0].geometry.location;
+            this.mapCenter = { lat: location.lat(), lng: location.lng() };
+            resolve();
+          } else {
+            console.error('Geocoding failed:', status);
+            reject(new Error('Geocoding failed'));
+          }
+        });
+      });
     },
     async selectCarPark(carParkOrMarker) {
       const carPark = carParkOrMarker.carPark || carParkOrMarker;

@@ -9,8 +9,17 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
 const { Op, or } = require('sequelize');
+const nodemailer = require('nodemailer');
 
 require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.EMAIL_G,
+    pass: process.env.PASSWORD_G
+  }
+});
 
 // Environment variables for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -103,6 +112,44 @@ app.post('/login', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+router.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+
+  const user = await db.User.findOne({ where: { email } });
+
+  if (!user) {
+    return res.status(404).send('No account with that email found.');
+  }
+  
+  const token = crypto.randomBytes(20).toString('hex');
+
+  user.reset_password_token = token;
+  user.reset_password_expires = Date.now() + 3600000; // 1 hour from now
+
+  await user.save().catch(err => {
+    console.error('Error saving user:', err);
+    return res.status(500).send('Internal Server Error');
+  });
+
+  const mailOptions = {
+    to: email,
+    from: 'johnredgolf16@gmail.com',
+    subject: 'Password Reset PickASpace',
+    text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
+          `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
+          `http://localhost:3000/reset-password/${token}\n\n` +
+          `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return res.status(500).send('Error sending email');
+    }
+    res.send('An e-mail has been sent to ' + email + ' with further instructions.');
+  });
+});
+
 
 // Authentication Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
