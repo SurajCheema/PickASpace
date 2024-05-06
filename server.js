@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const cron = require('node-cron');
 const { Op, or } = require('sequelize');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 require('dotenv').config();
 
@@ -17,7 +18,7 @@ const transporter = nodemailer.createTransport({
   service: 'Gmail',
   auth: {
     user: process.env.EMAIL_G,
-    pass: process.env.PASSWORD_G
+    pass: process.env.APP_PASS
   }
 });
 
@@ -70,7 +71,7 @@ app.post('/create-user', async (req, res) => {
 
     // How intense the hashing will be. Higher = harder to guess but will slow down the process.
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     const newUser = await db.User.create({
       car_registration,
       first_name,
@@ -92,6 +93,7 @@ app.post('/create-user', async (req, res) => {
 // Login user
 app.post('/login', async (req, res) => {
   try {
+    
     const { email, password } = req.body;
     const user = await db.User.findOne({ where: { email } });
 
@@ -113,10 +115,12 @@ app.post('/login', async (req, res) => {
   }
 });
 
-router.post('/request-password-reset', async (req, res) => {
+app.post('/request-password-reset', async (req, res) => {
+  console.log("TRYING TO RESET PASSWORD");
   const { email } = req.body;
 
   const user = await db.User.findOne({ where: { email } });
+  console.log(user);
 
   if (!user) {
     return res.status(404).send('No account with that email found.');
@@ -142,8 +146,11 @@ router.post('/request-password-reset', async (req, res) => {
       `If you did not request this, please ignore this email and your password will remain unchanged.\n`
   };
 
+  console.log("Email ready to be sent");
+
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
+      console.log("ERROR: " + error);
       return res.status(500).send('Error sending email');
     }
     res.send('An e-mail has been sent to ' + email + ' with further instructions.');
