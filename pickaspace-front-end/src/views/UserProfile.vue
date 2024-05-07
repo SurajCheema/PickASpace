@@ -60,21 +60,12 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">New Password (leave blank to keep current):</label>
-        <input type="password" class="form-control" id="password" v-model="newPassword">
-      </div>
-
-      <div class="mb-3">
-        <label for="passwordConfirm" class="form-label">Confirm New Password:</label>
-        <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm">
-        <div class="invalid-feedback" v-show="newPassword && newPassword !== passwordConfirm">
-          Passwords do not match!
-        </div>
-      </div>
-
       <button type="submit" class="btn btn-primary" :disabled="!isValidForm">Update Profile</button>
     </form>
+    <button class="btn btn-secondary mt-3" @click="requestPasswordReset">Reset Password</button>
+    <div v-if="message" class="mt-3" :class="{ 'text-success': isSuccess, 'text-danger': !isSuccess }">
+      {{ message }}
+    </div>
     <div v-if="updateSuccess" class="alert alert-success mt-3">
       Profile successfully updated!
     </div>
@@ -82,7 +73,7 @@
 </template>
 
 <script>
-import { getUserDetails, updateUserDetails } from '../services/userService';
+import { getUserDetails, updateUserDetails, requestPasswordReset as requestPasswordResetService } from '../services/userService';
 import { fetchVehicleDetails } from '../services/vehicleService';
 
 export default {
@@ -98,10 +89,10 @@ export default {
         DOB: ''
       },
       emailConfirm: '',
-      newPassword: '',
-      passwordConfirm: '',
       updateSuccess: false,
-      registrationError: ''
+      registrationError: '',
+      message: '',
+      isSuccess: false
     };
   },
   created() {
@@ -116,6 +107,8 @@ export default {
         this.emailConfirm = this.user.email;
       } catch (error) {
         console.error('Failed to fetch user details:', error);
+        this.message = 'Failed to fetch user details.';
+        this.isSuccess = false;
       }
     },
     async validateRegistrationPlate() {
@@ -145,23 +138,32 @@ export default {
       const phoneRegex = /^\+?[1-9]\d{1,14}$/;
       return phoneRegex.test(phone);
     },
-
-    isStrongPassword(password) {
-      return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(password);
-    },
-
-    submitForm() {
+    async submitForm() {
       if (this.isValidForm) {
         let updateData = { ...this.user };
-        if (this.newPassword.trim() && this.isStrongPassword(this.newPassword) && this.newPassword === this.passwordConfirm) {
-          updateData.password = this.newPassword;
-        } else {
-          delete updateData.password;
-        }
-        updateUserDetails(updateData).then(() => {
+
+        try {
+          await updateUserDetails(updateData); 
           this.updateSuccess = true;
-          setTimeout(() => this.updateSuccess = false, 3000);
-        }).catch(error => console.error('Update failed:', error));
+          this.message = 'Profile successfully updated!';
+          this.isSuccess = true;
+          setTimeout(() => { this.updateSuccess = false; }, 3000);
+        } catch (error) {
+          console.error('Update failed:', error);
+          this.message = 'Update failed. Please try again.';
+          this.isSuccess = false;
+        }
+      }
+    },
+    async requestPasswordReset() {
+      try {
+        await requestPasswordResetService(this.user.email);
+        this.message = 'Please check your email to continue with password reset.';
+        this.isSuccess = true;
+      } catch (error) {
+        console.error('Failed to initiate password reset:', error);
+        this.message = 'Failed to send password reset email. Please try again later.';
+        this.isSuccess = false;
       }
     }
   },
@@ -172,8 +174,7 @@ export default {
         this.isValidPhone(this.user.phone) &&
         this.user.first_name &&
         this.user.last_name &&
-        this.user.DOB &&
-        (!this.newPassword || (this.newPassword.trim() && this.newPassword === this.passwordConfirm && this.isStrongPassword(this.newPassword)));
+        this.user.DOB;
     }
   }
 }
@@ -182,5 +183,10 @@ export default {
 <style scoped>
 .invalid-feedback {
   display: block;
+}
+
+.text-success,
+.text-danger {
+  font-size: 1rem;
 }
 </style>
