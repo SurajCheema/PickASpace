@@ -90,7 +90,6 @@ export const updateUserDetails = async (userData) => {
   return response.json();
 };
 
-// Request Password Reset
 export const requestPasswordReset = async (email) => {
   const response = await fetch(`${API_URL}/request-password-reset`, {
     method: 'POST',
@@ -101,11 +100,10 @@ export const requestPasswordReset = async (email) => {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.log(errorText);
-    throw new Error(errorText || 'Error sending reset link');
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Error sending reset link');
   }
-  
+
   return response.json();
 };
 
