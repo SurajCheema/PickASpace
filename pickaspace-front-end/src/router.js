@@ -14,6 +14,7 @@ import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import AdminRefundManagement from './views/AdminRefundManagement.vue';
 import RequestPasswordReset from './views/RequestPasswordReset.vue';
+import ResetPassword from './views/ResetPassword.vue'; 
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -61,6 +62,13 @@ const routes = [
     name: 'AdminRefundManagement',
     component: AdminRefundManagement,
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/reset-password/:token',
+    name: 'ResetPassword',
+    component: ResetPassword,
+    props: true, 
+    meta: { requiresAuth: false }
   },
 ];
 

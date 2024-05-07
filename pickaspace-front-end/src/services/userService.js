@@ -108,3 +108,21 @@ export const requestPasswordReset = async (email) => {
   
   return response.json();
 };
+
+export const updatePassword = async (token, newPassword) => {
+  const response = await fetch(`${API_URL}/update-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token, newPassword }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.log(errorText);
+    throw new Error(errorText || 'Failed to update password');
+  }
+
+  return response.json();
+};

@@ -11,6 +11,7 @@ const cron = require('node-cron');
 const { Op, or } = require('sequelize');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const path = require('path');
 
 require('dotenv').config();
 
@@ -21,6 +22,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.APP_PASS
   }
 });
+
+app.use(express.static(path.join(__dirname, 'pickaspace-front-end')));
 
 // Environment variables for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -142,7 +145,7 @@ app.post('/request-password-reset', async (req, res) => {
     subject: 'Password Reset PickASpace',
     text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
       `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
-      `http://localhost:3000/reset-password/${token}\n\n` +
+      `http://localhost:8080/reset-password/${token}\n\n` +
       `If you did not request this, please ignore this email and your password will remain unchanged.\n`
   };
 
@@ -156,6 +159,43 @@ app.post('/request-password-reset', async (req, res) => {
     res.send('An e-mail has been sent to ' + email + ' with further instructions.');
   });
 });
+
+
+// Update user password with the token
+app.post('/update-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const user = await db.User.findOne({
+      where: {
+        reset_password_token: token,
+        reset_password_expires: {
+          [Op.gt]: Date.now()  // Check if the token is still valid
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).send("Password reset token is invalid or has expired.");
+    }
+
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Save the new password and clear the reset token fields
+    user.password = hashedPassword;
+    user.reset_password_token = null;
+    user.reset_password_expires = null;
+    await user.save();
+
+    res.send("Your password has been updated successfully.");
+  } catch (error) {
+    console.error('Failed to update password:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 // Authentication Middleware to verify JWT
@@ -991,4 +1031,10 @@ app.get('/api/refunds/payment/:paymentId', authenticateToken, async (req, res) =
     console.error('Error fetching refund by payment ID:', error);
     res.status(500).send('Server error');
   }
+});
+
+
+// Serve Vue application index.html for all non-API routes
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'pickaspace-front-end', 'public', 'index.html'));
 });
