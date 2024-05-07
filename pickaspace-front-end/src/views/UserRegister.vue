@@ -3,9 +3,11 @@
     <h1>Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
-        <label for="carRegistration">Car Registration:</label>
-        <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration" required>
-      </div>
+    <label for="carRegistration">Car Registration:</label>
+    <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration"
+      @blur="validateRegistrationPlate" required>
+    <div v-if="registrationError" class="text-danger">{{ registrationError }}</div>
+  </div>
       <div class="form-group">
         <label for="firstName">First Name:</label>
         <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
@@ -40,7 +42,9 @@
         <label for="dob">Date of Birth:</label>
         <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
       </div>
-      <button type="submit" class="btn btn-primary">Register</button>
+      <button type="submit" class="btn btn-primary" :disabled="isRegistering">
+        {{ isRegistering ? 'Registering...' : 'Register' }}
+      </button>
     </form>
     <div v-if="registrationSuccess" class="alert alert-success">
       Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.
@@ -50,6 +54,7 @@
 
 <script>
 import { registerUser } from '../services/userService';
+import { fetchVehicleDetails } from '../services/vehicleService';
 
 export default {
   name: 'UserRegister',
@@ -57,52 +62,84 @@ export default {
     return {
       user: {
         car_registration: '',
+        first_name: '',
+        last_name: '',
         email: '',
         password: '',
-        full_name: '',
-        DOB: ''
+        phone: '',
+        DOB: '',
       },
       emailConfirm: '',
       passwordConfirm: '',
       emailError: '',
       passwordError: '',
-      registrationSuccess: false
+      registrationError: '',
+      registrationSuccess: false,
+      isRegistering: false,
     };
   },
   watch: {
     emailConfirm(newVal) {
-      if (this.user.email !== newVal) {
+      this.validateEmail(newVal);
+    },
+    'user.email'(newVal) {
+      this.validateEmail(this.emailConfirm, newVal);
+    },
+    passwordConfirm(newVal) {
+      this.validatePassword(newVal);
+    },
+    'user.password'(newVal) {
+      this.validatePassword(this.passwordConfirm, newVal);
+    },
+  },
+  methods: {
+    async validateRegistrationPlate() {
+      try {
+        await fetchVehicleDetails(this.user.car_registration);
+        this.registrationError = ''; // Clear any previous error
+      } catch (error) {
+        this.registrationError = error.message;
+        console.error("Registration validation error:", error);
+      }
+    },
+    validateEmail(confirmEmail, email = this.user.email) {
+      if (email !== confirmEmail) {
         this.emailError = 'Emails do not match!';
       } else {
         this.emailError = '';
       }
     },
-    passwordConfirm(newVal) {
-      if (this.user.password !== newVal) {
+    validatePassword(confirmPassword, password = this.user.password) {
+      if (password !== confirmPassword) {
         this.passwordError = 'Passwords do not match!';
       } else {
         this.passwordError = '';
       }
-    }
-  },
-  methods: {
+    },
     async registerUser() {
-      if (this.emailError || this.passwordError) {
-        return; // Prevent registration if there are errors
+      if (this.emailError || this.passwordError || this.registrationError) {
+        return; // Prevent registration if there are email, password, or registration errors
       }
+
       try {
+        this.isRegistering = true;
+
         const result = await registerUser(this.user);
         console.log('User registered:', result);
         this.registrationSuccess = true;
       } catch (error) {
         console.error('Registration failed:', error);
+        this.registrationError = 'Registration failed. Please try again.';
+      } finally {
+        this.isRegistering = false;
       }
     },
+
     redirectToLogin() {
       this.$router.push('/login');
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>

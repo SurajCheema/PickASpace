@@ -12,6 +12,8 @@ const { Op, or } = require('sequelize');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const path = require('path');
+const axios = require('axios');
+const fetch = require('node-fetch');
 
 require('dotenv').config();
 
@@ -57,10 +59,54 @@ db.sequelize.sync().then(() => {
   });
 });
 
+// Function to fetch vehicle details from the DVLA API
+async function getVehicleDetails(registrationNumber) {
+  try {
+    const apiKey = process.env.DVLA_TEST_API_KEY;
+    const apiUrl = 'https://uat.driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles';
+
+    const response = await axios.post(apiUrl, { registrationNumber }, {
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching vehicle details:', error.response.data);
+    throw error;
+  }
+}
+
+app.post('/api/vehicle-proxy/:registrationNumber', async (req, res) => {
+  const { registrationNumber } = req.params;
+  const url = 'https://uat.driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.DVLA_TEST_API_KEY,
+      },
+      body: JSON.stringify({ registrationNumber }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching vehicle data:', error);
+    res.status(500).send('Failed to fetch vehicle data');
+  }
+});
+
 // Register user
 app.post('/create-user', async (req, res) => {
   try {
-
     const {
       car_registration,
       first_name,
@@ -71,6 +117,16 @@ app.post('/create-user', async (req, res) => {
       DOB,
       role = 'user' // Default role is 'user'
     } = req.body;
+
+    // Validate vehicle registration number using test data
+    const vehicleDetails = await getVehicleDetails(car_registration);
+
+
+    // Check if the vehicle is electric
+    const isElectric = vehicleDetails.fuelType === 'ELECTRIC';
+
+    // Check if the vehicle has a blue badge
+    const hasBlueBadge = vehicleDetails.wheelplan === 'BLUE BADGE';
 
     // How intense the hashing will be. Higher = harder to guess but will slow down the process.
     const saltRounds = 10;
@@ -86,17 +142,23 @@ app.post('/create-user', async (req, res) => {
       role
     });
 
-    res.json({ message: "User created successfully", userId: newUser.user_id, role: newUser.role });
+    res.json({
+      message: "User created successfully",
+      userId: newUser.user_id,
+      role: newUser.role,
+      isElectric,
+      hasBlueBadge
+    });
   } catch (error) {
     console.error('Failed to create user:', error);
-    res.status(500).send('Detailed Error: ' + error.message + ' | Stack: ' + error.stack);
+    res.status(error.response && error.response.status || 500).send(error.response ? error.response.data : 'Detailed Error: ' + error.message + ' | Stack: ' + error.stack);
   }
 });
 
 // Login user
 app.post('/login', async (req, res) => {
   try {
-    
+
     const { email, password } = req.body;
     const user = await db.User.findOne({ where: { email } });
 
@@ -1030,8 +1092,8 @@ app.get('/api/refunds/payment/:paymentId', authenticateToken, async (req, res) =
   }
 });
 
-
 // Serve Vue application index.html for all non-API routes
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'pickaspace-front-end', 'public', 'index.html'));
 });
+
