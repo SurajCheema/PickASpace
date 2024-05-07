@@ -143,7 +143,7 @@ export default {
         let updateData = { ...this.user };
 
         try {
-          await updateUserDetails(updateData); 
+          await updateUserDetails(updateData);
           this.updateSuccess = true;
           this.message = 'Profile successfully updated!';
           this.isSuccess = true;
@@ -174,7 +174,8 @@ export default {
         this.isValidPhone(this.user.phone) &&
         this.user.first_name &&
         this.user.last_name &&
-        this.user.DOB;
+        this.user.DOB &&
+        !this.registrationError;
     }
   }
 }
