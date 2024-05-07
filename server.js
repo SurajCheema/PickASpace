@@ -132,7 +132,7 @@ app.post('/request-password-reset', async (req, res) => {
   const token = crypto.randomBytes(20).toString('hex');
 
   user.reset_password_token = token;
-  user.reset_password_expires = Date.now() + 3600000; // 1 hour from now
+  user.reset_password_expires = Date.now() + 900000; // 15 minutes from now (900000 milliseconds = 15 minutes)
 
   await user.save().catch(err => {
     console.error('Error saving user:', err);
@@ -146,6 +146,7 @@ app.post('/request-password-reset', async (req, res) => {
     text: `You are receiving this because you (or someone else) have requested the reset of the password for your account, on PickASpace.\n\n` +
       `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
       `http://localhost:8080/reset-password/${token}\n\n` +
+      `This link will expire in 15 minutes. Please ensure to reset your password within this timeframe.\n\n` +
       `If you did not request this, please ignore this email and your password will remain unchanged.\n`
   };
 
