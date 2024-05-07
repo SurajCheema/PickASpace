@@ -4,7 +4,9 @@
     <form @submit.prevent="submitForm" class="needs-validation" novalidate>
       <div class="mb-3">
         <label for="carRegistration" class="form-label">Car Registration:</label>
-        <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration" required>
+        <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration"
+          @blur="validateRegistrationPlate" required>
+        <div v-if="registrationError" class="invalid-feedback" style="display: block;">{{ registrationError }}</div>
         <div class="invalid-feedback" v-show="!user.car_registration">
           Car registration is required.
         </div>
@@ -81,6 +83,7 @@
 
 <script>
 import { getUserDetails, updateUserDetails } from '../services/userService';
+import { fetchVehicleDetails } from '../services/vehicleService';
 
 export default {
   name: 'UserProfile',
@@ -97,7 +100,8 @@ export default {
       emailConfirm: '',
       newPassword: '',
       passwordConfirm: '',
-      updateSuccess: false
+      updateSuccess: false,
+      registrationError: ''
     };
   },
   created() {
@@ -112,6 +116,20 @@ export default {
         this.emailConfirm = this.user.email;
       } catch (error) {
         console.error('Failed to fetch user details:', error);
+      }
+    },
+    async validateRegistrationPlate() {
+      if (!this.user.car_registration.trim()) {
+        this.registrationError = "Car registration cannot be empty.";
+        return;
+      }
+
+      try {
+        await fetchVehicleDetails(this.user.car_registration);
+        this.registrationError = '';  // Clear any previous error
+      } catch (error) {
+        this.registrationError = error.message || "Failed to validate car registration.";
+        console.error("Registration validation error:", error);
       }
     },
     formatDate(dateStr) {
@@ -144,7 +162,7 @@ export default {
           this.updateSuccess = true;
           setTimeout(() => this.updateSuccess = false, 3000);
         }).catch(error => console.error('Update failed:', error));
-      } ''
+      }
     }
   },
   computed: {
