@@ -3,6 +3,10 @@
 const API_URL = 'http://localhost:3000'; // Update to your backend server URL
 
 export const fetchVehicleDetails = async (registrationNumber) => {
+    if (!registrationNumber.trim()) {
+      throw new Error("Please enter a car registration number.");
+    }
+  
     try {
       const response = await fetch(`${API_URL}/api/vehicle-proxy/${registrationNumber}`, {
         method: 'POST',
@@ -13,7 +17,7 @@ export const fetchVehicleDetails = async (registrationNumber) => {
   
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.errors[0].detail || 'Failed to fetch vehicle details');
+        throw new Error(errorData.errors[0].detail || 'Invalid car registration number.');
       }
   
       return response.json();
@@ -21,4 +25,4 @@ export const fetchVehicleDetails = async (registrationNumber) => {
       console.error("Error fetching vehicle details:", error);
       throw error;
     }
-  };
+  };  

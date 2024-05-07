@@ -3,11 +3,11 @@
     <h1>Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
-    <label for="carRegistration">Car Registration:</label>
-    <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration"
-      @blur="validateRegistrationPlate" required>
-    <div v-if="registrationError" class="text-danger">{{ registrationError }}</div>
-  </div>
+        <label for="carRegistration">Car Registration:</label>
+        <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration"
+          @blur="validateRegistrationPlate" required>
+        <div v-if="registrationError" class="text-danger">{{ registrationError }}</div>
+      </div>
       <div class="form-group">
         <label for="firstName">First Name:</label>
         <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
@@ -94,11 +94,16 @@ export default {
   },
   methods: {
     async validateRegistrationPlate() {
+      if (!this.user.car_registration.trim()) {
+        this.registrationError = "Car registration cannot be empty.";
+        return;
+      }
+
       try {
         await fetchVehicleDetails(this.user.car_registration);
         this.registrationError = ''; // Clear any previous error
       } catch (error) {
-        this.registrationError = error.message;
+        this.registrationError = error.message || "Failed to validate car registration.";
         console.error("Registration validation error:", error);
       }
     },
