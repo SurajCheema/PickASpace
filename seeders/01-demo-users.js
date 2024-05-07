@@ -29,7 +29,19 @@ module.exports = {
         role: 'admin', // Admin role
         createdAt: new Date(),
         updatedAt: new Date()
-      }
+      },
+      {
+        email: 'surajcheema@outlook.com',
+        password: 'test', // Plain password will be hashed below
+        first_name: 'Suraj',
+        last_name: 'C',
+        DOB: new Date('1990-01-01'),
+        car_registration: 'ABC123',
+        phone: '+44123456789',
+        role: 'user', // Normal user role
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
     ];
 
     // Hash passwords

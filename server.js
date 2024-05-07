@@ -126,7 +126,7 @@ app.post('/request-password-reset', async (req, res) => {
   console.log(user);
 
   if (!user) {
-    return res.status(404).send('No account with that email found.');
+    return res.status(404).json({ error: 'No account with that email found.' });
   }
 
   const token = crypto.randomBytes(20).toString('hex');
@@ -136,14 +136,14 @@ app.post('/request-password-reset', async (req, res) => {
 
   await user.save().catch(err => {
     console.error('Error saving user:', err);
-    return res.status(500).send('Internal Server Error');
+    return res.status(500).json({ error: 'Internal Server Error' });
   });
 
   const mailOptions = {
     to: email,
     from: 'johnredgolf16@gmail.com',
     subject: 'Password Reset PickASpace',
-    text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
+    text: `You are receiving this because you (or someone else) have requested the reset of the password for your account, on PickASpace.\n\n` +
       `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
       `http://localhost:8080/reset-password/${token}\n\n` +
       `If you did not request this, please ignore this email and your password will remain unchanged.\n`
@@ -154,14 +154,12 @@ app.post('/request-password-reset', async (req, res) => {
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log("ERROR: " + error);
-      return res.status(500).send('Error sending email');
+      return res.status(500).json({ error: 'Error sending email' });
     }
-    res.send('An e-mail has been sent to ' + email + ' with further instructions.');
+    res.json({ message: 'An e-mail has been sent to ' + email + ' with further instructions.' });
   });
 });
 
-
-// Update user password with the token
 app.post('/update-password', async (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -170,13 +168,13 @@ app.post('/update-password', async (req, res) => {
       where: {
         reset_password_token: token,
         reset_password_expires: {
-          [Op.gt]: Date.now()  // Check if the token is still valid
-        }
-      }
+          [Op.gt]: new Date(), // Check if the token is still valid
+        },
+      },
     });
 
     if (!user) {
-      return res.status(400).send("Password reset token is invalid or has expired.");
+      return res.status(400).json({ error: "Password reset token is invalid or has expired." });
     }
 
     // Hash the new password
@@ -189,14 +187,12 @@ app.post('/update-password', async (req, res) => {
     user.reset_password_expires = null;
     await user.save();
 
-    res.send("Your password has been updated successfully.");
+    res.json({ message: "Your password has been updated successfully." });
   } catch (error) {
     console.error('Failed to update password:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
 
 // Authentication Middleware to verify JWT
 const authenticateToken = (req, res, next) => {

@@ -121,7 +121,7 @@ export const updatePassword = async (token, newPassword) => {
   if (!response.ok) {
     const errorText = await response.text();
     console.log(errorText);
-    throw new Error(errorText || 'Failed to update password');
+    throw new Error(JSON.parse(errorText).error || 'Failed to update password');
   }
 
   return response.json();

@@ -18,7 +18,9 @@ module.exports = (sequelize, DataTypes) => {
     role: {
       type: DataTypes.STRING,
       defaultValue: 'user'  // Values: 'user', 'admin', 'warden'
-    }
+    },
+    reset_password_token: DataTypes.STRING,
+    reset_password_expires: DataTypes.DATE,
   }, {
     // Insert additional settings here.
   });
