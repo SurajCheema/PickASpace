@@ -88,6 +88,8 @@
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
 import { loadStripe } from '@stripe/stripe-js';
+import { getUserDetails } from '../services/userService';
+import { fetchVehicleDetails } from '../services/vehicleService';
 
 export default {
   name: 'BayBooking',
@@ -157,8 +159,43 @@ export default {
   },
 
   methods: {
-    selectBay(bay) {
-      this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
+    async selectBay(bay) {
+      const details = await getUserDetails();
+      this.user = { ...this.user, ...details };
+      // Assuming there is a way to get the registration number of the vehicle trying to book
+      const registrationNumber = this.user.car_registration.trim();
+      console.log(registrationNumber);
+
+      if (!registrationNumber) {
+        alert("Vehicle registration number must be provided.");
+        return;
+      }
+
+      try {
+        // Fetch vehicle details from the DVLA via your server endpoint
+        const response = await fetchVehicleDetails(this.user.car_registration);
+        console.log(response);
+
+        const fuelType = response.fuelType;
+        console.log(fuelType);
+
+       
+        // Check if the selected bay has EV charging and if the vehicle is not electric
+        if (bay.hasEVCharging && fuelType !== "ELECTRICITY") {
+          alert("This bay is reserved for electric vehicles only.");
+          return;
+        }
+        else {
+          // REUSE THE CODE YOU HAVE ON GITHUB REGARDING A VALID BAY.
+          this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
+          alert("BAY SELECTED");
+        }
+        // If the bay is either not for EVs or the car is electric, proceed to select the bay
+        //this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
+      } catch (error) {
+        console.error("Error selecting bay:", error);
+        alert("There was an error processing your request. Please try again.");
+      }
     },
     formatCurrency(value) {
       if (value === "-") return value;
