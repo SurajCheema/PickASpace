@@ -61,7 +61,6 @@
           </p>
         </div>
       </div>
-
     </div>
     <div class="row mt-5-bay-cards-row">
       <div class="col-12">
@@ -83,17 +82,23 @@
       </div>
     </div>
   </div>
-</template>
 
+  <EVConfirmationModal :show="showModal" :message="modalMessage" @confirm="confirmModal" @cancel="cancelModal" />
+
+</template>
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
 import { loadStripe } from '@stripe/stripe-js';
 import { getUserDetails } from '../services/userService';
 import { fetchVehicleDetails } from '../services/vehicleService';
+import EVConfirmationModal from '../components/EVConfirmationModal.vue';
 
 export default {
   name: 'BayBooking',
   props: ['carparkId'],
+  components: {
+    EVConfirmationModal
+  },
   data() {
     return {
       carParkAddress: '',
@@ -109,7 +114,9 @@ export default {
       submitError: '',
       bookingSuccessMessage: '',
       paymentSuccessful: false,
-      loading: false
+      loading: false,
+      showModal: false,
+      modalMessage: ''
     };
   },
 
@@ -179,23 +186,28 @@ export default {
         const fuelType = response.fuelType;
         console.log(fuelType);
 
-       
         // Check if the selected bay has EV charging and if the vehicle is not electric
         if (bay.hasEVCharging && fuelType !== "ELECTRICITY") {
-          alert("This bay is reserved for electric vehicles only.");
-          return;
-        }
-        else {
-          // REUSE THE CODE YOU HAVE ON GITHUB REGARDING A VALID BAY.
+          this.modalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice. Do you want to take the risk anyway?";
+          this.selectedBay = bay; // Store the selected bay
+          this.showModal = true;
+        } else {
+          // The bay is either not for EVs or the car is electric, proceed to select the bay
           this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
-          alert("BAY SELECTED");
         }
-        // If the bay is either not for EVs or the car is electric, proceed to select the bay
-        //this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
       } catch (error) {
         console.error("Error selecting bay:", error);
         alert("There was an error processing your request. Please try again.");
       }
+    },
+    confirmModal() {
+      // User confirmed to take the risk, select the bay
+      this.showModal = false;
+    },
+    cancelModal() {
+      // User canceled, clear the selected bay
+      this.selectedBay = null;
+      this.showModal = false;
     },
     formatCurrency(value) {
       if (value === "-") return value;
@@ -251,14 +263,13 @@ export default {
       this.cardCvcElement.mount('#card-cvc');
     },
 
-
     async submitBooking() {
-      this.loading=true
+      this.loading = true;
 
       if (!this.isDepartureValid || !this.selectedBay) {
         this.submitError = "Please ensure all fields are correctly filled.";
         console.error("Booking Error:", this.submitError);
-        this.loading=false
+        this.loading = false;
         return;
       }
 
@@ -270,14 +281,14 @@ export default {
       if (error) {
         this.submitError = error.message;
         console.error("Stripe Error: Error creating Stripe token:", error.message);
-        this.loading=false
+        this.loading = false;
         return;
       }
 
       if (!token) {
         this.submitError = "Failed to create payment token.";
         console.error("Stripe Error: Stripe token creation failed without an error message.");
-        this.loading=false
+        this.loading = false;
         return;
       }
 
@@ -289,7 +300,7 @@ export default {
       if (amount <= 0) {
         this.submitError = "Invalid amount to charge.";
         console.error("Charge Error:", this.submitError);
-        this.loading=false
+        this.loading = false;
         return;
       }
 
@@ -315,7 +326,7 @@ export default {
         this.submitError = error.message || "An unexpected error occurred.";
         console.error("Booking Error:", this.submitError, error);
       }
-      this.loading=false
+      this.loading = false;
     },
 
     resetForm() {
@@ -331,7 +342,7 @@ export default {
   async mounted() {
     try {
       await this.fetchCarParkDetails();
-      await this.initStripe();  // Initialize Stripe after loading details
+      await this.initStripe();  // Initialise Stripe after loading details
     } catch (error) {
       console.error('Error during mounted lifecycle:', error);
       this.submitError = error.message || 'Failed to initialize component properly.';
@@ -339,7 +350,6 @@ export default {
   }
 };
 </script>
-
 <style scoped>
 .loading-spinner {
   /* CSS for the loading spinner */
@@ -366,12 +376,10 @@ export default {
   /* Light background for selected bay */
 }
 
-
 .col-12-h4 {
   color: #ffffff;
   border-radius: 10px;
 }
-
 
 .date-picker {
   width: 100%;
@@ -392,7 +400,7 @@ export default {
 }
 
 @media (min-width: 768px) {
-  .form-control {
+  .form.control {
     width: 100%;
     /* Adjust if the date pickers still appear too large */
   }
@@ -426,9 +434,9 @@ export default {
 
 #submit {
   margin-top: 20px;
-  /* Space between the CVC input and the button */
-  background-color: #4CAF50;
-  /* Green background for visibility */
+  /* Space between the CVC input and the button /
+background-color: #4CAF50;
+/ Green background for visibility */
   color: white;
   border: none;
   border-radius: 4px;
