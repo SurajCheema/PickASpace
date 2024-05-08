@@ -26,15 +26,17 @@
         <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
       </div>
       <div class="form-group">
-    <label for="password">Password:</label>
-    <input type="password" class="form-control" id="password" v-model="user.password" @input="validatePassword" required>
-    <div v-if="passwordError" class="text-danger">{{ passwordError }}</div>
-  </div>
-  <div class="form-group">
-    <label for="passwordConfirm">Confirm Password:</label>
-    <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm" @input="validatePassword" required>
-  </div>
-        <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" class="form-control" id="password" v-model="user.password" @input="validatePassword"
+          required>
+        <div v-if="passwordError" class="text-danger">{{ passwordError }}</div>
+      </div>
+      <div class="form-group">
+        <label for="passwordConfirm">Confirm Password:</label>
+        <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm"
+          @input="validatePassword" required>
+      </div>
+      <div class="form-group">
         <label for="phone">Phone Number:</label>
         <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
       </div>
@@ -115,11 +117,11 @@ export default {
       }
     },
     validatePassword() {
-      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
       if (this.user.password !== this.passwordConfirm) {
         this.passwordError = 'Passwords do not match!';
       } else if (!passwordRegex.test(this.user.password)) {
-        this.passwordError = 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.';
+        this.passwordError = 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.';
       } else {
         this.passwordError = '';
       }
