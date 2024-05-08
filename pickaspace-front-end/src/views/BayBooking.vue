@@ -85,19 +85,30 @@
 
   <EVConfirmationModal :show="showModal" :message="modalMessage" @confirm="confirmModal" @cancel="cancelModal" />
 
+  <BlueBadgeConfirmationModal :show="blueBadgeModalShow" :message="blueBadgeModalMessage"
+    @confirm="confirmBlueBadgeModal" @cancel="cancelBlueBadgeModal" />
+
+    <CombinedBayConfirmationModal :show="combinedModalShow" :evMessage="evModalMessage" :blueBadgeMessage="blueBadgeModalMessage"
+    @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
+
 </template>
+
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
 import { loadStripe } from '@stripe/stripe-js';
 import { getUserDetails } from '../services/userService';
 import { fetchVehicleDetails } from '../services/vehicleService';
 import EVConfirmationModal from '../components/EVConfirmationModal.vue';
+import BlueBadgeConfirmationModal from '../components/BlueBadgeConfirmationModal.vue';
+import CombinedBayConfirmationModal from '../components/CombinedBayConfirmationModal.vue';
 
 export default {
   name: 'BayBooking',
   props: ['carparkId'],
   components: {
-    EVConfirmationModal
+    EVConfirmationModal,
+    BlueBadgeConfirmationModal,
+    CombinedBayConfirmationModal
   },
   data() {
     return {
@@ -107,16 +118,19 @@ export default {
       arrivalTime: '',
       departureTime: '',
       pricing: null,
-      stripe: null, // Initialize stripe object
-      cardNumberElement: null, // Initialize card number element
-      cardExpiryElement: null, // Initialize card expiry element
+      stripe: null, // Initialise stripe object
+      cardNumberElement: null, // Initialise card number element
+      cardExpiryElement: null, // Initialise card expiry element
       cardCvcElement: null,
       submitError: '',
       bookingSuccessMessage: '',
       paymentSuccessful: false,
       loading: false,
       showModal: false,
-      modalMessage: ''
+      combinedModalShow: false,
+      modalMessage: '',
+      blueBadgeModalShow: false,
+      blueBadgeModalMessage: '',
     };
   },
 
@@ -169,36 +183,61 @@ export default {
     async selectBay(bay) {
       const details = await getUserDetails();
       this.user = { ...this.user, ...details };
-      // Assuming there is a way to get the registration number of the vehicle trying to book
-      const registrationNumber = this.user.car_registration.trim();
-      console.log(registrationNumber);
 
+      const registrationNumber = this.user.car_registration.trim();
       if (!registrationNumber) {
         alert("Vehicle registration number must be provided.");
         return;
       }
 
       try {
-        // Fetch vehicle details from the DVLA via your server endpoint
-        const response = await fetchVehicleDetails(this.user.car_registration);
-        console.log(response);
-
+        const response = await fetchVehicleDetails(registrationNumber);
         const fuelType = response.fuelType;
-        console.log(fuelType);
 
-        // Check if the selected bay has EV charging and if the vehicle is not electric
+        if (bay.hasEVCharging && fuelType !== "ELECTRICITY" && bay.disabled && !this.user.blueBadge) {
+          this.evModalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice.";
+          this.blueBadgeModalMessage = "You do not have a blue badge. Anyone parked in an enforceable bay and not displaying a valid blue badge may receive a penalty charge notice.";
+          this.selectedBay = bay;
+          this.combinedModalShow = true;
+        } 
+
+        // Handle the scenario for electric vehicle charging bays
         if (bay.hasEVCharging && fuelType !== "ELECTRICITY") {
-          this.modalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice. Do you want to take the risk anyway?";
+          this.modalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice.";
           this.selectedBay = bay; // Store the selected bay
           this.showModal = true;
+        } else if (bay.disabled && !this.user.blueBadge) {
+          // Handle the scenario for disabled access bays
+          this.blueBadgeModalMessage = "You do not have a blue badge. Anyone parked in an enforceable bay and not displaying a valid blue badge may receive a penalty charge notice.";
+          this.blueBadgeModalShow = true; // Control visibility of BlueBadgeConfirmationModal
+          this.selectedBay = bay; // Tentatively store the selected bay
         } else {
-          // The bay is either not for EVs or the car is electric, proceed to select the bay
+          // Proceed as normal if no conditions are met
           this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
         }
       } catch (error) {
         console.error("Error selecting bay:", error);
         alert("There was an error processing your request. Please try again.");
       }
+    },
+
+    confirmEVModal() {
+      // User confirmed to take the risk for EV charging, select the bay
+      this.showModal = false;
+    },
+    cancelEVModal() {
+      // User canceled from EV charging modal, clear the selected bay
+      this.selectedBay = null;
+      this.showModal = false;
+    },
+    confirmBlueBadgeModal() {
+      // User opts to "Take Risk Anyway" for disabled bay without blue badge
+      this.blueBadgeModalShow = false;
+    },
+    cancelBlueBadgeModal() {
+      // User cancels after blue badge warning, deselect bay
+      this.selectedBay = null;
+      this.blueBadgeModalShow = false;
     },
     confirmModal() {
       // User confirmed to take the risk, select the bay

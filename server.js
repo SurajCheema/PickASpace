@@ -665,7 +665,9 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
 app.get('/user-details', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const userDetails = await db.User.findByPk(userId);
+    const userDetails = await db.User.findByPk(userId, {
+      attributes: ['user_id', 'email', 'first_name', 'last_name', 'blueBadge'] 
+    });
     if (userDetails) {
       res.json(userDetails);
     } else {
