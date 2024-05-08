@@ -1,36 +1,45 @@
 <template>
   <div class="password-reset-container">
     <h1>Reset Your Password</h1>
-    <form @submit.prevent="submitNewPassword">
+    <form @submit.prevent="submitNewPassword" v-if="!isSuccess">
       <div class="form-group">
-    <label for="newPassword">New Password:</label>
-    <input type="password" id="newPassword" v-model="newPassword" @input="validatePassword" required placeholder="New password">
-    <p v-if="passwordError" class="error">{{ passwordError }}</p>
-  </div>
-  <div class="form-group">
-    <label for="confirmPassword">Confirm New Password:</label>
-    <input type="password" id="confirmPassword" v-model="confirmPassword" @input="validatePassword" required placeholder="Confirm password">
-  </div>
-      <div v-if="message" :class="{'message-success': isSuccess, 'message-error': !isSuccess}">
+        <label for="newPassword">New Password:</label>
+        <input type="password" id="newPassword" v-model="newPassword" @input="validatePassword" required
+          placeholder="New password">
+        <p v-if="passwordError" class="error">{{ passwordError }}</p>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm New Password:</label>
+        <input type="password" id="confirmPassword" v-model="confirmPassword" @input="validatePassword" required
+          placeholder="Confirm password">
+      </div>
+      <div v-if="message" :class="{ 'message-success': isSuccess, 'message-error': !isSuccess }">
         {{ message }}
       </div>
       <button type="submit" class="reset-button">Reset Password</button>
     </form>
+    <div v-if="isSuccess" class="message-success">
+      {{ message }}
+      <p>You will be redirected to the login page in {{ countDown }} seconds.</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { updatePassword, checkNewPassword  } from '../services/userService';
+import { ref, computed, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { updatePassword, checkNewPassword } from '../services/userService';
 
 const route = useRoute();
+const router = useRouter();
 const token = route.params.token;
 const newPassword = ref('');
 const confirmPassword = ref('');
 const message = ref('');
 const isSuccess = ref(false);
 const passwordError = ref('');
+const countDown = ref(5);
+let countDownTimer = null;
 
 const passwordMismatch = computed(() => newPassword.value !== confirmPassword.value);
 
@@ -63,11 +72,25 @@ async function submitNewPassword() {
     const response = await updatePassword(token, newPassword.value);
     message.value = response.message || "Password successfully updated.";
     isSuccess.value = true;
+
+    // Start the countdown timer
+    countDownTimer = setInterval(() => {
+      countDown.value--;
+      if (countDown.value === 0) {
+        clearInterval(countDownTimer);
+        router.push({ name: 'UserLogin' });
+      }
+    }, 1000);
   } catch (error) {
     message.value = error.message;
     isSuccess.value = false;
   }
 }
+
+onUnmounted(() => {
+  // Clear the countdown timer when the component is unmounted
+  clearInterval(countDownTimer);
+});
 </script>
 
 <style scoped>
@@ -102,8 +125,11 @@ input[type="password"] {
   background-color: #45a049;
 }
 
-.error, .message-success, .message-error {
-  color: red; /* default for error messages */
+.error,
+.message-success,
+.message-error {
+  color: red;
+  /* default for error messages */
   margin-top: 1rem;
 }
 
