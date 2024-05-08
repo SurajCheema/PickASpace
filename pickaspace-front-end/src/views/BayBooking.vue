@@ -83,13 +83,7 @@
     </div>
   </div>
 
-  <EVConfirmationModal :show="showModal" :message="modalMessage" @confirm="confirmModal" @cancel="cancelModal" />
-
-  <BlueBadgeConfirmationModal :show="blueBadgeModalShow" :message="blueBadgeModalMessage"
-    @confirm="confirmBlueBadgeModal" @cancel="cancelBlueBadgeModal" />
-
-    <CombinedBayConfirmationModal :show="combinedModalShow" :evMessage="evModalMessage" :blueBadgeMessage="blueBadgeModalMessage"
-    @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
+  <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage" @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
 
 </template>
 
@@ -98,16 +92,12 @@ import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/c
 import { loadStripe } from '@stripe/stripe-js';
 import { getUserDetails } from '../services/userService';
 import { fetchVehicleDetails } from '../services/vehicleService';
-import EVConfirmationModal from '../components/EVConfirmationModal.vue';
-import BlueBadgeConfirmationModal from '../components/BlueBadgeConfirmationModal.vue';
 import CombinedBayConfirmationModal from '../components/CombinedBayConfirmationModal.vue';
 
 export default {
   name: 'BayBooking',
   props: ['carparkId'],
   components: {
-    EVConfirmationModal,
-    BlueBadgeConfirmationModal,
     CombinedBayConfirmationModal
   },
   data() {
@@ -126,11 +116,8 @@ export default {
       bookingSuccessMessage: '',
       paymentSuccessful: false,
       loading: false,
-      showModal: false,
       combinedModalShow: false,
-      modalMessage: '',
-      blueBadgeModalShow: false,
-      blueBadgeModalMessage: '',
+      combinedModalMessage: '',
     };
   },
 
@@ -195,59 +182,41 @@ export default {
         const fuelType = response.fuelType;
 
         if (bay.hasEVCharging && fuelType !== "ELECTRICITY" && bay.disabled && !this.user.blueBadge) {
-          this.evModalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice.";
-          this.blueBadgeModalMessage = "You do not have a blue badge. Anyone parked in an enforceable bay and not displaying a valid blue badge may receive a penalty charge notice.";
+          // Both EV charging and disabled access required
+          this.combinedModalMessage = "Your vehicle is not electric, and you do not have a blue badge. Parking in this bay can leave you liable for a penalty charge notice.";
           this.selectedBay = bay;
           this.combinedModalShow = true;
-        } 
-
-        // Handle the scenario for electric vehicle charging bays
-        if (bay.hasEVCharging && fuelType !== "ELECTRICITY") {
-          this.modalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice.";
-          this.selectedBay = bay; // Store the selected bay
-          this.showModal = true;
+        } else if (bay.hasEVCharging && fuelType !== "ELECTRICITY") {
+          // Only EV charging required
+          this.combinedModalMessage = "Your vehicle is not electric. Parking in a dedicated electric car charging bay can leave drivers of fuel-powered vehicles liable for a penalty charge notice.";
+          this.selectedBay = bay;
+          this.combinedModalShow = true;
         } else if (bay.disabled && !this.user.blueBadge) {
-          // Handle the scenario for disabled access bays
-          this.blueBadgeModalMessage = "You do not have a blue badge. Anyone parked in an enforceable bay and not displaying a valid blue badge may receive a penalty charge notice.";
-          this.blueBadgeModalShow = true; // Control visibility of BlueBadgeConfirmationModal
-          this.selectedBay = bay; // Tentatively store the selected bay
+          // Only disabled access required
+          this.combinedModalMessage = "You do not have a blue badge. Anyone parked in an enforceable bay and not displaying a valid blue badge may receive a penalty charge notice.";
+          this.selectedBay = bay;
+          this.combinedModalShow = true;
         } else {
-          // Proceed as normal if no conditions are met
+          // No special requirements
           this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
-        }
+        }   
+        console.log("Modal message set to:", this.combinedModalMessage); 
       } catch (error) {
         console.error("Error selecting bay:", error);
         alert("There was an error processing your request. Please try again.");
       }
     },
 
-    confirmEVModal() {
-      // User confirmed to take the risk for EV charging, select the bay
-      this.showModal = false;
+    confirmCombinedModal() {
+      // User  confirmed to take the risk, select the bay
+      this.combinedModalShow = false;
     },
-    cancelEVModal() {
-      // User canceled from EV charging modal, clear the selected bay
-      this.selectedBay = null;
-      this.showModal = false;
-    },
-    confirmBlueBadgeModal() {
-      // User opts to "Take Risk Anyway" for disabled bay without blue badge
-      this.blueBadgeModalShow = false;
-    },
-    cancelBlueBadgeModal() {
-      // User cancels after blue badge warning, deselect bay
-      this.selectedBay = null;
-      this.blueBadgeModalShow = false;
-    },
-    confirmModal() {
-      // User confirmed to take the risk, select the bay
-      this.showModal = false;
-    },
-    cancelModal() {
+    cancelCombinedModal() {
       // User canceled, clear the selected bay
-      this.selectedBay = null;
-      this.showModal = false;
+      this.selectedBay = null; // Deselect the bay
+      this.combinedModalShow = false;
     },
+
     formatCurrency(value) {
       if (value === "-") return value;
       return `£${parseFloat(value).toFixed(2)}`;

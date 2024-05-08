@@ -1,4 +1,3 @@
-<!-- CombinedConfirmationModal.vue -->
 <template>
     <div v-if="show" class="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
@@ -7,8 +6,7 @@
             <h5 class="modal-title">Bay Restrictions</h5>
           </div>
           <div class="modal-body">
-            <p v-if="evMessage">{{ evMessage }}</p>
-            <p v-if="blueBadgeMessage">{{ blueBadgeMessage }}</p>
+            <p>{{ message }}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="cancel">Cancel</button>
@@ -17,14 +15,13 @@
         </div>
       </div>
     </div>
-  </template>
+  </template>  
   
   <script>
   export default {
     props: {
       show: Boolean,
-      evMessage: String,
-      blueBadgeMessage: String
+      message: String
     },
     methods: {
       confirm() {
