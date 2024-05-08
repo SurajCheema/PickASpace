@@ -22,7 +22,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { updatePassword } from '../services/userService';
+import { updatePassword, checkNewPassword  } from '../services/userService';
 
 const route = useRoute();
 const token = route.params.token;
@@ -34,7 +34,7 @@ const passwordError = ref('');
 
 const passwordMismatch = computed(() => newPassword.value !== confirmPassword.value);
 
-function validatePassword() {
+async function validatePassword() {
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
   if (newPassword.value !== confirmPassword.value) {
     passwordError.value = 'Passwords do not match!';
@@ -53,6 +53,13 @@ async function submitNewPassword() {
   }
 
   try {
+    const checkResponse = await checkNewPassword(token, newPassword.value);
+    if (checkResponse.error) {
+      message.value = checkResponse.error;
+      isSuccess.value = false;
+      return;
+    }
+
     const response = await updatePassword(token, newPassword.value);
     message.value = response.message || "Password successfully updated.";
     isSuccess.value = true;

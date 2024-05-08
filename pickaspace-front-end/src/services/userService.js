@@ -124,3 +124,24 @@ export const updatePassword = async (token, newPassword) => {
 
   return response.json();
 };
+
+export const checkNewPassword = async (token, newPassword) => {
+  const response = await fetch(`${API_URL}/api/check-new-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token, newPassword }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    if (errorData.error === 'Password matches current password') {
+      throw new Error('New password cannot be the same as the current password');
+    } else {
+      throw new Error(errorData.error || 'Failed to validate new password');
+    }
+  }
+
+  return response.json();
+};

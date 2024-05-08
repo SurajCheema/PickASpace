@@ -1097,3 +1097,31 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'pickaspace-front-end', 'public', 'index.html'));
 });
 
+app.post('/api/check-new-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const user = await db.User.findOne({
+      where: {
+        reset_password_token: token,
+        reset_password_expires: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+    }
+
+    const match = await bcrypt.compare(newPassword, user.password);
+    if (match) {
+      return res.status(409).json({ error: 'Password matches current password' });
+    }
+
+    res.status(200).json({ message: 'Password is acceptable' });
+  } catch (error) {
+    console.error('Error checking new password:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
