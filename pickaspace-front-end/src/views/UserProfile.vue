@@ -60,6 +60,11 @@
         </div>
       </div>
 
+      <div class="mb-3">
+        <label for="blueBadge" class="form-label">Has Blue Badge:</label>
+        <input type="checkbox" id="blueBadge" v-model="user.blueBadge" class="form-check-input">
+      </div>
+
       <button type="submit" class="btn btn-primary" :disabled="!isValidForm">Update Profile</button>
     </form>
     <button class="btn btn-secondary mt-3" @click="requestPasswordReset">Reset Password</button>
@@ -105,6 +110,7 @@ export default {
         this.user = { ...this.user, ...details };
         this.user.DOB = this.formatDate(details.DOB);
         this.emailConfirm = this.user.email;
+        this.user.blueBadge = details.blueBadge || false;
       } catch (error) {
         console.error('Failed to fetch user details:', error);
         this.message = 'Failed to fetch user details.';

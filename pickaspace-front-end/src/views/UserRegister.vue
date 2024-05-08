@@ -44,6 +44,12 @@
         <label for="dob">Date of Birth:</label>
         <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
       </div>
+      <div class="form-group">
+        <label for="blueBadge">Has Blue Badge:</label>
+        <input type="checkbox" id="blueBadge" v-model="user.blueBadge">
+      </div>
+
+
       <button type="submit" class="btn btn-primary" :disabled="isRegistering">
         {{ isRegistering ? 'Registering...' : 'Register' }}
       </button>
@@ -70,6 +76,7 @@ export default {
         password: '',
         phone: '',
         DOB: '',
+        blueBadge: false
       },
       emailConfirm: '',
       passwordConfirm: '',
@@ -194,5 +201,12 @@ button {
 
 button:hover {
   background-color: #45a049;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  /* Reset width to default */
+  margin-top: 5px;
+  /* Provide some spacing from the label */
 }
 </style>

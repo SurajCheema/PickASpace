@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     reset_password_token: DataTypes.STRING,
     reset_password_expires: DataTypes.DATE,
+    blueBadge: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },    
   }, {
     // Insert additional settings here.
   });

@@ -62,6 +62,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      blueBadge: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },      
     });
   },
 

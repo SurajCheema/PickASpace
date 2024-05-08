@@ -115,7 +115,8 @@ app.post('/create-user', async (req, res) => {
       password,
       phone,
       DOB,
-      role = 'user' // Default role is 'user'
+      role = 'user', // Default role is 'user'
+      blueBadge
     } = req.body;
 
     // Validate vehicle registration number using test data
@@ -139,7 +140,8 @@ app.post('/create-user', async (req, res) => {
       password: hashedPassword,
       phone,
       DOB,
-      role
+      role,
+      blueBadge
     });
 
     res.json({
@@ -615,8 +617,7 @@ app.get('/api/bays/:bayId/availability', async (req, res) => {
 // Update user details
 app.post('/api/update-user', authenticateToken, async (req, res) => {
   const { userId } = req.user; // Extracted from the JWT
-
-  const { phone, address, first_name, last_name, email, DOB, car_registration, password } = req.body;
+  const { phone, address, first_name, last_name, email, DOB, car_registration, blueBadge } = req.body;
 
   // Basic validation
   if (!first_name || !last_name || !email || !phone || !DOB) {
@@ -631,13 +632,8 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     email,
     DOB,
     car_registration,
-    password
+    blueBadge // include the blueBadge in updates
   };
-
-  if (password) {
-    const saltRounds = 10;
-    updatedFields.password = await bcrypt.hash(password, saltRounds);
-  }
 
   console.log('Attempting to update user:', userId, updatedFields);
 
