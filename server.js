@@ -206,6 +206,7 @@ app.post('/create-user', async (req, res) => {
   }
 });
 
+// Endpoint to onboard customers onto my stripe page so they can claim their revenue from their carparks
 app.get('/api/create-onboarding-link', authenticateToken, async (req, res) => {
   const userId = req.user.userId; // Get the user ID from the authenticated user
   try {
@@ -231,13 +232,13 @@ app.get('/api/create-onboarding-link', authenticateToken, async (req, res) => {
   }
 });
 
-// Endpoint for creating a Stripe account for the customer
+// Endpoint to create a Stripe account for the customer
 app.post('/api/create-customer', async (req, res) => {
   try {
     const customer = await stripe.customers.create({
       email: req.body.email,
       name: req.body.name,
-      source: req.body.stripeToken //  obtain this from the frontend after Stripe.js tokenizes user card information
+      source: req.body.stripeToken
     });
     res.json(customer);
   } catch (error) {
@@ -490,7 +491,7 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 // Book a bay endpoint (adding to CarParkLog)
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
   const { bay_id, carpark_id, startTime, endTime, cost, stripeToken } = req.body;
-  const user_id = req.user.userId;  // Assuming authenticateToken middleware correctly attaches user to request
+  const user_id = req.user.userId;
 
   // Validate inputs
   if (!stripeToken) {
@@ -510,12 +511,37 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'The requested bay is not available or already booked.' });
     }
 
-    // Create Stripe charge
+    // Find the carpark owner
+    const carpark = await db.CarPark.findOne({
+      where: { carpark_id },
+      include: [{ model: db.User, as: 'User' }]
+    });
+
+    if (!carpark || !carpark.User || !carpark.User.stripe_account_id) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'Carpark, owner, or connected account not found.' });
+    }
+
+    const processingFee = 0.30; // Processing fee in pounds
+    const platformFee = cost * 0.1; // Calculate the platform fee (10% of the booking cost)
+    const totalCost = cost + processingFee; // Total cost including the processing fee
+
+    // Create Stripe charges
     const charge = await stripe.charges.create({
-      amount: cost,
+      amount: Math.round(totalCost * 100), // Convert pounds to pence
       currency: 'gbp',
       source: stripeToken,
-      description: `Charge for parking at bay ${bay_id} in carpark ${carpark_id}`
+      description: `Charge for parking at bay ${bay_id} in carpark ${carpark_id}`,
+      application_fee_amount: Math.round(platformFee * 100), // Convert pounds to pence
+      statement_descriptor: 'Parking Fee',
+      receipt_email: req.user.email,
+      metadata: {
+        'Processing Fee': `£${processingFee.toFixed(2)}`,
+        'Platform Fee': `£${platformFee.toFixed(2)}`,
+        'Booking Cost': `£${cost.toFixed(2)}`,
+      },
+    }, {
+      stripeAccount: carpark.User.stripe_account_id // Use the carpark owner's connected account
     });
 
     // Verify if the charge was successful
@@ -527,7 +553,9 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     // Create a payment record
     const payment = await db.Payment.create({
       stripePaymentId: charge.id,
-      amount: cost / 100, // Convert cost from pence to pounds
+      amount: cost,
+      platformFee: platformFee,
+      processingFee: processingFee,
       paymentStatus: 'completed',
       receiptUrl: charge.receipt_url,
       date_paid: new Date(),
@@ -542,7 +570,7 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       payment_id: payment.payment_id,
       startTime,
       endTime,
-      cost: cost / 100,
+      cost,
     }, { transaction });
 
     await transaction.commit();
@@ -558,7 +586,6 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Helper function to check bay availability within a transaction
 async function checkBayAvailability(bayId, startTime, endTime, transaction) {
   const overlappingBookings = await db.CarParkLog.count({

@@ -135,6 +135,7 @@ export default {
       }
       return ((new Date(this.departureTime) - new Date(this.arrivalTime)) / (1000 * 60 * 60)).toFixed(2);
     },
+
     calculatedCost() {
       if (!this.selectedBay || !this.arrivalTime || !this.departureTime || !this.pricing || this.stayDuration === "-") {
         return "-";
@@ -150,7 +151,11 @@ export default {
 
       let totalCost = (months * monthly) + (weeks * weekly) + (days * daily) + (remainingHours * hourly);
       const allHourlyCost = hours * hourly;
-      return Math.min(totalCost, allHourlyCost);
+      const cost = Math.min(totalCost, allHourlyCost);
+
+      const processingFee = 0.30; // Add the £0.30 processing fee
+
+      return cost + processingFee;
     }
   },
 
@@ -303,8 +308,8 @@ export default {
 
       console.log("Stripe Token Generated:", token.id); // Always log the Stripe token
 
-      const amount = Math.round(this.calculatedCost * 100); // Convert pounds to pence
-      console.log("Amount to charge (in pence):", amount); // Always log the amount to charge
+      const amount = Math.round(this.calculatedCost); // Keep the cost in pounds
+      console.log("Amount to charge (in pounds):", amount); // Always log the amount to charge
 
       if (amount <= 0) {
         this.submitError = "Invalid amount to charge.";

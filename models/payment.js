@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     amount: {
-      type: DataTypes.DECIMAL
+      type: DataTypes.DECIMAL(10, 2)
     },
     paymentStatus: {
       type: DataTypes.STRING,
@@ -36,11 +36,17 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
+    platformFee: {
+      type: DataTypes.DECIMAL(10, 2)
+    },
+    processingFee: {
+      type: DataTypes.DECIMAL(10, 2)
+    },
   });
 
   Payment.associate = (models) => {
     Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    Payment.hasOne(models.Refund, { foreignKey: 'payment_id', as: 'refund' }); // Association added here
+    Payment.hasOne(models.Refund, { foreignKey: 'payment_id', as: 'refund' });
     Payment.hasOne(models.CarParkLog, { foreignKey: 'payment_id', as: 'log' });
   };
 

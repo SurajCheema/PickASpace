@@ -16,7 +16,8 @@ module.exports = {
         phone: '+44123456789',
         role: 'user', // Normal user role
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        stripe_account_id: 'acct_1PEWPmEDBZAcK5pZ'
       },
       {
         email: 'admin@test.com',

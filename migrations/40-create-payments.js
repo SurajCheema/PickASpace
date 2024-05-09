@@ -12,7 +12,8 @@ module.exports = {
         allowNull: true
       },
       amount: {
-        type: Sequelize.DECIMAL
+        type: Sequelize.DECIMAL,
+        type: Sequelize.DECIMAL(10, 2)
       },
       paymentStatus: {
         type: Sequelize.STRING,
@@ -45,6 +46,12 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      },
+      platformFee: {
+        type: Sequelize.DECIMAL(10, 2)
+      },
+      processingFee: {
+        type: Sequelize.DECIMAL(10, 2)
       },
     });
   },
