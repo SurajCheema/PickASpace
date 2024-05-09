@@ -12,7 +12,6 @@ module.exports = {
         allowNull: true
       },
       amount: {
-        type: Sequelize.DECIMAL,
         type: Sequelize.DECIMAL(10, 2)
       },
       paymentStatus: {

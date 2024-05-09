@@ -48,7 +48,7 @@ module.exports = {
         allowNull: false
       },
       cost: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false
       },
       status: {

@@ -17,7 +17,7 @@ module.exports = {
         role: 'user', // Normal user role
         createdAt: new Date(),
         updatedAt: new Date(),
-        stripe_account_id: 'acct_1PEfCfCZJ4FPbR8c'
+        stripe_account_id: 'acct_1PEfNpCYeKEb7cFa'
       },
       {
         email: 'admin@test.com',

@@ -914,7 +914,7 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
         createdBy: userId,
         updatedBy: userId,
       });
-      
+
       console.log('Refund request created:', refund);
       res.json({ message: 'Refund request submitted for review', refundId: refund.refund_id });
     }
@@ -928,36 +928,34 @@ async function processAutomaticRefund(payment, userId, reason) {
   try {
     const carpark = await db.CarPark.findOne({
       where: { carpark_id: payment.log.carpark_id },
-      include: [{ model: db.User, as: 'User' }],
+      include: [{ model: db.User, as: 'User' }]
     });
 
     if (!carpark || !carpark.User || !carpark.User.stripe_account_id) {
       throw new Error('Carpark, owner, or connected account not found.');
     }
 
-    const refundAmount = parseFloat(payment.amount); // Parse the payment amount as a float
-    console.log('Refund amount:', refundAmount);
+    // Calculate the total refund amount including the processing fee
+    const totalRefundAmount = parseFloat(payment.amount) + parseFloat(payment.processingFee);
+    console.log('Total refund amount:', totalRefundAmount);
 
-    if (isNaN(refundAmount)) {
-      throw new Error('Invalid refund amount');
+    if (isNaN(totalRefundAmount)) {
+      throw new Error('Invalid total refund amount');
     }
 
-    const refundAmountInCents = Math.round(refundAmount * 100);
+    const refundAmountInCents = Math.round(totalRefundAmount * 100);
     console.log('Refund amount in cents:', refundAmountInCents);
 
-    const stripeRefund = await stripe.refunds.create(
-      {
-        charge: payment.stripePaymentId,
-        amount: refundAmountInCents,
-      },
-      {
-        stripeAccount: carpark.User.stripe_account_id,
-      }
-    );
+    const stripeRefund = await stripe.refunds.create({
+      charge: payment.stripePaymentId,
+      amount: refundAmountInCents,
+    }, {
+      stripeAccount: carpark.User.stripe_account_id,
+    });
 
     const refund = await db.Refund.create({
       payment_id: payment.payment_id,
-      amount: refundAmount,
+      amount: totalRefundAmount,
       status: 'approved',
       reason: reason,
       decision: 'Automatic refund for cancellation more than 24 hours before start time',
@@ -1069,22 +1067,30 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
       }]
     });
 
+    console.log('Refund:', refund);
+
     if (!refund) {
       return res.status(404).send('Refund request not found or already processed');
     }
 
-    const carpark = refund.payment.log.carPark;
-    if (!carpark || !carpark.User || !carpark.User.stripe_account_id) {
-      return res.status(400).send('Carpark, owner, or connected account not found.');
+    // Convert pounds/dollars to cents for the API call
+    if (refund.amount == null || refund.payment.processingFee == null) {
+      console.error('Invalid data: Amount or processing fee is null');
+      return res.status(500).send('Internal error with refund data');
     }
 
-    const refundAmount = refund.amount + refund.payment.processingFee; // Refund the entire amount including the processing fee
+    const refundAmount = Math.round((Number(refund.amount) + Number(refund.payment.processingFee)) * 100);
+    console.log(`Refund amount in cents calculated: ${refundAmount}`);
+
+    if (isNaN(refundAmount)) {
+      return res.status(400).send('Invalid amount for refund');
+    }
 
     const stripeRefund = await stripe.refunds.create({
       charge: refund.payment.stripePaymentId,
-      amount: Math.round(refundAmount * 100), // Convert to pence
+      amount: refundAmount,
     }, {
-      stripeAccount: carpark.User.stripe_account_id,
+      stripeAccount: refund.payment.log.carPark.User.stripe_account_id,
     });
 
     await updateRefundRecord(refund, stripeRefund, decision, req.user.userId);
