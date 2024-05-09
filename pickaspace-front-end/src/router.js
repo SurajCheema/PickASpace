@@ -14,7 +14,8 @@ import UserPaymentLogs from './views/UserPaymentLogs.vue';
 import AdminDashboard from './views/AdminDashboard.vue';
 import AdminRefundManagement from './views/AdminRefundManagement.vue';
 import RequestPasswordReset from './views/RequestPasswordReset.vue';
-import ResetPassword from './views/ResetPassword.vue'; 
+import ResetPassword from './views/ResetPassword.vue';
+import StripeOnBoarding from './views/StripeOnBoarding.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -67,9 +68,16 @@ const routes = [
     path: '/reset-password/:token',
     name: 'ResetPassword',
     component: ResetPassword,
-    props: true, 
+    props: true,
     meta: { requiresAuth: false }
   },
+
+  {
+    path: '/onboarding',
+    name: 'StripeOnBoarding',
+    component: StripeOnBoarding,
+    meta: { requiresAuth: true }
+  }
 ];
 
 const router = createRouter({

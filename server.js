@@ -59,6 +59,40 @@ db.sequelize.sync().then(() => {
   });
 });
 
+// Authentication Middleware to verify JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    console.log('Authentication failed: No token provided');
+    return res.status(401).send('Token is required');
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      console.log(`Token verification failed: ${err.message}`);
+      return res.status(403).send('Invalid Token');
+    }
+
+    console.log(`Token verified successfully: User ID ${user.userId} with role ${user.role}`);
+    req.user = user;
+    next();
+  });
+};
+
+// Middleware to verify user role
+const verifyRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      console.log(`Access denied: User role ${req.user.role} not permitted on this route`);
+      return res.status(403).send('Access denied: You do not have permission to access this resource');
+    }
+    console.log(`Access granted for user role ${req.user.role}`);
+    next();
+  };
+};
+
 // Function to fetch vehicle details from the DVLA API
 async function getVehicleDetails(registrationNumber) {
   try {
@@ -104,7 +138,7 @@ app.post('/api/vehicle-proxy/:registrationNumber', async (req, res) => {
   }
 });
 
-// Register user
+// Register user and create a Stripe connected account if necessary
 app.post('/create-user', async (req, res) => {
   try {
     const {
@@ -122,16 +156,14 @@ app.post('/create-user', async (req, res) => {
     // Validate vehicle registration number using test data
     const vehicleDetails = await getVehicleDetails(car_registration);
 
-
     // Check if the vehicle is electric
     const isElectric = vehicleDetails.fuelType === 'ELECTRIC';
 
-    // Check if the vehicle has a blue badge
-    const hasBlueBadge = vehicleDetails.wheelplan === 'BLUE BADGE';
-
-    // How intense the hashing will be. Higher = harder to guess but will slow down the process.
+    // How intense the hashing will be
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user in your DB
     const newUser = await db.User.create({
       car_registration,
       first_name,
@@ -144,18 +176,77 @@ app.post('/create-user', async (req, res) => {
       blueBadge
     });
 
+    // Create a Stripe connected account for the user if they might be a carpark owner
+    let stripeAccountId = null;
+    if (role === 'user') {  // Assume all users might rent out their spaces
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      });
+      stripeAccountId = account.id;
+      // Save the Stripe account ID in your DB linked to the user
+      await db.User.update({ stripe_account_id: stripeAccountId }, { where: { user_id: newUser.user_id } });
+    }
+
     res.json({
       message: "User created successfully",
       userId: newUser.user_id,
       role: newUser.role,
       isElectric,
-      hasBlueBadge
+      hasBlueBadge: blueBadge,
+      stripeAccountId
     });
   } catch (error) {
     console.error('Failed to create user:', error);
     res.status(error.response && error.response.status || 500).send(error.response ? error.response.data : 'Detailed Error: ' + error.message + ' | Stack: ' + error.stack);
   }
 });
+
+app.get('/api/create-onboarding-link', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; // Get the user ID from the authenticated user
+  try {
+    const user = await db.User.findByPk(userId);
+    console.log("User data retrieved:", user);
+
+    if (!user || !user.stripe_account_id) {
+      console.error('No user or Stripe account ID found', { userId, user });
+      return res.status(400).json({ error: 'No Stripe account ID found for user.' });
+    }
+
+    const accountLink = await stripe.accountLinks.create({
+      account: user.stripe_account_id,
+      refresh_url: 'http://localhost:8080/reauth',
+      return_url: 'http://localhost:8080/dashboard',
+      type: 'account_onboarding',
+    });
+
+    res.json({ url: accountLink.url });
+  } catch (error) {
+    console.error('Failed to create onboarding link:', error);
+    res.status(500).send('Failed to create onboarding link: ' + error.message);
+  }
+});
+
+// Endpoint for creating a Stripe account for the customer
+app.post('/api/create-customer', async (req, res) => {
+  try {
+    const customer = await stripe.customers.create({
+      email: req.body.email,
+      name: req.body.name,
+      source: req.body.stripeToken //  obtain this from the frontend after Stripe.js tokenizes user card information
+    });
+    res.json(customer);
+  } catch (error) {
+    console.error('Failed to create Stripe customer:', error);
+    res.status(500).send('Failed to create customer');
+  }
+});
+
+
 
 // Login user
 app.post('/login', async (req, res) => {
@@ -259,39 +350,7 @@ app.post('/update-password', async (req, res) => {
   }
 });
 
-// Authentication Middleware to verify JWT
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    console.log('Authentication failed: No token provided');
-    return res.status(401).send('Token is required');
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      console.log(`Token verification failed: ${err.message}`);
-      return res.status(403).send('Invalid Token');
-    }
-
-    console.log(`Token verified successfully: User ID ${user.userId} with role ${user.role}`);
-    req.user = user;
-    next();
-  });
-};
-
-// Middleware to verify user role
-const verifyRole = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!allowedRoles.includes(req.user.role)) {
-      console.log(`Access denied: User role ${req.user.role} not permitted on this route`);
-      return res.status(403).send('Access denied: You do not have permission to access this resource');
-    }
-    console.log(`Access granted for user role ${req.user.role}`);
-    next();
-  };
-};
 
 // Create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
@@ -665,10 +724,9 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
 app.get('/user-details', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const userDetails = await db.User.findByPk(userId, {
-      attributes: ['user_id', 'email', 'first_name', 'last_name', 'blueBadge'] 
-    });
+    const userDetails = await db.User.findByPk(userId);
     if (userDetails) {
+      console.log("Fetched user details:", userDetails); // Log user details to help with debugging
       res.json(userDetails);
     } else {
       res.status(404).send('User not found');

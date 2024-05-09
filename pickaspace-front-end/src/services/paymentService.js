@@ -191,3 +191,22 @@ export const fetchRefundById = async (refundId) => {
   }
   return await response.json();
 };
+
+export const createStripeOnboardingLink = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`${API_BASE_URL}/create-onboarding-link`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create Stripe onboarding link');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating Stripe onboarding link:', error);
+    throw error;
+  }
+};

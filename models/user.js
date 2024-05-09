@@ -24,7 +24,11 @@ module.exports = (sequelize, DataTypes) => {
     blueBadge: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
-    },    
+    },
+    stripe_account_id: {
+      type: DataTypes.STRING,
+      allowNull: true  // It's possible not every user will have a Stripe account
+    }
   }, {
     // Insert additional settings here.
   });

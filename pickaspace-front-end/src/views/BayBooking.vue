@@ -83,7 +83,8 @@
     </div>
   </div>
 
-  <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage" @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
+  <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage"
+    @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
 
 </template>
 
@@ -199,8 +200,8 @@ export default {
         } else {
           // No special requirements
           this.selectedBay = this.selectedBay && this.selectedBay.bay_id === bay.bay_id ? null : bay;
-        }   
-        console.log("Modal message set to:", this.combinedModalMessage); 
+        }
+        console.log("Modal message set to:", this.combinedModalMessage);
       } catch (error) {
         console.error("Error selecting bay:", error);
         alert("There was an error processing your request. Please try again.");
@@ -208,7 +209,7 @@ export default {
     },
 
     confirmCombinedModal() {
-      // User  confirmed to take the risk, select the bay
+      // User confirmed to take the risk, select the bay
       this.combinedModalShow = false;
     },
     cancelCombinedModal() {

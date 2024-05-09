@@ -46,14 +46,6 @@ module.exports = {
         allowNull: false,
         defaultValue: 'user' // Default is 'user', can also be 'admin' or 'warden'
       },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
       reset_password_token: {
         type: Sequelize.STRING,
         allowNull: true,
@@ -66,7 +58,19 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false
-      },      
+      },
+      stripe_account_id: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      }
     });
   },
 
