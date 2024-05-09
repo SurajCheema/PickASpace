@@ -489,11 +489,11 @@ app.get('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 });
 
 // Book a bay endpoint (adding to CarParkLog)
+// Book a bay endpoint with Stripe Connect adjustments
 app.post('/api/book-bay', authenticateToken, async (req, res) => {
   const { bay_id, carpark_id, startTime, endTime, cost, stripeToken } = req.body;
   const user_id = req.user.userId;
 
-  // Validate inputs
   if (!stripeToken) {
     return res.status(400).json({ error: 'Stripe token is required.' });
   }
@@ -504,14 +504,12 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
   const transaction = await db.sequelize.transaction();
 
   try {
-    // Check bay availability including overlap check
     const isAvailable = await checkBayAvailability(bay_id, startTime, endTime, transaction);
     if (!isAvailable) {
       await transaction.rollback();
       return res.status(400).json({ error: 'The requested bay is not available or already booked.' });
     }
 
-    // Find the carpark owner
     const carpark = await db.CarPark.findOne({
       where: { carpark_id },
       include: [{ model: db.User, as: 'User' }]
@@ -522,47 +520,33 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Carpark, owner, or connected account not found.' });
     }
 
-    const processingFee = 0.30; // Processing fee in pounds
-    const platformFee = cost * 0.1; // Calculate the platform fee (10% of the booking cost)
-    const totalCost = cost + processingFee; // Total cost including the processing fee
-
-    // Create Stripe charges
+    const totalCost = cost + 0.30; // Including a fixed processing fee for example
     const charge = await stripe.charges.create({
-      amount: Math.round(totalCost * 100), // Convert pounds to pence
+      amount: Math.round(totalCost * 100),
       currency: 'gbp',
       source: stripeToken,
       description: `Charge for parking at bay ${bay_id} in carpark ${carpark_id}`,
-      application_fee_amount: Math.round(platformFee * 100), // Convert pounds to pence
-      statement_descriptor: 'Parking Fee',
-      receipt_email: req.user.email,
-      metadata: {
-        'Processing Fee': `£${processingFee.toFixed(2)}`,
-        'Platform Fee': `£${platformFee.toFixed(2)}`,
-        'Booking Cost': `£${cost.toFixed(2)}`,
-      },
+      application_fee_amount: Math.round(cost * 0.10 * 100), // 10% platform fee
     }, {
-      stripeAccount: carpark.User.stripe_account_id // Use the carpark owner's connected account
+      stripeAccount: carpark.User.stripe_account_id
     });
 
-    // Verify if the charge was successful
     if (!charge.paid) {
       await transaction.rollback();
       return res.status(402).json({ error: 'Payment failed.' });
     }
 
-    // Create a payment record
     const payment = await db.Payment.create({
       stripePaymentId: charge.id,
       amount: cost,
-      platformFee: platformFee,
-      processingFee: processingFee,
+      platformFee: cost * 0.10,
+      processingFee: 0.30,
       paymentStatus: 'completed',
       receiptUrl: charge.receipt_url,
       date_paid: new Date(),
       userId: user_id
     }, { transaction });
 
-    // Record the booking
     const booking = await db.CarParkLog.create({
       bay_id,
       carpark_id,
@@ -586,6 +570,7 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Helper function to check bay availability within a transaction
 async function checkBayAvailability(bayId, startTime, endTime, transaction) {
   const overlappingBookings = await db.CarParkLog.count({
@@ -898,62 +883,48 @@ app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    const payment = await db.Payment.findOne({
-      where: {
-        payment_id: paymentId,
-        userId: userId
-      },
-      include: [{ model: db.CarParkLog, as: 'log' }]
-    });
-
-    if (!payment || !payment.log) {
-      return res.status(404).json({ message: 'Payment or associated booking not found' });
-    }
-
-    if (payment.paymentStatus === 'refunded' || payment.paymentStatus === 'refunding') {
-      return res.status(400).json({ message: 'Refund already processed or in progress' });
-    }
-
-    // Check if the booking has been cancelled and recorded the cancellation time
-    if (payment.log.status !== 'cancelled' || !payment.log.cancelledAt) {
-      return res.status(400).json({ message: 'Refund requests can only be processed for cancelled bookings' });
-    }
-
-    const cancellationTime = new Date(payment.log.cancelledAt);
-    const startTime = new Date(payment.log.startTime);
-    const hoursDifference = (startTime - cancellationTime) / (1000 * 60 * 60);
-
-    // Check for automatic refund eligibility
-    if (hoursDifference >= 24) {
-      const refund = await processAutomaticRefund(payment, userId, reason);
-      res.json({ message: 'Refund processed automatically', refundId: refund.refund_id });
-    } else {
-      // Proceed with a normal refund request
-      const refund = await db.Refund.create({
-        payment_id: paymentId,
-        amount: payment.amount,
-        status: 'requested',
-        reason: reason,
-        receiptUrl: payment.receiptUrl,
-        log_id: payment.log.log_id,
-        createdBy: userId,
-        updatedBy: userId
+      const payment = await db.Payment.findOne({
+          where: { payment_id: paymentId, userId: userId },
+          include: [{ model: db.CarParkLog, as: 'log' }]
       });
 
+      if (!payment || !payment.log) {
+          console.log('Payment or associated booking log not found');
+          return res.status(404).json({ message: 'Payment or associated booking log not found' });
+      }
+
+      if (payment.paymentStatus === 'refunded' || payment.paymentStatus === 'refunding') {
+          return res.status(400).json({ message: 'Refund already processed or in progress' });
+      }
+
+      const refund = await db.Refund.create({
+          payment_id: paymentId,
+          amount: payment.amount,
+          status: 'requested',
+          reason: reason,
+          log_id: payment.log.log_id, // Ensure that log_id is being set correctly
+          createdBy: userId,
+          updatedBy: userId
+      });
+
+      console.log('Refund request created:', refund);
       res.json({ message: 'Refund request submitted for review', refundId: refund.refund_id });
-    }
   } catch (error) {
-    console.error('Failed to request refund:', error);
-    res.status(500).send({ message: error.message });
+      console.error('Failed to request refund:', error);
+      res.status(500).send({ message: error.message });
   }
 });
 
-
 // Helper function to handle automatic refunds
 async function processAutomaticRefund(payment, userId, reason) {
+  // Fetch the Stripe charge associated with the payment
+  const charge = await stripe.charges.retrieve(payment.stripePaymentId);
+
   const stripeRefund = await stripe.refunds.create({
-    charge: payment.stripePaymentId,
+    charge: charge.id,
     amount: Math.floor(payment.amount * 100) // Convert to pence for Stripe API
+  }, {
+    stripeAccount: charge.destination // Use the connected account ID from the charge
   });
 
   const refund = await db.Refund.create({
@@ -964,6 +935,7 @@ async function processAutomaticRefund(payment, userId, reason) {
     decision: 'Automatic refund for cancellation more than 24 hours before start time',
     log_id: payment.log.log_id,
     stripeRefundId: stripeRefund.id,
+    receiptUrl: stripeRefund.receipt_url,
     processedAt: new Date(),
     createdBy: userId,
     updatedBy: userId
@@ -974,7 +946,6 @@ async function processAutomaticRefund(payment, userId, reason) {
 
   return refund;
 }
-
 // Admin route to fetch all refunds with optional filters and admin verification
 app.get('/api/refunds', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { status, paymentId, userId, startDate, endDate } = req.query;
@@ -1006,64 +977,78 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
   const { refundId } = req.params;
   const { decision } = req.body;
 
-  if (!decision) return res.status(400).send('Decision for approval is required');
+  if (!decision) {
+    return res.status(400).send('Decision for approval is required');
+  }
 
   try {
-    // Only find refunds that are 'requested' or 'denied'
     const refund = await db.Refund.findOne({
       where: { refund_id: refundId, status: ['requested', 'denied'] },
-      include: [{ model: db.Payment, as: 'payment', include: [{ model: db.CarParkLog, as: 'log' }] }]
+      include: [{
+        model: db.Payment,
+        as: 'payment',
+        include: [{
+          model: db.User,
+          as: 'user', // Include the User to access Stripe account ID
+          attributes: ['stripe_account_id']
+        }, {
+          model: db.CarParkLog,
+          as: 'log'
+        }]
+      }]
     });
 
-    if (!refund) return res.status(404).send('Refund request not found or already processed');
-
-    const stripeRefund = await stripe.refunds.create({
-      charge: refund.payment.stripePaymentId,
-      amount: Math.floor(refund.amount * 100)
-    });
-
-    // Start a new transaction
-    const transaction = await db.sequelize.transaction();
-
-    try {
-      // Update the Refund record
-      await refund.update({
-        stripeRefundId: stripeRefund.id,
-        status: 'approved',
-        decision: req.body.decision || 'Approved by Admin',
-        processedAt: new Date(),
-        updatedBy: req.user.userId
-      }, { transaction });
-
-      // Update the associated Payment and CarParkLog
-      await db.Payment.update(
-        { paymentStatus: 'refunded' },
-        { where: { payment_id: refund.payment_id } },
-        { transaction }
-      );
-
-      if (refund.payment.log) {
-        await db.CarParkLog.update(
-          { status: 'refunded' },
-          { where: { log_id: refund.payment.log.log_id } },
-          { transaction }
-        );
-      }
-
-      // Commit the transaction
-      await transaction.commit();
-
-      res.json({ message: 'Refund approved successfully', refund });
-    } catch (error) {
-      // If there is a failure, rollback the transaction
-      await transaction.rollback();
-      throw error;
+    if (!refund) {
+      return res.status(404).send('Refund request not found or already processed');
     }
+
+    // Check if Stripe account ID is available
+    if (refund.payment.user.stripe_account_id) {
+      // Process refund through Stripe if Stripe account ID exists
+      const stripeRefund = await stripe.refunds.create({
+        charge: refund.payment.stripePaymentId,
+        amount: Math.round(refund.amount * 100) // Convert to cents
+      }, {
+        stripeAccount: refund.payment.user.stripe_account_id,
+      });
+
+      await updateRefundRecord(refund, stripeRefund, decision, req.user.userId);
+    } else {
+      // Process refund internally if no Stripe account ID exists
+      await updateRefundRecord(refund, null, decision, req.user.userId);
+      console.log('Refund processed internally without Stripe account ID.');
+    }
+
+    res.json({ message: 'Refund approved successfully', refund });
   } catch (error) {
     console.error('Failed to approve refund:', error);
     res.status(500).send('Internal Server Error');
   }
 });
+
+async function updateRefundRecord(refund, stripeRefund, decision, userId) {
+  await db.sequelize.transaction(async (transaction) => {
+    await refund.update({
+      stripeRefundId: stripeRefund ? stripeRefund.id : null,
+      status: 'approved',
+      decision: decision,
+      processedAt: new Date(),
+      updatedBy: userId
+    }, { transaction });
+
+    await db.Payment.update({ paymentStatus: 'refunded' }, {
+      where: { payment_id: refund.payment_id },
+      transaction
+    });
+
+    if (refund.payment.log) {
+      await db.CarParkLog.update({ status: 'refunded' }, {
+        where: { log_id: refund.payment.log.log_id },
+        transaction
+      });
+    }
+  });
+}
 
 // Admin function for denying refunds
 app.post('/api/refunds/:refundId/deny', authenticateToken, verifyRole(['admin']), async (req, res) => {
@@ -1174,6 +1159,8 @@ app.get('/api/refunds/payment/:paymentId', authenticateToken, async (req, res) =
     res.status(500).send('Server error');
   }
 });
+
+
 
 // Serve Vue application index.html for all non-API routes
 app.get(/.*/, (req, res) => {

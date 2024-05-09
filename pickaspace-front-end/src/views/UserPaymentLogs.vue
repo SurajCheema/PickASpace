@@ -93,6 +93,8 @@ export default {
         const refund = await fetchRefundByPaymentId(paymentId);
         if (refund) {
           console.log('Refund details fetched:', refund);
+          // Display the refund details modal with the receipt URL
+          // ...
         } else {
           console.error('No refund found for payment ID:', paymentId);
           alert('No refund details found for the selected payment.');
