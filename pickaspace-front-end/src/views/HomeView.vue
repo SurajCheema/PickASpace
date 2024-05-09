@@ -25,3 +25,5 @@ export default {
 </script>
 
 <style scoped></style>
+
+<link rel="stylesheet" href="style.css">

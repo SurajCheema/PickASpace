@@ -5,7 +5,7 @@
       <p><strong>Refund ID:</strong> {{ refund.refund_id }}</p>
       <p><strong>Payment ID:</strong> {{ refund.payment_id }}</p>
       <p><strong>Stripe Refund ID:</strong> {{ refund.stripeRefundId || 'N/A' }}</p>
-      <p><strong>Receipt:</strong> <a v-if="refund.receiptUrl" :href="refund.receiptUrl" target="_blank" class="receipt-link">View receipt</a><span v-else>N/A</span></p>
+      <p><strong>Receipt:</strong> <a v-if="refund.payment && refund.payment.receiptUrl" :href="refund.payment.receiptUrl" target="_blank" class="receipt-link">View receipt</a><span v-else>N/A</span></p>
       <p><strong>Amount:</strong> {{ refund.amount }}</p>
       <p><strong>Status:</strong> {{ refund.status }}</p>
       <p><strong>Requested At:</strong> {{ formatDate(refund.createdAt) }}</p>
