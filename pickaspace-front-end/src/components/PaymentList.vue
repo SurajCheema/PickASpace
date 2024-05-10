@@ -1,9 +1,12 @@
 <template>
   <div>
     <b-list-group>
-      <b-list-group-item v-for="payment in sortedPayments" :key="payment.payment_id"
-        class="d-flex justify-content-between align-items-center" @click="showDetails(payment)">
-
+      <b-list-group-item
+        v-for="payment in sortedPayments"
+        :key="payment.payment_id"
+        class="d-flex justify-content-between align-items-center"
+        @click="$emit('view-payment', payment)"
+      >
         <div>
           <h5 class="mb-1">Payment ID: {{ payment.payment_id }}</h5>
           <p class="mb-1">Status: {{ payment.paymentStatus }}</p>
@@ -13,14 +16,21 @@
         <div>
           <b-button
             v-if="payment.paymentStatus === 'completed' && payment.log && payment.log.status === 'cancelled' && !payment.refund"
-            @click.stop.prevent="openRefundModal(payment.payment_id)" variant="danger">Refund</b-button>
-          <b-button v-if="payment.refund" @click.stop.prevent="openRefundStatusModal(payment)" variant="info">Refund
-            Status</b-button>
+            @click.stop.prevent="openRefundModal(payment.payment_id)"
+            variant="danger"
+          >
+            Refund
+          </b-button>
+          <b-button
+            v-if="payment.refund"
+            @click.stop.prevent="openRefundStatusModal(payment)"
+            variant="info"
+          >
+            Refund Status
+          </b-button>
         </div>
       </b-list-group-item>
     </b-list-group>
-
-
 
     <!-- Refund Details Modal -->
     <b-modal v-model="refundModalVisible" title="Refund Details">
@@ -56,14 +66,14 @@
   </div>
 
   <!-- Success Modal -->
-<b-modal ref="successModal" title="Success" ok-only ok-variant="success" @ok="$refs.successModal.hide()">
-  Refund request resubmitted successfully.
-</b-modal>
+  <b-modal ref="successModal" title="Success" ok-only ok-variant="success" @ok="$refs.successModal.hide()">
+    Refund request resubmitted successfully.
+  </b-modal>
 
-<!-- Error Modal -->
-<b-modal ref="errorModal" title="Error" ok-only ok-variant="danger" @ok="$refs.errorModal.hide()">
-  Failed to resubmit refund request. Please try again.
-</b-modal>
+  <!-- Error Modal -->
+  <b-modal ref="errorModal" title="Error" ok-only ok-variant="danger" @ok="$refs.errorModal.hide()">
+    Failed to resubmit refund request. Please try again.
+  </b-modal>
 </template>
 
 <script>
@@ -104,10 +114,6 @@ export default {
     },
     formatAmount(amount) {
       return isNaN(parseFloat(amount)) ? '0.00' : parseFloat(amount).toFixed(2);
-    },
-    showDetails(payment) {
-      this.selectedPayment = payment;
-      this.modalVisible = true;
     },
     openRefundStatusModal(payment) {
       this.selectedRefund = payment.refund;

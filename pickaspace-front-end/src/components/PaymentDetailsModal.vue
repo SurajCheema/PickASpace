@@ -12,19 +12,23 @@
         <button v-if="hasRefund" @click="viewRefundStatus">View Refund Status</button>
       </div>
     </template>
+    <template v-slot:footer>
+      <b-button v-if="payment.log" variant="primary" @click="viewBooking(payment.log.log_id)">View Booking</b-button>
+    </template>
   </b-modal>
   <refund-details-modal v-if="selectedRefund" :refund="selectedRefund" :show-modal="showRefundModal"
     @update:show-modal="showRefundModal = $event" @refund-updated="$emit('refund-updated')"></refund-details-modal>
 </template>
 
 <script>
-import { BModal } from 'bootstrap-vue-next';
+import { BModal, BButton } from 'bootstrap-vue-next';
 import RefundDetailsModal from '@/components/RefundDetailsModal.vue';
 import { fetchRefundByPaymentId } from '@/services/paymentService';
 
 export default {
   components: {
     BModal,
+    BButton,
     RefundDetailsModal
   },
   props: {
@@ -68,6 +72,9 @@ export default {
     },
     clearModal() {
       this.$emit('close');
+    },
+    viewBooking(bookingId) {
+      this.$emit('view-booking', bookingId);
     },
     async viewRefundStatus() {
       try {

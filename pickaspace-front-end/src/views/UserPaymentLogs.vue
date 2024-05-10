@@ -8,20 +8,40 @@
       <button class="btn btn-primary" @click="setFilter('refunded')">Refunded</button>
     </div>
     <div>
-      <payment-list :payments="filteredPayments" @view-booking="setSelectedBookingId"
-        @open-refund-modal="openRefundModal" @open-refund-status-modal="openRefundStatusModal"
-        @refund-resubmitted="fetchPaymentsWrapper" />
-      <booking-details v-if="selectedBooking" :booking="selectedBooking" @close="selectedBooking = null"
-        @booking-cancelled="handleBookingCancelled" />
-      <refund-request-modal :is-visible="isRefundModalVisible" :payment-id="selectedPaymentId" @close="closeRefundModal"
-        @request-refund="handleRefundRequest" />
+      <payment-list
+        :payments="filteredPayments"
+        @view-payment="openPaymentDetailsModal"
+        @open-refund-modal="openRefundModal"
+        @open-refund-status-modal="openRefundStatusModal"
+        @refund-resubmitted="fetchPaymentsWrapper"
+      />
+      <payment-details-modal
+        v-if="selectedPayment"
+        :payment="selectedPayment"
+        @close="closePaymentDetailsModal"
+        @view-booking="setSelectedBookingId"
+        @booking-cancelled="handleBookingCancelled"
+      />
+      <booking-details
+        v-if="selectedBooking"
+        :booking="selectedBooking"
+        @close="selectedBooking = null"
+        @booking-cancelled="handleBookingCancelled"
+      />
+      <refund-request-modal
+        :is-visible="isRefundModalVisible"
+        :payment-id="selectedPaymentId"
+        @close="closeRefundModal"
+        @request-refund="handleRefundRequest"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import PaymentList from '../components/PaymentList.vue';
+import PaymentDetailsModal from '../components/PaymentDetailsModal.vue';
 import BookingDetails from '../components/BookingDetailsModal.vue';
 import RefundRequestModal from '../components/RefundRequestModal.vue';
 import { fetchPayments, fetchRefundByPaymentId, requestRefund } from '@/services/paymentService';
@@ -30,6 +50,7 @@ import { fetchBookingById } from '@/services/carParkService';
 export default {
   components: {
     PaymentList,
+    PaymentDetailsModal,
     BookingDetails,
     RefundRequestModal
   },
@@ -38,7 +59,7 @@ export default {
     const isRefundModalVisible = ref(false);
     const selectedPaymentId = ref(null);
     const filter = ref('all');
-    const filteredPayments = ref([]);
+    const selectedPayment = ref(null);
     const selectedBookingId = ref(null);
     const selectedBooking = ref(null);
 
@@ -46,7 +67,6 @@ export default {
       try {
         payments.value = await fetchPayments();
         console.log('Fetched payments in UserPaymentLogs:', payments.value);
-        filterPayments();
       } catch (error) {
         console.error('Failed to fetch payments:', error);
         alert('Failed to fetch payments. Please try again.');
@@ -55,18 +75,25 @@ export default {
 
     const setFilter = (f) => {
       filter.value = f;
-      filterPayments();
     };
 
-    const filterPayments = () => {
-      filteredPayments.value = payments.value.filter(p => filter.value === 'all' || p.paymentStatus === filter.value);
+    const filteredPayments = computed(() => {
+      return payments.value.filter(p => filter.value === 'all' || p.paymentStatus === filter.value);
+    });
+
+    const openPaymentDetailsModal = (payment) => {
+      selectedPayment.value = payment;
     };
 
-    const setSelectedBookingId = async (log_id) => {
-      selectedBookingId.value = log_id;
-      if (log_id) {
+    const closePaymentDetailsModal = () => {
+      selectedPayment.value = null;
+    };
+
+    const setSelectedBookingId = async (bookingId) => {
+      selectedBookingId.value = bookingId;
+      if (bookingId) {
         try {
-          selectedBooking.value = await fetchBookingById(log_id);
+          selectedBooking.value = await fetchBookingById(bookingId);
         } catch (error) {
           console.error('Error fetching booking details:', error);
           selectedBooking.value = null;
@@ -126,6 +153,9 @@ export default {
     return {
       filteredPayments,
       setFilter,
+      openPaymentDetailsModal,
+      closePaymentDetailsModal,
+      selectedPayment,
       selectedBookingId,
       setSelectedBookingId,
       selectedBooking,
