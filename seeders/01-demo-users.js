@@ -32,10 +32,10 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        email: 'surajcheema@outlook.com',
+        email: 'user2@test.com',
         password: 'test', // Plain password will be hashed below
-        first_name: 'Suraj',
-        last_name: 'C',
+        first_name: 'Jack',
+        last_name: 'Doe',
         DOB: new Date('1990-01-01'),
         car_registration: 'AA19PPP', // DVLA TEST API Registration number
         phone: '+44123456789',

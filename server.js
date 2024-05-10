@@ -835,6 +835,9 @@ app.get('/api/user/bookings/:log_id', authenticateToken, async (req, res) => {
       return;
     }
 
+    // Parse the cost as a float before sending it to the client
+    booking.cost = parseFloat(booking.cost);
+
     res.json(booking);
   } catch (error) {
     console.error('Error fetching booking:', error);

@@ -22,7 +22,7 @@
 import BookingList from '../components/BookingList.vue';
 import BookingDetailsModal from '../components/BookingDetailsModal.vue';
 import PaymentDetailsModal from '../components/PaymentDetailsModal.vue';
-import { fetchUserBookings, cancelBooking as cancelBookingService } from '@/services/carParkService'; 
+import { fetchUserBookings, cancelBooking as cancelBookingService, fetchBookingById } from '@/services/carParkService';
 import { fetchPaymentById } from '@/services/paymentService';
 
 export default {
@@ -98,9 +98,15 @@ export default {
       this.activeType = type;
       this.updateActiveBookings();
     },
-    showBookingDetailsModal(booking) {
-      this.bookingDetails = booking;
-      this.isBookingDetailsModalVisible = true;
+    async showBookingDetailsModal(booking) {
+      try {
+        const bookingDetails = await fetchBookingById(booking.log_id);
+        this.bookingDetails = bookingDetails;
+        this.isBookingDetailsModalVisible = true;
+      } catch (error) {
+        console.error('Error fetching booking details:', error);
+        alert('Failed to fetch booking details: ' + error.message);
+      }
     },
     closeBookingDetailsModal() {
       this.isBookingDetailsModalVisible = false;

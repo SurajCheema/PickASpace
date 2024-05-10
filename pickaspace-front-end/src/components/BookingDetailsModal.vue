@@ -6,7 +6,7 @@
             <p><strong>Full Address:</strong> {{ booking.carPark.addressLine1 }}, {{ booking.carPark.addressLine2 }},
                 {{ booking.carPark.city }}, {{ booking.carPark.postcode }}</p>
             <p><strong>Bay Number:</strong> {{ booking.bay.bay_number }}</p>
-            <p><strong>Cost:</strong> £{{ booking.cost.toFixed(2) }}</p>
+            <p><strong>Cost:</strong> £{{ formatCost(booking.cost) }}</p>
             <p><strong>Start Time:</strong> {{ formatDateTime(booking.startTime) }}</p>
             <p><strong>End Time:</strong> {{ formatDateTime(booking.endTime) }}</p>
             <p><strong>Status:</strong> {{ booking.status }}</p>
@@ -66,7 +66,16 @@ export default {
         formatDateTime(datetime) {
             const date = new Date(datetime);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} 
-            ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        },
+        formatCost(cost) {
+            if (typeof cost === 'number') {
+                return cost.toFixed(2);
+            } else if (typeof cost === 'string') {
+                return parseFloat(cost).toFixed(2);
+            } else {
+                return '0.00';
+            }
         },
         shouldShowCancelButton(booking) {
             const now = new Date();
