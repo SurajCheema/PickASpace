@@ -1,7 +1,6 @@
 // Base URL
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// Create new car park
 export const createCarPark = async (carParkData) => {
   // Complete endpoint URL
   const url = `${API_BASE_URL}/create-carpark`;
@@ -19,7 +18,16 @@ export const createCarPark = async (carParkData) => {
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const errorData = await response.json();
+      if (errorData.error === 'Stripe account not linked. Please complete the Stripe onboarding process.') {
+        throw new Error('Stripe account not linked. Please complete the Stripe onboarding process.');
+      } else if (errorData.error === 'Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.') {
+        throw new Error('Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.');
+      } else if (errorData.error === 'Missing required fields') {
+        throw new Error('Missing required fields. Please fill in all mandatory fields.');
+      } else {
+        throw new Error('Failed to create car park. Please try again later.');
+      }
     }
 
     const data = await response.json();

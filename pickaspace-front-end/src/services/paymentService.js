@@ -210,3 +210,27 @@ export const createStripeOnboardingLink = async () => {
     throw error;
   }
 };
+
+// Function to check Stripe Connect account status
+export const checkStripeAccountStatus = async (stripeAccountId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`${API_BASE_URL}/stripe/account-status/${stripeAccountId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to retrieve Stripe account status');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Stripe account status:', error);
+    throw error;
+  }
+};

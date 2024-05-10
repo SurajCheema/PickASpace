@@ -198,21 +198,27 @@ export default {
       });
     },
     async handleSubmit() {
-      if (!this.validateForm()) {
-        return;
-      }
+      if (!this.validateForm()) return;
+
       try {
         await createCarPark(this.carPark);
-        this.successMessage = 'Successfully created car park.'; // Set success message
-        this.errorMessages = []; // Clear any previous error messages
-
-        // Clear the form by resetting carPark data to its initial state
+        this.successMessage = 'Successfully created car park.';
+        this.errorMessages = [];
         this.resetForm();
       } catch (error) {
         console.error('Error creating car park:', error);
-        this.errorMessages.push('Failed to create car park. Please try again later.');
+        if (error.message === 'Stripe account not linked. Please complete the Stripe onboarding process.') {
+          this.errorMessages.push('Stripe account not linked. Please complete the Stripe onboarding process.');
+        } else if (error.message === 'Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.') {
+          this.errorMessages.push('Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.');
+        } else if (error.message === 'Failed to create car park. Please try again later.') {
+          this.errorMessages.push('Failed to create car park. Please try again later.');
+        } else {
+          this.errorMessages.push('An error occurred while creating the car park. Please check the console for more details.');
+        }
       }
     },
+
     // Reset form fields to their initial state
     resetForm() {
       this.carPark.addressLine1 = '';

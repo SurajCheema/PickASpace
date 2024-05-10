@@ -351,15 +351,51 @@ app.post('/update-password', async (req, res) => {
   }
 });
 
+// Function to check Stripe account status
+app.get('/api/stripe/account-status/:accountId', async (req, res) => {
+  const { accountId } = req.params;
+  try {
+    const stripeAccount = await stripe.accounts.retrieve(accountId);
+    res.json({ status: stripeAccount.details_submitted ? 'submitted' : 'pending' });
+  } catch (error) {
+    console.error('Failed to retrieve Stripe account information:', error);
+    if (error.code === 'account_invalid') {
+      res.status(404).json({ error: 'Stripe account not found' });
+    } else {
+      res.status(500).json({ error: 'Failed to retrieve Stripe account information' });
+    }
+  }
+});
 
-
-// Create a new car park
+// Endpoint to create a new car park
 app.post('/api/create-carpark', authenticateToken, async (req, res) => {
+  const user = await db.User.findByPk(req.user.userId);
+
+  // Check if the user has a connected Stripe account
+  if (!user.stripe_account_id) {
+    console.log(`User ${user.user_id} does not have a connected Stripe account`);
+    return res.status(403).json({
+      error: 'Stripe account not linked. Please complete the Stripe onboarding process.'
+    });
+  }
+
+  // Check the status of the Stripe account
+  const stripeAccountStatus = await stripe.accounts.retrieve(user.stripe_account_id);
+  const isStripeAccountActive = stripeAccountStatus.details_submitted;
+
+  if (!isStripeAccountActive) {
+    console.log(`User ${user.user_id} has an inactive Stripe account`);
+    return res.status(403).json({
+      error: 'Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.'
+    });
+  }
+
   const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
 
   // Validate required fields
   if (!addressLine1 || !city || !postcode || !openTime || !closeTime || !pricing || !bays || bays.length === 0) {
-    return res.status(400).send('Missing required fields');
+    console.log('Missing required fields in car park creation request:', req.body);
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   // Construct full address from parts
