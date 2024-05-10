@@ -1,6 +1,6 @@
 <template>
   <div id="login-div" class="auth-container">
-    <h1>Login</h1>
+    <h1 class="blue">Login</h1>
     <form @submit.prevent="loginUser">
       <div>
         <label for="email">Email:</label>
@@ -13,7 +13,9 @@
       </div>
       <p class="error" v-if="loginError">{{ loginError }}</p>
       <div>
+        <p>Don't have an account yet? Register <a href="#">here!</a>
         <a href="/user/requestpasswordreset" class="password-reset-link">Forgot Password?</a>
+        </p>
       </div>
       <button type="submit">Login</button>
     </form>
@@ -61,15 +63,22 @@ export default {
 </script>
 
 <style scoped>
+.blue{
+  color:blue;
+}
+
 .auth-container {
   max-width: 400px;
-  margin: 0 auto;
-  padding: 6em 20px 20px 20px;
-  /* top right bottom down */
+  margin: 1em auto; /* Centered horizontally with margin top and bottom */
+  padding: 2em;
+  background-color: #f4f4f4; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
 .auth-container div {
   margin-bottom: 10px;
+  width: 100%; /* Full width within the container */
 }
 
 label {
@@ -86,6 +95,7 @@ input[type="password"] {
 }
 
 button {
+  width: 100%; /* Full width button */
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;

@@ -20,15 +20,7 @@
       </b-list-group-item>
     </b-list-group>
 
-    <!-- Payment Details Modal -->
-    <b-modal v-model="modalVisible" title="Payment Details">
-      <p><strong>Payment ID:</strong> {{ selectedPayment.payment_id }}</p>
-      <p><strong>Amount:</strong> £{{ formatAmount(selectedPayment.amount) }}</p>
-      <p><strong>Status:</strong> {{ selectedPayment.paymentStatus }}</p>
-      <p><strong>Date:</strong> {{ new Date(selectedPayment.date_paid).toLocaleDateString() }}</p>
-      <p><strong>Stripe Payment ID:</strong> {{ selectedPayment.stripePaymentId || 'N/A' }}</p>
-      <p><strong>Receipt URL:</strong> <a :href="selectedPayment.receiptUrl" target="_blank">View Receipt</a></p>
-    </b-modal>
+
 
     <!-- Refund Details Modal -->
     <b-modal v-model="refundModalVisible" title="Refund Details">

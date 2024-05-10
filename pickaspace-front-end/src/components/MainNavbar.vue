@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <router-link id="brand-name" class="navbar-brand" to="/">PickASpace</router-link>
+    <router-link id="brand-name" class="navbar-brand" to="/"><span class="blue">PickASpace</span></router-link>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -63,6 +63,10 @@ export default {
 </script>
 
 <style>
+.blue{
+  color:blue;
+}
+
 #brand-name {
   padding-left: 1.5em;
 }

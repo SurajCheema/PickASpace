@@ -1,5 +1,5 @@
 <template>
-  <div class="container mt-5">
+  <div class="container mt-5" style="max-width: 70%; margin: 0 auto;">
     <div class="input-group mb-3">
       <input type="text" class="form-control" placeholder="Search by address..." v-model="searchQuery"
         @input="fetchCarParks">
@@ -18,7 +18,7 @@
     </div>
     <div class="row">
       <div class="col-12 col-md-4" v-for="carPark in filteredCarParks" :key="carPark.carpark_id">
-        <div class="card mb-3 hover-highlight" style="cursor:pointer" @click="selectCarPark(carPark)">
+        <div class="card mb-3 hover-highlight blue-background" style="cursor:pointer" @click="selectCarPark(carPark)">
           <div class="card-body">
             <h5 class="card-title">{{ carPark.addressLine1 }}</h5>
             <p class="card-text">{{ carPark.city }}, {{ carPark.postcode }}</p>
@@ -37,7 +37,7 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body blue-background">
             <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{
         selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
             <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
@@ -215,6 +215,12 @@ export default {
 </script>
 
 <style scoped>
+.blue{
+  color:blue;
+}
+.blue-background{
+  background-color:deepskyblue;
+}
 .hover-highlight:hover {
   background-color: #f8f9fa;
 }
