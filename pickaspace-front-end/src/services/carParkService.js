@@ -216,3 +216,29 @@ export const fetchBookingById = async (log_id) => {
   console.log('Fetched booking:', data);
   return data;
 };
+
+//Edit a carpark with new details and bays
+export const updateCarPark = async (carparkId, carParkData) => {
+  const url = `${API_BASE_URL}/carparks/${carparkId}`;
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(carParkData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update car park. Please try again later.');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating car park:', error);
+    throw error;
+  }
+};
