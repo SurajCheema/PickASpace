@@ -14,20 +14,16 @@
                     <p><strong>Open Time:</strong> {{ carPark.openTime }}</p>
                     <p><strong>Close Time:</strong> {{ carPark.closeTime }}</p>
                     <p><strong>Access Instructions:</strong> {{ carPark.accessInstructions }}</p>
-                    <p><strong>Total Number of Bays:</strong> {{ carPark.bays.length }}</p>
+                    <p><strong>Total Number of Bays:</strong> {{ totalBays }}</p>
                     <p><strong>Number of Bays with EV Charging:</strong> {{ evChargingCount }}</p>
                     <p><strong>Number of Bays with Disabled Access:</strong> {{ disabledAccessCount }}</p>
                     <div v-if="carPark.pricing">
                         <h6><strong>Pricing:</strong></h6>
                         <ul>
-                            <li v-if="carPark.pricing.hourly"><strong>Hourly:</strong> £{{
-        carPark.pricing.hourly.toFixed(2) }}</li>
-                            <li v-if="carPark.pricing.daily"><strong>Daily:</strong> £{{
-        carPark.pricing.daily.toFixed(2) }}</li>
-                            <li v-if="carPark.pricing.weekly"><strong>Weekly:</strong> £{{
-                                carPark.pricing.weekly.toFixed(2) }}</li>
-                            <li v-if="carPark.pricing.monthly"><strong>Monthly:</strong> £{{
-                                carPark.pricing.monthly.toFixed(2) }}</li>
+                            <li v-for="(price, key) in carPark.pricing" :key="key">
+                                <strong>{{ key.charAt(0).toUpperCase() + key.slice(1) }}:</strong> £{{ price.toFixed(2)
+                                }}
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -48,12 +44,24 @@ export default {
             default: false
         }
     },
+    watch: {
+        carPark: {
+            handler(newVal) {
+                console.log('Car park data updated:', newVal);
+            },
+            deep: true
+        }
+    },
     computed: {
+        totalBays() {
+            console.log(`Total bays computed as: ${this.carPark.bays ? this.carPark.bays.length : 0}`);
+            return this.carPark.bays ? this.carPark.bays.length : 0;
+        },
         evChargingCount() {
-            return this.carPark.bays.filter(bay => bay.hasEVCharging).length;
+            return this.carPark.bays ? this.carPark.bays.filter(bay => bay.hasEVCharging).length : 0;
         },
         disabledAccessCount() {
-            return this.carPark.bays.filter(bay => bay.disabled).length;
+            return this.carPark.bays ? this.carPark.bays.filter(bay => bay.disabled).length : 0;
         }
     },
     methods: {

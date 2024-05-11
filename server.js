@@ -536,7 +536,7 @@ app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['adm
 
 
 
-// Schedule to delete marked car parks every minute (for testing)
+// Schedule to delete marked car parks every minute (for testing - will be once a day for production)
 cron.schedule('* * * * *', async () => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
@@ -712,13 +712,16 @@ app.get('/api/carparks', async (req, res) => {
 
 // Fetch bays for a specific car park
 app.get('/api/carparks/:carparkId/bays', async (req, res) => {
+  const { carparkId } = req.params;
+  console.log(`Fetching bays for car park ID: ${carparkId}`);
+  
   try {
-    const { carparkId } = req.params; // Extract carparkId from URL parameters
     const bays = await db.Bay.findAll({
       where: { carpark_id: carparkId }
     });
+    console.log(`Found ${bays.length} bays`);
 
-    if (bays) {
+    if (bays.length > 0) {
       res.json(bays);
     } else {
       res.status(404).send('Bays not found');
