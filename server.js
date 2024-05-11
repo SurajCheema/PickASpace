@@ -14,8 +14,26 @@ const crypto = require('crypto');
 const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
+const { Sequelize } = require('sequelize');
+const config = require('./config/config.json');
 
 require('dotenv').config();
+console.log('Timezone set to:', process.env.TZ); 
+
+// Select the environment based on process.env.NODE_ENV, default to development
+const env = process.env.NODE_ENV || 'development';
+const dbConfig = config[env];
+
+// Create a new Sequelize instance
+const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
+  host: dbConfig.host,
+  dialect: dbConfig.dialect,
+  port: dbConfig.port,
+  logging: false,
+  timezone: '+00:00',  // Set the timezone to UTC
+});
+
+module.exports = sequelize;
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -457,6 +475,144 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
     res.status(500).send('An error occurred while creating the car park.');
   }
 });
+
+
+// Endpoint for user to mark a soft delete for a car park
+app.delete('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
+  const { carparkId } = req.params;
+
+  try {
+    const carPark = await db.CarPark.findOne({
+      where: {
+        carpark_id: carparkId,
+        user_id: req.user.userId,
+        deletedAt: null  // Ensure the car park has not already been marked as deleted
+      }
+    });
+
+    if (!carPark) {
+      console.log(`User ${req.user.userId} attempted to delete a non-existent or unauthorized carpark with ID ${carparkId}`);
+      return res.status(404).json({ error: 'Car park not found or you do not have permission to delete it' });
+    }
+
+    // Mark the carpark as deleted instead of destroying it
+    await carPark.update({ deletedAt: new Date() });
+    console.log(`Carpark with ID ${carparkId} marked as deleted successfully by user ${req.user.userId}`);
+
+    res.json({ message: 'Car park marked as deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting car park:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Admin endpoint for user to mark a soft delete for a car park
+app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { carparkId } = req.params;
+
+  try {
+    const carPark = await db.CarPark.findOne({
+      where: {
+        carpark_id: carparkId,
+        deletedAt: null  // Ensure the car park has not already been marked as deleted
+      }
+    });
+
+    if (!carPark) {
+      console.log(`Admin user ${req.user.userId} attempted to delete a non-existent or already deleted carpark with ID ${carparkId}`);
+      return res.status(404).json({ error: 'Car park not found or already deleted' });
+    }
+
+    // Mark the carpark as deleted instead of destroying it
+    await carPark.update({ deletedAt: new Date() });
+    console.log(`Carpark with ID ${carparkId} marked as deleted successfully by admin user ${req.user.userId}`);
+
+    res.json({ message: 'Car park marked as deleted successfully by admin' });
+  } catch (error) {
+    console.error('Error deleting car park by admin:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+// Schedule to delete marked car parks every minute (for testing)
+cron.schedule('* * * * *', async () => {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
+
+  console.log(`Current time: ${now.toISOString()}`);
+  console.log(`Thirty days ago: ${thirtyDaysAgo.toISOString()}`);
+
+  try {
+    const carParksToDelete = await db.CarPark.findAll({
+      where: {
+        deletedAt: {
+          [Op.ne]: null,          // Ensure deletedAt is not null
+          [Op.lte]: thirtyDaysAgo // Check if the deletedAt time is less than or equal to thirty days ago
+        }
+      },
+      include: [
+        { model: db.Bay, as: 'bays' },
+        { model: db.CarParkLog, as: 'logs' }
+      ]
+    });
+
+    for (const carPark of carParksToDelete) {
+      // Delete associated bays
+      await db.Bay.destroy({ where: { carpark_id: carPark.carpark_id } });
+
+      // Delete associated logs
+      await db.CarParkLog.destroy({ where: { carpark_id: carPark.carpark_id } });
+
+      // Delete the car park
+      await carPark.destroy();
+    }
+
+    console.log(`Automatically deleted ${carParksToDelete.length} car parks that were marked for deletion over thirty days ago.`);
+  } catch (error) {
+    console.error('Failed to automatically delete old car parks:', error);
+  }
+});
+
+
+
+
+// Admin endpoint to force delete a car park immediately
+app.delete('/api/admin/carparks/:carparkId/force', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { carparkId } = req.params;
+
+  try {
+    // Start a transaction
+    const result = await db.sequelize.transaction(async (t) => {
+      // Delete related entities manually if not handled by CASCADE
+      await db.Bay.destroy({ where: { carpark_id: carparkId } }, { transaction: t });
+      await db.CarParkLog.destroy({ where: { carpark_id: carparkId } }, { transaction: t });
+
+      // Attempt to delete the car park
+      const deleted = await db.CarPark.destroy({
+        where: { carpark_id: carparkId },
+        transaction: t
+      });
+
+      return deleted;
+    });
+
+    if (result) {
+      console.log(`Carpark with ID ${carparkId} deleted successfully by admin ${req.user.userId}`);
+      res.json({ message: `Successfully deleted car park with ID ${carparkId}` });
+    } else {
+      res.status(404).json({ error: 'Car park not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting car park:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
 
 // Endpoint to edit a car park
 app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {

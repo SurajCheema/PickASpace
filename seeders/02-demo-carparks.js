@@ -9,8 +9,8 @@ module.exports = {
         addressLine2: 'Ave Park',
         city: 'London',
         postcode: 'SW1A 1AA', // Central London postcode
-        openTime: '08:00',
-        closeTime: '18:00',
+        openTime: new Date('1970-01-01T08:00:00Z'), // Convert to Date object
+        closeTime: new Date('1970-01-01T18:00:00Z'), // Convert to Date object
         accessInstructions: 'Press buzzer',
         pricing: JSON.stringify({
           hourly: 2.5,
@@ -29,8 +29,8 @@ module.exports = {
         addressLine2: 'Block 2',
         city: 'London',
         postcode: 'E1 6AN', // East London postcode
-        openTime: '09:00',
-        closeTime: '17:00',
+        openTime: new Date('1970-01-01T09:00:00Z'), // Convert to Date object
+        closeTime: new Date('1970-01-01T17:00:00Z'), // Convert to Date object
         accessInstructions: 'Call upon arrival',
         pricing: JSON.stringify({
           hourly: 3.0,
@@ -49,8 +49,8 @@ module.exports = {
         addressLine2: '',
         city: 'London',
         postcode: 'N1 0QH', // North London postcode
-        openTime: '07:00',
-        closeTime: '19:00',
+        openTime: new Date('1970-01-01T07:00:00Z'), // Convert to Date object
+        closeTime: new Date('1970-01-01T19:00:00Z'), // Convert to Date object
         accessInstructions: 'Use the side gate',
         pricing: JSON.stringify({
           hourly: 3.5,

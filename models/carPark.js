@@ -8,10 +8,10 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     openTime: {
-      type: DataTypes.TIME
+      type: DataTypes.DATE,
     },
     closeTime: {
-      type: DataTypes.TIME
+      type: DataTypes.DATE,
     },
     accessInstructions: {
       type: DataTypes.TEXT,
@@ -50,13 +50,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(11, 8),
       allowNull: true,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
+    },
   });
 
   // Define associations
   CarPark.associate = (models) => {
     CarPark.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
-    CarPark.hasMany(models.Bay, { foreignKey: 'carpark_id', as: 'bays' });
-    CarPark.hasMany(models.CarParkLog, { foreignKey: 'carpark_id', as: 'logs' });
+    CarPark.hasMany(models.Bay, { foreignKey: 'carpark_id', as: 'bays', onDelete: 'CASCADE' });
+    CarPark.hasMany(models.CarParkLog, { foreignKey: 'carpark_id', as: 'logs', onDelete: 'CASCADE' });
   };
 
   return CarPark;

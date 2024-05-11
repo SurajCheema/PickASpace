@@ -1,6 +1,5 @@
-'use strict';
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('CarParkLogs', {
       log_id: {
         type: Sequelize.INTEGER,
@@ -9,11 +8,12 @@ module.exports = {
       },
       carpark_id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         references: {
           model: 'CarParks',
           key: 'carpark_id'
         },
-        allowNull: false
+        onDelete: 'CASCADE'
       },
       user_id: {
         type: Sequelize.INTEGER,
@@ -29,7 +29,8 @@ module.exports = {
           model: 'Bays',
           key: 'bay_id'
         },
-        allowNull: false
+        allowNull: true,
+        onDelete: 'SET NULL'
       },
       payment_id: {
         type: Sequelize.INTEGER,
@@ -37,7 +38,8 @@ module.exports = {
           model: 'Payments',
           key: 'payment_id'
         },
-        allowNull: true
+        allowNull: true,
+        onDelete: 'CASCADE'
       },
       startTime: {
         type: Sequelize.DATE,
@@ -60,7 +62,7 @@ module.exports = {
       },
       cancelledAt: {
         type: Sequelize.DATE,
-        allowNull: true // This field is null until the booking is cancelled
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
@@ -72,7 +74,7 @@ module.exports = {
       }
     });
   },
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('CarParkLogs');
   }
 };

@@ -35,8 +35,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Bay.associate = (models) => {
-    Bay.belongsTo(models.CarPark, { foreignKey: 'carpark_id', as: 'carPark' });
-    Bay.hasMany(models.CarParkLog, { foreignKey: 'bay_id', as: 'logs' });
+    Bay.belongsTo(models.CarPark, { foreignKey: 'carpark_id', as: 'carPark', onDelete: 'CASCADE' });
+    Bay.hasMany(models.CarParkLog, { foreignKey: 'bay_id', as: 'logs', onDelete: 'CASCADE' });
   };
 
   return Bay;

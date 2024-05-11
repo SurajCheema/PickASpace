@@ -9,10 +9,10 @@ module.exports = {
         autoIncrement: true
       },
       openTime: {
-        type: Sequelize.TIME
+        type: Sequelize.DATE
       },
       closeTime: {
-        type: Sequelize.TIME
+        type: Sequelize.DATE
       },
       accessInstructions: {
         type: Sequelize.TEXT,
@@ -56,6 +56,11 @@ module.exports = {
       longitude: {
         type: Sequelize.DECIMAL(11, 8),
         allowNull: true,
+      },
+      deletedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        defaultValue: null
       },
       createdAt: {
         allowNull: false,
