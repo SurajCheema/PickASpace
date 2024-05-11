@@ -1,6 +1,16 @@
 // Base URL
 const API_BASE_URL = 'http://localhost:3000/api';
 
+// Helper function to get authorization headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+};
+
+
 export const createCarPark = async (carParkData) => {
   // Complete endpoint URL
   const url = `${API_BASE_URL}/create-carpark`;
@@ -217,26 +227,22 @@ export const fetchBookingById = async (log_id) => {
   return data;
 };
 
-//Edit a carpark with new details and bays
+// Update a carpark with new details and bays
 export const updateCarPark = async (carparkId, carParkData) => {
   const url = `${API_BASE_URL}/carparks/${carparkId}`;
   try {
-    const token = localStorage.getItem('token');
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(carParkData),
     });
-
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update car park. Please try again later.');
+      throw new Error(errorData.message || 'Failed to update car park. Please try again later.');
     }
-
-    return await response.json();
+    const updatedData = await response.json();
+    console.log('Car park updated successfully:', updatedData);
+    return updatedData;
   } catch (error) {
     console.error('Error updating car park:', error);
     throw error;
