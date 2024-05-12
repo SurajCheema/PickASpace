@@ -625,14 +625,21 @@ app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 
   try {
     const carPark = await db.CarPark.findOne({
-      where: { carpark_id: carparkId, user_id: req.user.userId },
+      where: { carpark_id: carparkId },
       include: [{ model: db.Bay, as: 'bays' }]
     });
 
     if (!carPark) {
-      console.log(`User ${req.user.userId} attempted to update non-existent or unauthorized carpark with ID ${carparkId}`);
-      return res.status(404).send('Car park not found or you do not have permission to update it');
+      console.log(`Car park with ID ${carparkId} not found`);
+      return res.status(404).send('Car park not found');
     }
+
+    // Check if the user is the owner of the car park or an admin
+    if (carPark.user_id !== req.user.userId && req.user.role !== 'admin') {
+      console.log(`User ${req.user.userId} attempted to update unauthorized carpark with ID ${carparkId}`);
+      return res.status(403).send('You do not have permission to update this car park');
+    }
+
     // Parse openTime and closeTime as Date objects
     const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
     const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
@@ -697,6 +704,28 @@ app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 
 // Get all carparks with optional address filtering
 app.get('/api/carparks', async (req, res) => {
+  console.log("Search Query:", req.query.query); // Debug incoming query
+  const { query } = req.query;
+  try {
+    const whereClause = {
+      [db.Sequelize.Op.or]: [
+        { addressLine1: { [db.Sequelize.Op.iLike]: `%${query}%` } },
+        { addressLine2: { [db.Sequelize.Op.iLike]: `%${query}%` } },
+        { city: { [db.Sequelize.Op.iLike]: `%${query}%` } },
+        { postcode: { [db.Sequelize.Op.iLike]: `%${query}%` } },
+      ],
+    };
+
+    const carParks = await db.CarPark.findAll({ where: whereClause });
+    res.json(carParks);
+  } catch (error) {
+    console.error('Failed to fetch car parks:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Admin endpoint get all carparks for admin with optional address filtering
+app.get('/api/admin/carparks', authenticateToken, verifyRole(['admin']), async (req, res) => {
   console.log("Search Query:", req.query.query); // Debug incoming query
   const { query } = req.query;
   try {

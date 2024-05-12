@@ -18,6 +18,7 @@ import ResetPassword from './views/ResetPassword.vue';
 import StripeOnBoarding from './views/StripeOnBoarding.vue';
 import UserManageCarParks from './views/UserManageCarParks.vue';
 import UserEditCarPark from '@/views/UserEditCarPark.vue';
+import AdminManageCarParks from './views/AdminManageCarParks.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -72,6 +73,14 @@ const routes = [
     component: AdminRefundManagement,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
+
+  {
+    path: '/admin/carparks',
+    name: 'AdminManageCarParks',
+    component: AdminManageCarParks,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+
   {
     path: '/reset-password/:token',
     name: 'ResetPassword',

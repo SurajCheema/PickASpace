@@ -40,6 +40,27 @@ export const createCarPark = async (carParkData) => {
   }
 };
 
+// Fetch all car parks from backend (for admin)
+export const fetchAllCarParks = async (searchParams = '') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/carparks?${searchParams}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch car parks');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching car parks:', error);
+    throw error;
+  }
+};
+
 // Fetch car parks from backend
 export const fetchCarParks = async (searchParams = '') => {
   try {
@@ -242,7 +263,7 @@ export const updateCarPark = async (carparkId, carParkData) => {
 };
 
 // Soft delete a carpark
-export const deleteCarPark = async (carparkId) => {
+export const softDeleteCarPark = async (carparkId) => {
   const url = `${API_BASE_URL}/carparks/${carparkId}`;
   try {
     const response = await fetch(url, {
@@ -255,6 +276,44 @@ export const deleteCarPark = async (carparkId) => {
     return await response.json();
   } catch (error) {
     console.error('Error marking car park for deletion:', error);
+    throw error;
+  }
+};
+
+// Soft delete a carpark by admin
+export const adminSoftDeleteCarPark = async (carparkId) => {
+  const url = `${API_BASE_URL}/admin/carparks/${carparkId}`;
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to mark car park for deletion');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error marking car park for deletion:', error);
+    throw error;
+  }
+};
+
+// Admin force delete a carpark immediately (for admin)
+export const forceDeleteCarPark = async (carparkId) => {
+  const url = `${API_BASE_URL}/admin/carparks/${carparkId}/force`;
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete car park permanently');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting car park permanently:', error);
     throw error;
   }
 };
