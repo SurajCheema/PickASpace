@@ -47,12 +47,12 @@ export default {
 
         async function loadCarParks() {
             const searchParams = new URLSearchParams({ query: state.searchQuery || '' }).toString();
-            try {
-                state.carparks = await fetchAllCarParks(searchParams);
-                state.carparks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            } catch (error) {
-                console.error('Failed to load carparks:', error);
-            }
+            state.carparks = await fetchAllCarParks(searchParams);
+            state.carparks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        function openEditModal(carpark) {
+            router.push({ name: 'AdminEditCarPark', params: { carparkId: carpark.carpark_id } });
         }
 
         async function showDetails(carpark) {
@@ -67,10 +67,6 @@ export default {
                 }
             }
             state.selectedCarPark = carpark;
-        }
-
-        function openEditModal(carpark) {
-            router.push({ name: 'AdminEditCarPark', params: { carparkId: carpark.carpark_id } });
         }
 
         async function localSoftDeleteCarPark(carparkId) {
@@ -115,6 +111,32 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+.carpark-list {
+    display: flex;
+    justify-content: center;
+}
+
+.list-group {
+    max-width: 600px;
+    width: 100%;
+}
+
+.list-group-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}
+
+.list-group-item button {
+    margin-left: 10px;
+}
+</style>
+
 
 <style scoped>
 .carpark-list {

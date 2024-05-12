@@ -134,13 +134,12 @@ export const adminFetchCarParkDetails = async (carparkId) => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    if (!response.ok) {
-      throw new Error('Failed to fetch carpark details');
-    }
-    return await response.json();
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json(); // This will fail if the response is not JSON
+    return data;
   } catch (error) {
-    console.error('Error fetching carpark details:', error);
-    throw error;
+    console.error('Error fetching carpark details:', error.message);
+    throw error; // Re-throw or handle accordingly
   }
 };
 

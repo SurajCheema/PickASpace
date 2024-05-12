@@ -83,7 +83,7 @@ const routes = [
   },
 
   {
-    path: '/admin/edit-carpark',
+    path: '/admin/edit-carpark/:carparkId',
     name: 'AdminEditCarPark',
     component: AdminEditCarPark,
     meta: { requiresAuth: true, requiresAdmin: true }
