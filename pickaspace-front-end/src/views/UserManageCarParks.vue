@@ -26,7 +26,7 @@
 import { reactive, toRefs } from 'vue';
 import { useRouter } from 'vue-router';
 import CarParkDetailsModal from '@/components/CarParkDetailsModal.vue';
-import { fetchCarParks, deleteCarPark as deleteCarParkAPI, fetchCarParkBays } from '@/services/carParkService';
+import { fetchCarParks, softDeleteCarPark as deleteCarParkAPI, fetchCarParkBays } from '@/services/carParkService'; 
 
 export default {
   components: {
@@ -42,24 +42,16 @@ export default {
 
     async function loadCarParks() {
       const searchParams = new URLSearchParams({ query: state.searchQuery || '' }).toString();
-      try {
-        state.carparks = await fetchCarParks(searchParams);
-        state.carparks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      } catch (error) {
-        console.error('Failed to load carparks:', error);
-      }
+      state.carparks = await fetchCarParks(searchParams);
+      state.carparks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     async function showDetails(carpark) {
       console.log(`Showing details for car park ID: ${carpark.carpark_id}`);
       if (!carpark.bays) {
-        try {
-          const bays = await fetchCarParkBays(carpark.carpark_id);
-          console.log(`Fetched ${bays.length} bays for car park ID: ${carpark.carpark_id}`);
-          carpark.bays = bays;
-        } catch (error) {
-          console.error('Failed to fetch bays:', error);
-        }
+        const bays = await fetchCarParkBays(carpark.carpark_id);
+        console.log(`Fetched ${bays.length} bays for car park ID: ${carpark.carpark_id}`);
+        carpark.bays = bays;
       }
       state.selectedCarPark = carpark;
     }
@@ -70,7 +62,7 @@ export default {
 
     async function softDeleteCarPark(carparkId) {
       try {
-        await deleteCarParkAPI(carparkId);
+        await deleteCarParkAPI(carparkId);  
         await loadCarParks();
         alert('Car park marked for deletion successfully.');
       } catch (error) {
@@ -81,7 +73,7 @@ export default {
     function getRemainingDays(deletedAt) {
       const deletionDate = new Date(deletedAt);
       const currentDate = new Date();
-      const thirtyDaysLater = new Date(deletionDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Add 30 days in milliseconds
+      const thirtyDaysLater = new Date(deletionDate.getTime() + 30 * 24 * 60 * 60 * 1000);
       const timeDiff = thirtyDaysLater.getTime() - currentDate.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
       return daysDiff > 0 ? daysDiff : 0;
