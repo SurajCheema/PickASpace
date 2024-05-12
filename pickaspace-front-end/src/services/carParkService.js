@@ -29,15 +29,7 @@ export const createCarPark = async (carParkData) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      if (errorData.error === 'Stripe account not linked. Please complete the Stripe onboarding process.') {
-        throw new Error('Stripe account not linked. Please complete the Stripe onboarding process.');
-      } else if (errorData.error === 'Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.') {
-        throw new Error('Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.');
-      } else if (errorData.error === 'Missing required fields') {
-        throw new Error('Missing required fields. Please fill in all mandatory fields.');
-      } else {
-        throw new Error('Failed to create car park. Please try again later.');
-      }
+      throw new Error(errorData.error || 'Failed to create car park. Please try again later.');
     }
 
     const data = await response.json();

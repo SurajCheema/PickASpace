@@ -97,6 +97,9 @@
           </div>
         </div>
       </div>
+      <div v-if="successMessage" class="alert alert-success text-center mt-4" role="alert">
+        {{ successMessage }}
+      </div>
       <div class="text-center mt-4">
         <button type="submit" class="btn btn-primary">Create Car Park</button>
       </div>
@@ -131,9 +134,11 @@ export default {
           weekly: 25.00,
           monthly: 80.00,
         },
+        bays: [],
       }),
       errorMessages: [],
       successMessage: '',
+      totalBays: 0,
     };
   },
   methods: {
@@ -204,12 +209,8 @@ export default {
         this.resetForm();
       } catch (error) {
         console.error('Error creating car park:', error);
-        if (error.message === 'Stripe account not linked. Please complete the Stripe onboarding process.') {
-          this.errorMessages.push('Stripe account not linked. Please complete the Stripe onboarding process.');
-        } else if (error.message === 'Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.') {
-          this.errorMessages.push('Stripe account is not fully activated. Please complete any required steps in your Stripe dashboard.');
-        } else if (error.message === 'Failed to create car park. Please try again later.') {
-          this.errorMessages.push('Failed to create car park. Please try again later.');
+        if (error.response && error.response.data && error.response.data.error) {
+          this.errorMessages.push(error.response.data.error);
         } else {
           this.errorMessages.push('An error occurred while creating the car park. Please check the console for more details.');
         }

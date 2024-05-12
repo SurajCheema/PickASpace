@@ -18,7 +18,7 @@ const { Sequelize } = require('sequelize');
 const config = require('./config/config.json');
 
 require('dotenv').config();
-console.log('Timezone set to:', process.env.TZ); 
+console.log('Timezone set to:', process.env.TZ);
 
 // Select the environment based on process.env.NODE_ENV, default to development
 const env = process.env.NODE_ENV || 'development';
@@ -416,6 +416,10 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+    // Parse openTime and closeTime as Date objects
+    const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
+    const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
+
   // Construct full address from parts
   const fullAddress = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
 
@@ -444,8 +448,8 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
         addressLine2,
         city,
         postcode,
-        openTime,
-        closeTime,
+        openTime: parsedOpenTime,
+        closeTime: parsedCloseTime,
         accessInstructions,
         pricing,
         latitude: lat,
@@ -472,7 +476,7 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
     res.status(201).json({ message: "Car park created successfully", carparkId: result.carpark_id });
   } catch (error) {
     console.error('Error creating car park:', error);
-    res.status(500).send('An error occurred while creating the car park.');
+    res.status(500).json({ error: 'An error occurred while creating the car park.' });
   }
 });
 
@@ -714,7 +718,7 @@ app.get('/api/carparks', async (req, res) => {
 app.get('/api/carparks/:carparkId/bays', async (req, res) => {
   const { carparkId } = req.params;
   console.log(`Fetching bays for car park ID: ${carparkId}`);
-  
+
   try {
     const bays = await db.Bay.findAll({
       where: { carpark_id: carparkId }
