@@ -123,6 +123,28 @@ export const fetchCarParkDetails = async (carparkId) => {
   }
 };
 
+// Fetch details of a specific carpark by its ID (for admin)
+export const adminFetchCarParkDetails = async (carparkId) => {
+  const url = `${API_BASE_URL}/admin/carparks/${carparkId}`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch carpark details');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching carpark details:', error);
+    throw error;
+  }
+};
+
+
 // Book a bay from a carpark
 export const bookBay = async (bookingData) => {
   const url = `${API_BASE_URL}/book-bay`;
@@ -317,3 +339,26 @@ export const forceDeleteCarPark = async (carparkId) => {
     throw error;
   }
 };
+
+// Update a carpark with new details and bays (for admin)
+export const adminUpdateCarPark = async (carparkId, carParkData) => {
+  const url = `${API_BASE_URL}/admin/carparks/${carparkId}`;
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(carParkData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update car park. Please try again later.');
+    }
+    const updatedData = await response.json();
+    console.log('Car park updated successfully:', updatedData);
+    return updatedData;
+  } catch (error) {
+    console.error('Error updating car park:', error);
+    throw error;
+  }
+};
+

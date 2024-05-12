@@ -638,26 +638,20 @@ app.delete('/api/admin/carparks/:carparkId/force', authenticateToken, verifyRole
 
 
 
-// Endpoint to edit a car park
+// Endpoint to edit a car park (for users)
 app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
   const { carparkId } = req.params;
   const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
 
   try {
     const carPark = await db.CarPark.findOne({
-      where: { carpark_id: carparkId },
+      where: { carpark_id: carparkId, user_id: req.user.userId },
       include: [{ model: db.Bay, as: 'bays' }]
     });
 
     if (!carPark) {
-      console.log(`Car park with ID ${carparkId} not found`);
-      return res.status(404).send('Car park not found');
-    }
-
-    // Check if the user is the owner of the car park or an admin
-    if (carPark.user_id !== req.user.userId && req.user.role !== 'admin') {
-      console.log(`User ${req.user.userId} attempted to update unauthorized carpark with ID ${carparkId}`);
-      return res.status(403).send('You do not have permission to update this car park');
+      console.log(`Car park with ID ${carparkId} not found or user ${req.user.userId} is not authorized`);
+      return res.status(404).send('Car park not found or user is not authorized');
     }
 
     // Parse openTime and closeTime as Date objects
@@ -694,6 +688,84 @@ app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
 
     await carPark.save();
     console.log(`Carpark with ID ${carparkId} updated successfully by user ${req.user.userId}`);
+
+    // Delete bays and associated logs
+    const bayIds = carPark.bays.map(bay => bay.bay_id);
+    await db.CarParkLog.destroy({ where: { bay_id: bayIds } });
+    await db.Bay.destroy({ where: { carpark_id: carparkId } });
+    console.log(`Bays and associated logs for carpark with ID ${carparkId} deleted successfully`);
+
+    // Create new bays
+    const bayPromises = bays.map(bay =>
+      db.Bay.create({
+        carpark_id: carparkId,
+        bay_number: bay.bay_number,
+        vehicleSize: bay.vehicleSize,
+        hasEVCharging: bay.hasEVCharging,
+        disabled: bay.disabled,
+        description: bay.description,
+      })
+    );
+    await Promise.all(bayPromises);
+    console.log(`New bays created for carpark with ID ${carparkId}`);
+
+    res.json({ message: 'Car park updated successfully' });
+  } catch (error) {
+    console.error('Error updating car park:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Endpoint to edit a car park (for admins)
+app.put('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { carparkId } = req.params;
+  const { addressLine1, addressLine2, city, postcode, openTime, closeTime, accessInstructions, pricing, bays } = req.body;
+
+  try {
+    const carPark = await db.CarPark.findOne({
+      where: { carpark_id: carparkId },
+      include: [{ model: db.Bay, as: 'bays' }]
+    });
+
+    if (!carPark) {
+      console.log(`Car park with ID ${carparkId} not found`);
+      return res.status(404).send('Car park not found');
+    }
+
+    // Parse openTime and closeTime as Date objects
+    const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
+    const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
+
+    // Update the car park details
+    carPark.addressLine1 = addressLine1;
+    carPark.addressLine2 = addressLine2;
+    carPark.city = city;
+    carPark.postcode = postcode;
+    carPark.openTime = parsedOpenTime;
+    carPark.closeTime = parsedCloseTime;
+    carPark.accessInstructions = accessInstructions;
+    carPark.pricing = pricing;
+
+    // Geocode the updated address
+    const fullAddress = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
+    const response = await client.geocode({
+      params: {
+        address: fullAddress,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    });
+
+    if (response.data.status === 'OK') {
+      const { lat, lng } = response.data.results[0].geometry.location;
+      carPark.latitude = lat;
+      carPark.longitude = lng;
+      console.log(`Geocoding successful for carpark with ID ${carparkId}. Latitude: ${lat}, Longitude: ${lng}`);
+    } else {
+      console.log(`Geocoding failed for carpark with ID ${carparkId}. Status: ${response.data.status}`);
+    }
+
+    await carPark.save();
+    console.log(`Carpark with ID ${carparkId} updated successfully by admin ${req.user.userId}`);
 
     // Delete bays and associated logs
     const bayIds = carPark.bays.map(bay => bay.bay_id);

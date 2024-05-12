@@ -19,6 +19,7 @@ import StripeOnBoarding from './views/StripeOnBoarding.vue';
 import UserManageCarParks from './views/UserManageCarParks.vue';
 import UserEditCarPark from '@/views/UserEditCarPark.vue';
 import AdminManageCarParks from './views/AdminManageCarParks.vue';
+import AdminEditCarPark from './views/AdminEditCarPark.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -78,6 +79,13 @@ const routes = [
     path: '/admin/carparks',
     name: 'AdminManageCarParks',
     component: AdminManageCarParks,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+
+  {
+    path: '/admin/edit-carpark',
+    name: 'AdminEditCarPark',
+    component: AdminEditCarPark,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
 

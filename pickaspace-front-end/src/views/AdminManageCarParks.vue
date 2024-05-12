@@ -70,7 +70,7 @@ export default {
         }
 
         function openEditModal(carpark) {
-            router.push({ name: 'EditCarPark', params: { carparkId: carpark.carpark_id } });
+            router.push({ name: 'AdminEditCarPark', params: { carparkId: carpark.carpark_id } });
         }
 
         async function localSoftDeleteCarPark(carparkId) {
