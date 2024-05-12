@@ -1,0 +1,12 @@
+.blue{
+    color:blue;
+}
+
+.auth-container {
+    max-width: 400px;
+    margin: 1em auto; /* Centered horizontally with margin top and bottom */
+    padding: 2em;
+    background-color: #f4f4f4; /* Light gray background */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}

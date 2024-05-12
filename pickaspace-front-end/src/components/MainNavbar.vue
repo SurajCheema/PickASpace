@@ -1,31 +1,36 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <router-link id="brand-name" class="navbar-brand" to="/"><span class="blue">PickASpace</span></router-link>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul id="menu-options" class="navbar-nav ms-auto">
-        <li class="nav-item" v-if="isLoggedIn">
-          <router-link class="nav-link" to="/create-carpark">Rent out your space</router-link>
-        </li>
-        <li class="nav-item" v-if="isLoggedIn">
-          <router-link class="nav-link" to="/carparks">Search Carpark</router-link>
-        </li>
-        <li class="nav-item" v-if="isLoggedIn">
-          <router-link class="nav-link" to="/user/dashboard">Profile</router-link>
-        </li>
-        <li class="nav-item" v-if="!isLoggedIn">
-          <router-link class="nav-link" to="/login">Login</router-link>
-        </li>
-        <li class="nav-item" v-if="!isLoggedIn">
-          <router-link class="nav-link" to="/register">Register</router-link>
-        </li>
-        <li class="nav-item" v-if="isLoggedIn">
-          <a class="nav-link" href="#" @click.prevent="logout">Logout</a>
-        </li>
-      </ul>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <!-- Content Container centered and taking up 60% width -->
+      <div class="content-container">
+        <router-link id="brand-name" class="navbar-brand" to="/"><span class="blue">PickASpace</span></router-link>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul id="menu-options" class="navbar-nav ms-auto">
+            <li class="nav-item" v-if="isLoggedIn">
+              <router-link class="nav-link" to="/create-carpark">Rent out your space</router-link>
+            </li>
+            <li class="nav-item" v-if="isLoggedIn">
+              <router-link class="nav-link" to="/carparks">Search Carpark</router-link>
+            </li>
+            <li class="nav-item" v-if="isLoggedIn">
+              <router-link class="nav-link" to="/user/dashboard">Profile</router-link>
+            </li>
+            <li class="nav-item" v-if="!isLoggedIn">
+              <router-link class="nav-link" to="/login">Login</router-link>
+            </li>
+            <li class="nav-item" v-if="!isLoggedIn">
+              <router-link class="nav-link" to="/register">Register</router-link>
+            </li>
+            <li class="nav-item" v-if="isLoggedIn">
+              <a class="nav-link" href="#" @click.prevent="logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </nav>
 </template>
@@ -63,10 +68,6 @@ export default {
 </script>
 
 <style>
-.blue{
-  color:blue;
-}
-
 #brand-name {
   padding-left: 1.5em;
 }
@@ -74,4 +75,29 @@ export default {
 #menu-options {
   padding-right: 1.5em;
 }
+
+.navbar {
+  background-color: #6495ed; /* Darker shade of blue */
+  width: 100%; /* Navbar takes full width */
+}
+
+.container-fluid {
+  width: 100%; /* Ensure the container-fluid takes full width */
+}
+
+.content-container {
+  width: 60%; /* Limit content width to 60% */
+  margin: 0 auto; /* Center the content horizontally */
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+@media (max-width: 992px) {
+  .content-container {
+    width: 100%; /* Full width on smaller screens */
+    flex-direction: column; /* Stack items vertically on smaller screens */
+  }
+}
 </style>
+

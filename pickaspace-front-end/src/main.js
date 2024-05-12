@@ -5,6 +5,8 @@ import store from './store';
 import { createBootstrap } from 'bootstrap-vue-next';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
+import './assets/css/global.css';
+
 
 const app = createApp(App);
 

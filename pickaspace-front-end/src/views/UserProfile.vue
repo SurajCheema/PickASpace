@@ -1,6 +1,6 @@
 <template>
   <div class="container mt-5">
-    <h1 class="mb-4">Update Profile</h1>
+    <h1 class="mb-4"><span class="blue">Update</span> Profile</h1>
     <form @submit.prevent="submitForm" class="needs-validation" novalidate>
       <div class="mb-3">
         <label for="carRegistration" class="form-label">Car Registration:</label>
@@ -188,12 +188,71 @@ export default {
 </script>
 
 <style scoped>
+.container {
+  max-width: 800px; /* Larger container on large screens */
+  margin: 20px auto; /* Centered with top and bottom margin */
+  padding: 20px;
+  background-color: #f4f4f4; /* Light gray background consistent with other forms */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  border-radius: 8px; /* Rounded corners */
+  text-align: center;
+}
+
+.mb-3 {
+  margin-bottom: 1rem; /* Consistent spacing */
+}
+
+.form-label {
+  display: block; /* Ensures labels are properly aligned */
+  margin-bottom: .5rem;
+}
+
+.form-control {
+  width: 100%; /* Full width inputs within container */
+  padding: .375rem .75rem; /* Padding for better text visibility */
+  border: 1px solid #ccc;
+  border-radius: .25rem; /* Rounded corners for inputs */
+}
+
+button {
+  width: 100%; /* Full width button */
+  background-color: #4CAF50; /* Consistent button color */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: .25rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049; /* Darken button on hover for better user feedback */
+}
+
 .invalid-feedback {
-  display: block;
+  color: red; /* Error messages in red */
+  display: block; /* Ensure visibility */
 }
 
 .text-success,
 .text-danger {
-  font-size: 1rem;
+  font-size: 1rem; /* Text size for messages */
+}
+
+@media (min-width: 992px) {
+  .container {
+    width: 50%; /* 50% width on large screens */
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .container {
+    width: 60%; /* 60% width on medium screens */
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    width: 100%; /* Full width on small screens */
+  }
 }
 </style>

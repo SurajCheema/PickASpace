@@ -63,10 +63,6 @@ export default {
 </script>
 
 <style scoped>
-.blue{
-  color:blue;
-}
-
 .auth-container {
   max-width: 400px;
   margin: 1em auto; /* Centered horizontally with margin top and bottom */
