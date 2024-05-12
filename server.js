@@ -540,7 +540,7 @@ app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['adm
 
 
 
-// Schedule to delete marked car parks every minute (for testing - will be once a day for production)
+// Schedule to delete marked car parks and users every minute (for testing - will be once a day for production.)
 cron.schedule('* * * * *', async () => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
@@ -576,6 +576,26 @@ cron.schedule('* * * * *', async () => {
     console.log(`Automatically deleted ${carParksToDelete.length} car parks that were marked for deletion over thirty days ago.`);
   } catch (error) {
     console.error('Failed to automatically delete old car parks:', error);
+  }
+
+  try {
+    const usersToDelete = await db.User.findAll({
+      where: {
+        deletedAt: {
+          [Op.ne]: null,          // Ensure deletedAt is not null
+          [Op.lte]: thirtyDaysAgo // Check if the deletedAt time is less than or equal to thirty days ago
+        }
+      }
+    });
+
+    for (const user of usersToDelete) {
+      // Delete the user
+      await user.destroy();
+    }
+
+    console.log(`Automatically deleted ${usersToDelete.length} users that were marked for deletion over thirty days ago.`);
+  } catch (error) {
+    console.error('Failed to automatically delete old users:', error);
   }
 });
 
@@ -1007,7 +1027,7 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     email,
     DOB,
     car_registration,
-    blueBadge // include the blueBadge in updates
+    blueBadge
   };
 
   console.log('Attempting to update user:', userId, updatedFields);
@@ -1036,6 +1056,55 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
   }
 });
 
+// Admin endpoint to update any user's details
+app.put('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
+  const { phone, address, first_name, last_name, email, DOB, car_registration, blueBadge } = req.body;
+
+  // Basic validation
+  if (!first_name || !last_name || !email || !phone || !DOB) {
+    return res.status(400).json({ message: 'All fields except password must be filled.' });
+  }
+
+  const updatedFields = {
+    phone,
+    address,
+    first_name,
+    last_name,
+    email,
+    DOB,
+    car_registration,
+    blueBadge
+  };
+
+  console.log('Admin attempting to update user:', userId, updatedFields);
+
+  try {
+    // Start a transaction
+    const transaction = await db.sequelize.transaction();
+
+    // Update user with validation and transaction control
+    const result = await db.User.update(updatedFields, {
+      where: { user_id: userId },
+      transaction
+    });
+
+    await transaction.commit(); // Commit the transaction if all goes well
+
+    if (result[0] === 1) { // Check if the update was successful
+      res.json({ message: 'User updated successfully by admin' });
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    if (transaction) await transaction.rollback(); // Rollback transaction on error
+    console.error('Failed to update user by admin:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+
+
 // Endpoint to fetch user details
 app.get('/user-details', authenticateToken, async (req, res) => {
   try {
@@ -1052,6 +1121,82 @@ app.get('/user-details', authenticateToken, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+// Admin endpoint to fetch all users
+app.get('/api/admin/users', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  try {
+    const users = await db.User.findAll();
+    res.json(users);
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Admin endpoint to fetch a specific user by ID
+app.get('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await db.User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Failed to fetch user details:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Admin endpoint to soft delete a user
+app.delete('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await db.User.findOne({
+      where: {
+        user_id: userId,
+        deletedAt: null  // Ensure the user has not already been marked as deleted
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found or already deleted' });
+    }
+
+    // Mark the user as deleted instead of destroying it
+    await user.update({ deletedAt: new Date() });
+
+    res.json({ message: 'User marked as deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Admin endpoint to force delete a user immediately
+app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const deleted = await db.User.destroy({
+      where: { user_id: userId }
+    });
+
+    if (deleted) {
+      res.json({ message: `Successfully deleted user with ID ${userId}` });
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 // Fetch booking logs for a user
 app.get('/api/user/bookings', authenticateToken, async (req, res) => {

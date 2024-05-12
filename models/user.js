@@ -28,7 +28,12 @@ module.exports = (sequelize, DataTypes) => {
     stripe_account_id: {
       type: DataTypes.STRING,
       allowNull: true  // It's possible not every user will have a Stripe account
-    }
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
+    },
   }, {
     // Insert additional settings here.
   });
