@@ -416,9 +416,9 @@ app.post('/api/create-carpark', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-    // Parse openTime and closeTime as Date objects
-    const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
-    const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
+  // Parse openTime and closeTime as Date objects
+  const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
+  const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
 
   // Construct full address from parts
   const fullAddress = `${addressLine1}, ${addressLine2 || ''}, ${city}, ${postcode}`;
@@ -540,44 +540,44 @@ app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['adm
 
 
 
-// // Schedule to delete marked car parks every minute (for testing - will be once a day for production)
-// cron.schedule('* * * * *', async () => {
-//   const now = new Date();
-//   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
+// Schedule to delete marked car parks every minute (for testing - will be once a day for production)
+cron.schedule('* * * * *', async () => {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
 
-//   console.log(`Current time: ${now.toISOString()}`);
-//   console.log(`Thirty days ago: ${thirtyDaysAgo.toISOString()}`);
+  console.log(`Current time: ${now.toISOString()}`);
+  console.log(`Thirty days ago: ${thirtyDaysAgo.toISOString()}`);
 
-//   try {
-//     const carParksToDelete = await db.CarPark.findAll({
-//       where: {
-//         deletedAt: {
-//           [Op.ne]: null,          // Ensure deletedAt is not null
-//           [Op.lte]: thirtyDaysAgo // Check if the deletedAt time is less than or equal to thirty days ago
-//         }
-//       },
-//       include: [
-//         { model: db.Bay, as: 'bays' },
-//         { model: db.CarParkLog, as: 'logs' }
-//       ]
-//     });
+  try {
+    const carParksToDelete = await db.CarPark.findAll({
+      where: {
+        deletedAt: {
+          [Op.ne]: null,          // Ensure deletedAt is not null
+          [Op.lte]: thirtyDaysAgo // Check if the deletedAt time is less than or equal to thirty days ago
+        }
+      },
+      include: [
+        { model: db.Bay, as: 'bays' },
+        { model: db.CarParkLog, as: 'logs' }
+      ]
+    });
 
-//     for (const carPark of carParksToDelete) {
-//       // Delete associated bays
-//       await db.Bay.destroy({ where: { carpark_id: carPark.carpark_id } });
+    for (const carPark of carParksToDelete) {
+      // Delete associated bays
+      await db.Bay.destroy({ where: { carpark_id: carPark.carpark_id } });
 
-//       // Delete associated logs
-//       await db.CarParkLog.destroy({ where: { carpark_id: carPark.carpark_id } });
+      // Delete associated logs
+      await db.CarParkLog.destroy({ where: { carpark_id: carPark.carpark_id } });
 
-//       // Delete the car park
-//       await carPark.destroy();
-//     }
+      // Delete the car park
+      await carPark.destroy();
+    }
 
-//     console.log(`Automatically deleted ${carParksToDelete.length} car parks that were marked for deletion over thirty days ago.`);
-//   } catch (error) {
-//     console.error('Failed to automatically delete old car parks:', error);
-//   }
-// });
+    console.log(`Automatically deleted ${carParksToDelete.length} car parks that were marked for deletion over thirty days ago.`);
+  } catch (error) {
+    console.error('Failed to automatically delete old car parks:', error);
+  }
+});
 
 
 
@@ -633,14 +633,17 @@ app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
       console.log(`User ${req.user.userId} attempted to update non-existent or unauthorized carpark with ID ${carparkId}`);
       return res.status(404).send('Car park not found or you do not have permission to update it');
     }
+    // Parse openTime and closeTime as Date objects
+    const parsedOpenTime = new Date(`2000-01-01T${openTime}:00Z`);
+    const parsedCloseTime = new Date(`2000-01-01T${closeTime}:00Z`);
 
     // Update the car park details
     carPark.addressLine1 = addressLine1;
     carPark.addressLine2 = addressLine2;
     carPark.city = city;
     carPark.postcode = postcode;
-    carPark.openTime = openTime;
-    carPark.closeTime = closeTime;
+    carPark.openTime = parsedOpenTime;
+    carPark.closeTime = parsedCloseTime;
     carPark.accessInstructions = accessInstructions;
     carPark.pricing = pricing;
 

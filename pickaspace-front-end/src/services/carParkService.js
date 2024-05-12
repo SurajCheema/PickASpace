@@ -240,3 +240,21 @@ export const updateCarPark = async (carparkId, carParkData) => {
     throw error;
   }
 };
+
+// Soft delete a carpark
+export const deleteCarPark = async (carparkId) => {
+  const url = `${API_BASE_URL}/carparks/${carparkId}`;
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to mark car park for deletion');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error marking car park for deletion:', error);
+    throw error;
+  }
+};
