@@ -33,11 +33,11 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Car Park Details</h5>
-            <button type="button" class="close" @click="closeModal" aria-label="Close">
+            <button type="button" class="close" @click="closeModal" aria-label="Close" style="position: absolute; right: 20px; top: 20px;">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="modal-body blue-background">
+          <div class="modal-body">
             <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{
         selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
             <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
@@ -49,18 +49,22 @@
               }}</p>
             <p><strong>Largest Vehicle Size:</strong> {{ selectedCarPark.largestVehicleSize }}</p>
             <!-- Pricing details for car park -->
-            <div class="text-center">
+            <div class="pricing-container">
               <h6><strong>Pricing:</strong></h6>
-              <ul class="list-unstyled">
-                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.hourly"><strong>Hourly:</strong> £{{
-        selectedCarPark.pricing.hourly.toFixed(2) }}</li>
-                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.daily"><strong>Daily:</strong> £{{
-        selectedCarPark.pricing.daily.toFixed(2) }}</li>
-                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.weekly"><strong>Weekly:</strong> £{{
-        selectedCarPark.pricing.weekly.toFixed(2) }}</li>
-                <li v-if="selectedCarPark.pricing && selectedCarPark.pricing.monthly"><strong>Monthly:</strong> £{{
-        selectedCarPark.pricing.monthly.toFixed(2) }}</li>
-              </ul>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="pricing-card">
+                  <p><strong>Hourly:</strong> £{{ selectedCarPark.pricing.hourly.toFixed(2) }}</p>
+                </div>
+                <div class="pricing-card">
+                  <p><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2) }}</p>
+                </div>
+                <div class="pricing-card">
+                  <p><strong>Weekly:</strong> £{{ selectedCarPark.pricing.weekly.toFixed(2) }}</p>
+                </div>
+                <div class="pricing-card">
+                  <p><strong>Monthly:</strong> £{{ selectedCarPark.pricing.monthly.toFixed(2) }}</p>
+                </div>
+              </div>
             </div>
             <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
           </div>
@@ -215,13 +219,93 @@ export default {
 </script>
 
 <style scoped>
-.blue{
-  color:blue;
+.card {
+  background-color: white; /* Default background color */
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+  cursor: pointer;
 }
-.blue-background{
-  background-color:deepskyblue;
+
+.hover-highlight {
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
 }
+
 .hover-highlight:hover {
-  background-color: #f8f9fa;
+  background-color: deepskyblue; /* Blue background on hover */
+  transform: scale(1.05); /* Scale effect on hover */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow for 3D effect */
 }
+
+.modal-dialog {
+  max-width: 600px; /* Adjusts the modal width */
+  margin: 1.75rem auto;
+}
+
+.modal-content {
+  position: relative; /* Needed for absolute positioning of the close button */
+  border-radius: 8px; /* Rounded corners */
+  overflow: hidden; /* Ensures the children do not overflow the rounded corners */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15); /* Adds shadow for depth */
+  border: none; /* Removes default border */
+}
+
+.modal-header {
+  background-color: white;
+  padding: 20px;
+  border-bottom: 1px solid #dee2e6; /* Adds a subtle line to separate the header */
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.5rem; /* Adjusts title size */
+  color: #333; /* Color for the text */
+}
+
+.pricing-container {
+  padding: 20px;
+  background-color: #ffffff; /* Bright background for pricing section */
+  border-radius: 8px; /* Rounded corners for the container */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+  margin-top: 20px; /* Spacing from the previous content */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns */
+  gap: 20px; /* Spacing between grid items */
+}
+
+.pricing-card {
+  background-color: #f8f9fa; /* Slightly different background for cards */
+  padding: 15px;
+  border-radius: 6px; /* Soft rounded corners for cards */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Lighter shadow for each card */
+  background: linear-gradient(to right, #ffffff, #b3d4fc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  border: none;
+  background: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.close:hover {
+  color: #f00;
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 20px;
+  background: linear-gradient(to right, #ffffff, #b3d4fc);
+}
+
+
 </style>

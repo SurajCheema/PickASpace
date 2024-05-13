@@ -1,10 +1,10 @@
 <template>
   <div class="user-booking-logs">
-    <div class="text-center mb-4">
-      <button class="btn btn-primary mx-2" @click="setActive('current')">Current</button>
-      <button class="btn btn-primary mx-2" @click="setActive('upcoming')">Upcoming</button>
-      <button class="btn btn-primary mx-2" @click="setActive('past')">Past</button>
-      <button class="btn btn-primary mx-2" @click="setActive('cancelled')">Cancelled</button>
+    <div class="text-center mb-4 button-group">
+      <button class="btn mx-2" @click="setActive('current')">Current</button>
+      <button class="btn mx-2" @click="setActive('upcoming')">Upcoming</button>
+      <button class="btn mx-2" @click="setActive('past')">Past</button>
+      <button class="btn mx-2" @click="setActive('cancelled')">Cancelled</button>
     </div>
     <div>
       <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal"
@@ -150,9 +150,56 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .user-booking-logs {
-  max-width: 800px;
-  margin: auto;
+  display: block; /* Ensures the div behaves as a block-level element */
+  width: 100%; /* Full width for small screens */
+  padding: 20px;
+  margin: auto; /* Centers the div horizontally */
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #f8f9fa;
+}
+
+@media (min-width: 768px) { /* Medium screens and up */
+  .user-booking-logs {
+    width: 70%; /* 70% width for medium screens */
+  }
+}
+
+@media (min-width: 992px) { /* Large screens and up */
+  .user-booking-logs {
+    width: 60%; /* 60% width for large screens */
+  }
+}
+
+.booking-list {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* Single column layout by default */
+  gap: 20px; /* Spacing between grid items */
+}
+
+@media (min-width: 992px) { /* Large screens and up */
+  .booking-list {
+    grid-template-columns: repeat(2, 1fr); /* Two columns for large screens */
+  }
+}
+
+.button-group button {
+  background-color: #ffffff; /* White background */
+  color: #333; /* Dark text for better contrast */
+  border: 1px solid #cccccc; /* Slight border */
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.button-group button:hover {
+  background-color: #007bff; /* Bootstrap primary color on hover */
+  color: #ffffff;
+  transform: translateY(-2px); /* Slight raise effect */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 </style>
+
