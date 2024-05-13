@@ -59,6 +59,7 @@ export const updateUser = async (userData) => {
   return response.json();
 };
 
+// Fetch user details
 export const getUserDetails = async () => {
   const response = await fetch(`${API_URL}/user-details`, {
     method: 'GET',
@@ -71,7 +72,7 @@ export const getUserDetails = async () => {
     throw new Error('Failed to fetch user details');
   }
   const data = await response.json();
-  console.log("Fetched user details:", data); // Add this line to log fetched details
+  console.log("Fetched user details:", data); 
   return data;
 };
 

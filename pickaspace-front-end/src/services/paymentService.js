@@ -283,10 +283,10 @@ export const fetchStripeDashboardLink = async () => {
 };
 
 // Fetch transactions for a Stripe account
-export const fetchTransactions = async (stripeAccountId) => {
+export const fetchTransactions = async (stripe_account_id) => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`${API_BASE_URL}/user/transactions/${stripeAccountId}`, {
+    const response = await fetch(`${API_BASE_URL}/user/transactions/${stripe_account_id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

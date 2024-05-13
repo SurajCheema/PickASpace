@@ -1838,12 +1838,14 @@ app.get('/api/stripe/balance', authenticateToken, async (req, res) => {
   }
 });
 
+// Endpoint to fetch detailed transactions for a Stripe account
 app.get('/api/user/transactions/:accountId', authenticateToken, async (req, res) => {
-  const { accountId } = req.params; // Assuming accountId is passed as a parameter
+  const { accountId } = req.params;
   try {
     const transactions = await stripe.balanceTransactions.list({
-      limit: 100, // Adjust based on needs, implement pagination if required
-      stripeAccount: accountId, // This ensures the transactions are fetched for the connected account
+      limit: 100,
+      expand: ['data.fee_details'], // Expands the fee details in the response
+      stripeAccount: accountId,
     });
     res.json(transactions);
   } catch (error) {
