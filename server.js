@@ -382,7 +382,6 @@ app.post('/update-password', async (req, res) => {
   }
 });
 
-// Function to check Stripe account status
 app.get('/api/stripe/account-status/:accountId', async (req, res) => {
   const { accountId } = req.params;
   try {
