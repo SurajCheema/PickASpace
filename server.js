@@ -283,7 +283,6 @@ app.post('/api/create-customer', async (req, res) => {
 // Login user
 app.post('/login', async (req, res) => {
   try {
-
     const { email, password } = req.body;
     const user = await db.User.findOne({ where: { email } });
 
@@ -294,14 +293,15 @@ app.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (match) {
       // Create a token if the password matches
-      const token = jwt.sign({ userId: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ userId: user.user_id, role: user.role, stripeAccountId: user.stripe_account_id }, JWT_SECRET, { expiresIn: '1h' });
       res.json({ message: 'Login successful', token }); // Send the token to the client
     } else {
       // Password does not match
       return res.status(401).send('Authentication failed');
     }
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error('Error during login:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -387,7 +387,11 @@ app.get('/api/stripe/account-status/:accountId', async (req, res) => {
   const { accountId } = req.params;
   try {
     const stripeAccount = await stripe.accounts.retrieve(accountId);
-    res.json({ status: stripeAccount.details_submitted ? 'submitted' : 'pending' });
+    res.json({
+      details_submitted: stripeAccount.details_submitted,
+      charges_enabled: stripeAccount.charges_enabled,
+      payouts_enabled: stripeAccount.payouts_enabled
+    });
   } catch (error) {
     console.error('Failed to retrieve Stripe account information:', error);
     if (error.code === 'account_invalid') {

@@ -228,7 +228,11 @@ export const verifyStripeOnboarding = async (stripeAccountId) => {
     }
 
     const accountDetails = await response.json();
-    return accountDetails.details_submitted;
+    return (
+      accountDetails.details_submitted &&
+      accountDetails.charges_enabled &&
+      accountDetails.payouts_enabled
+    );
   } catch (error) {
     console.error('Error fetching Stripe account status:', error);
     throw error;

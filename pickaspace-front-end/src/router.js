@@ -20,6 +20,7 @@ import UserManageCarParks from './views/UserManageCarParks.vue';
 import UserEditCarPark from '@/views/UserEditCarPark.vue';
 import AdminManageCarParks from './views/AdminManageCarParks.vue';
 import AdminEditCarPark from './views/AdminEditCarPark.vue';
+import { verifyStripeOnboarding } from '@/services/paymentService';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -30,11 +31,12 @@ const routes = [
     component: CarParkDashboard,
     meta: { requiresAuth: true } // Requires authentication
   },
+
   {
     path: '/create-carpark',
     name: 'UserCreateCarPark',
     component: UserCreateCarPark,
-    meta: { requiresAuth: true } // Requires authentication
+    meta: { requiresAuth: true, requiresOnboarding: true } // Requires authentication and Stripe onboarding
   },
   {
     path: '/booking/:carparkId',
@@ -54,13 +56,18 @@ const routes = [
   { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
   { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } },
   { path: '/user/requestpasswordreset', name: 'RequestPasswordReset', component: RequestPasswordReset, meta: { requiresAuth: false } },
-  { path: '/user/carparks', name: 'UserManageCarParks', component: UserManageCarParks, meta: { requiresAuth: true } },
+  {
+    path: '/user/carparks',
+    name: 'UserManageCarParks',
+    component: UserManageCarParks,
+    meta: { requiresAuth: true, requiresOnboarding: true } // Requires authentication and Stripe onboarding
+  },
   {
     path: '/edit-carpark/:carparkId',
     name: 'EditCarPark',
     component: UserEditCarPark,
   },
-  
+
   // Admin routes
   {
     path: '/admin/dashboard',
@@ -111,43 +118,54 @@ const router = createRouter({
 });
 
 // Global beforeEach guard to check for routes requiring authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
 
-  console.log('Token:', token); // Log the token
+  if (!token) {
+    // No token found and route requires authentication
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+      console.log('No token found, redirecting to login');
+      return next({ name: 'UserLogin' });
+    }
+    // Proceed if no authentication is required
+    return next();
+  }
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!token) {
-      console.log('No token found, redirecting to login'); // Log the redirection
-      next({ name: 'UserLogin' });
-    } else {
-      try {
-        const decoded = jwtDecode(token);
-        console.log('Decoded token:', decoded); // Log the decoded token
+  try {
+    const decoded = jwtDecode(token);
+    console.log('Decoded token:', decoded);
 
-        const currentTime = Date.now() / 1000; // Convert current time to seconds
+    // Check if token has expired
+    if (Date.now() / 1000 > decoded.exp) {
+      console.log('Token has expired, redirecting to login');
+      localStorage.removeItem('token');
+      return next({ name: 'UserLogin' });
+    }
 
-        if (decoded.exp < currentTime) {
-          console.log('Token has expired, redirecting to login'); // Log the expiration
-          localStorage.removeItem('token');
-          next({ name: 'UserLogin' });
-        } else if (to.matched.some(record => record.meta.requiresAdmin) && decoded.role !== 'admin') {
-          console.log('Non-admin user, redirecting to home'); // Log the role mismatch
-          next({ name: 'Home' }); // Redirect non-admin users to home
-        } else {
-          console.log('Token valid, proceeding to route'); // Log the successful authorization
-          next(); // Proceed if role matches
-        }
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        localStorage.removeItem('token');
-        next({ name: 'UserLogin' });
+    // Handle routes that require Stripe onboarding
+    if (to.matched.some(record => record.meta.requiresOnboarding)) {
+      const userStripeAccountId = decoded.stripeAccountId;
+      if (!userStripeAccountId) {
+        console.log('Stripe account ID not found in token, redirecting to onboarding');
+        return next({ name: 'StripeOnBoarding' });
+      }
+      
+      const isOnboarded = await verifyStripeOnboarding(userStripeAccountId);
+      if (!isOnboarded) {
+        console.log('Stripe onboarding incomplete, redirecting to onboarding page');
+        return next({ name: 'StripeOnBoarding' });
       }
     }
-  } else {
-    console.log('No authentication required, proceeding to route'); // Log the route without authentication
-    next(); // Proceed if no auth required
+
+    // Proceed to the route if all checks pass
+    console.log('All checks passed, proceeding to route');
+    next();
+  } catch (error) {
+    console.error("Error with token or during onboarding check:", error);
+    localStorage.removeItem('token');
+    next({ name: 'UserLogin' });
   }
 });
+
 
 export default router;
