@@ -1771,11 +1771,17 @@ app.get('/api/refunds/payment/:paymentId', authenticateToken, async (req, res) =
   }
 });
 
-
-
-// Serve Vue application index.html for all non-API routes
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'pickaspace-front-end', 'public', 'index.html'));
+// Endpoint to create Stripe dashboard link
+app.get('/api/stripe/dashboard-link', authenticateToken, async (req, res) => {
+  try {
+    console.log('Creating Stripe dashboard link for user:', req.user.userId);
+    const loginLink = await stripe.accounts.createLoginLink(req.user.stripeAccountId);
+    console.log('Stripe dashboard link created successfully:', loginLink.url);
+    res.json({ url: loginLink.url });
+  } catch (error) {
+    console.error('Failed to create Stripe dashboard link:', error);
+    res.status(500).send('Failed to create Stripe dashboard link');
+  }
 });
 
 app.post('/api/check-new-password', async (req, res) => {
@@ -1804,5 +1810,44 @@ app.post('/api/check-new-password', async (req, res) => {
   } catch (error) {
     console.error('Error checking new password:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint to get Stripe balance
+app.get('/api/stripe/balance', authenticateToken, async (req, res) => {
+  if (!req.user.stripeAccountId) {
+    console.error('No Stripe account ID found for user:', req.user.userId);
+    return res.status(400).json({ error: 'No Stripe account ID found' });
+  }
+
+  try {
+    const balance = await stripe.balance.retrieve({
+      stripeAccount: req.user.stripeAccountId 
+    });
+
+    console.log('Stripe balance retrieved:', balance);
+
+    // Optionally calculate total earnings
+    const totalEarnings = balance.available.reduce((acc, curr) => acc + curr.amount, 0) +
+                          balance.pending.reduce((acc, curr) => acc + curr.amount, 0);
+
+    res.json({ available: balance.available, pending: balance.pending, totalEarnings });
+  } catch (error) {
+    console.error('Failed to retrieve balance:', error);
+    res.status(500).send('Failed to retrieve Stripe balance');
+  }
+});
+
+app.get('/api/user/transactions/:accountId', authenticateToken, async (req, res) => {
+  const { accountId } = req.params; // Assuming accountId is passed as a parameter
+  try {
+    const transactions = await stripe.balanceTransactions.list({
+      limit: 100, // Adjust based on needs, implement pagination if required
+      stripeAccount: accountId, // This ensures the transactions are fetched for the connected account
+    });
+    res.json(transactions);
+  } catch (error) {
+    console.error('Failed to retrieve transactions:', error);
+    res.status(500).send('Failed to retrieve transactions');
   }
 });

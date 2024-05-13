@@ -21,6 +21,7 @@ import UserEditCarPark from '@/views/UserEditCarPark.vue';
 import AdminManageCarParks from './views/AdminManageCarParks.vue';
 import AdminEditCarPark from './views/AdminEditCarPark.vue';
 import { verifyStripeOnboarding } from '@/services/paymentService';
+import UserManagePayouts from './views/UserManagePayouts.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -66,6 +67,13 @@ const routes = [
     path: '/edit-carpark/:carparkId',
     name: 'EditCarPark',
     component: UserEditCarPark,
+  },
+
+  {
+    path: '/manage-payouts',
+    name: 'ManagePayouts',
+    component: UserManagePayouts,
+    meta: { requiresAuth: true, requiresOnboarding: true }
   },
 
   // Admin routes

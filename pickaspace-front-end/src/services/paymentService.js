@@ -238,3 +238,66 @@ export const verifyStripeOnboarding = async (stripeAccountId) => {
     throw error;
   }
 };
+
+export const fetchStripeBalance = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`${API_BASE_URL}/stripe/balance`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch Stripe balance');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Stripe balance:', error);
+    throw error;
+  }
+};
+
+// Function to fetch Stripe dashboard link
+export const fetchStripeDashboardLink = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    console.log('Sending request to fetch Stripe dashboard link');
+    const response = await fetch(`${API_BASE_URL}/stripe/dashboard-link`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch Stripe dashboard link. Response:', response);
+      throw new Error('Failed to fetch Stripe dashboard link');
+    }
+    console.log('Stripe dashboard link fetched successfully');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Stripe dashboard link:', error);
+    throw error;
+  }
+};
+
+// Fetch transactions for a Stripe account
+export const fetchTransactions = async (stripeAccountId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/transactions/${stripeAccountId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch transactions');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    throw error;
+  }
+};

@@ -33,11 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
-    },
-    stripe_onboarding_complete: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
+    }
   }, {
     // Insert additional settings here.
   });
