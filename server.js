@@ -59,6 +59,17 @@ if (!process.env.STRIPE_SECRET_KEY) {
   process.exit(1);  // Exit the application if the STRIPE_SECRET_KEY is not defined
 }
 
+// Function to verify if the Stripe onboarding process is complete
+async function verifyStripeOnboarding(stripeAccountId) {
+  try {
+      const account = await stripe.accounts.retrieve(stripeAccountId);
+      return account.details_submitted;
+  } catch (error) {
+      console.error('Failed to verify Stripe onboarding:', error);
+      throw new Error('Stripe verification failed');
+  }
+}
+
 // Enable CORS for all routes
 app.use(cors());
 
@@ -110,6 +121,8 @@ const verifyRole = (allowedRoles) => {
     next();
   };
 };
+
+
 
 // Function to fetch vehicle details from the DVLA API
 async function getVehicleDetails(registrationNumber) {
@@ -385,8 +398,28 @@ app.get('/api/stripe/account-status/:accountId', async (req, res) => {
   }
 });
 
+// Middleware to verify if User is onboarded on Stripe Connect (Express)
+const checkOnboardingComplete = async (req, res, next) => {
+  const userId = req.user.userId;
+  try {
+    const user = await db.User.findByPk(userId);
+    if (!user || !user.stripe_account_id) {
+      return res.status(400).json({ message: 'Stripe account not found for user.' });
+    }
+
+    const onboardingComplete = await verifyStripeOnboarding(user.stripe_account_id);
+    if (!onboardingComplete) {
+      return res.status(403).json({ message: 'Please complete Stripe onboarding to proceed.' });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Endpoint to create a new car park
-app.post('/api/create-carpark', authenticateToken, async (req, res) => {
+app.post('/api/create-carpark', authenticateToken, checkOnboardingComplete, async (req, res) => {
   const user = await db.User.findByPk(req.user.userId);
 
   // Check if the user has a connected Stripe account

@@ -75,7 +75,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
         defaultValue: null
-      }
+      },
+      stripe_onboarding_complete: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
     });
   },
 

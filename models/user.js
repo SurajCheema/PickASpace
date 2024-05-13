@@ -34,6 +34,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       defaultValue: null
     },
+    stripe_onboarding_complete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
   }, {
     // Insert additional settings here.
   });
