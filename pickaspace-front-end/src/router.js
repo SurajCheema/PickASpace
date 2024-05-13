@@ -22,12 +22,13 @@ import AdminManageCarParks from './views/AdminManageCarParks.vue';
 import AdminEditCarPark from './views/AdminEditCarPark.vue';
 import { verifyStripeOnboarding } from '@/services/paymentService';
 import UserManagePayouts from './views/UserManagePayouts.vue';
+import AdminManageUsers from './views/AdminManageUsers.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
   { path: '/login', name: 'UserLogin', component: UserLogin },
   {
-    path: '/carparks',
+    path: '/dashboard',
     name: 'CarParkDashboard',
     component: CarParkDashboard,
     meta: { requiresAuth: true } // Requires authentication
@@ -61,16 +62,17 @@ const routes = [
     path: '/user/carparks',
     name: 'UserManageCarParks',
     component: UserManageCarParks,
-    meta: { requiresAuth: true, requiresOnboarding: true } // Requires authentication and Stripe onboarding
+    meta: { requiresAuth: true, requiresOnboarding: true } 
   },
   {
     path: '/edit-carpark/:carparkId',
     name: 'EditCarPark',
     component: UserEditCarPark,
+    meta: { requiresAuth: true, requiresOnboarding: true } 
   },
 
   {
-    path: '/manage-payouts',
+    path: '/user/earnings',
     name: 'ManagePayouts',
     component: UserManagePayouts,
     meta: { requiresAuth: true, requiresOnboarding: true }
@@ -117,6 +119,13 @@ const routes = [
     name: 'StripeOnBoarding',
     component: StripeOnBoarding,
     meta: { requiresAuth: true }
+  },
+
+  {
+    path: '/admin/users',
+    name: 'AdminManageUsers',
+    component: AdminManageUsers,
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ];
 

@@ -575,9 +575,8 @@ app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['adm
 });
 
 
-
-// Schedule to delete marked car parks and users every minute (for testing - will be once a day for production.)
-cron.schedule('* * * * *', async () => {
+// Schedule to delete marked car parks and users once a day at midnight
+cron.schedule('0 0 * * *', async () => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // Subtract 30 days in milliseconds
 
@@ -615,60 +614,48 @@ cron.schedule('* * * * *', async () => {
   }
 
   try {
-    const usersToDelete = await db.User.findAll({
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const deletedUsers = await db.User.destroy({
       where: {
         deletedAt: {
-          [Op.ne]: null,          // Ensure deletedAt is not null
-          [Op.lte]: thirtyDaysAgo // Check if the deletedAt time is less than or equal to thirty days ago
+          [Op.ne]: null,
+          [Op.lte]: thirtyDaysAgo
         }
       }
     });
 
-    for (const user of usersToDelete) {
-      // Delete the user
-      await user.destroy();
-    }
-
-    console.log(`Automatically deleted ${usersToDelete.length} users that were marked for deletion over thirty days ago.`);
+    console.log(`Automatically deleted ${deletedUsers} users that were marked for deletion over thirty days ago.`);
   } catch (error) {
     console.error('Failed to automatically delete old users:', error);
   }
 });
 
 
-
-
-// Admin endpoint to force delete a car park immediately
-app.delete('/api/admin/carparks/:carparkId/force', authenticateToken, verifyRole(['admin']), async (req, res) => {
-  const { carparkId } = req.params;
+// Admin endpoint to force delete a user immediately
+app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
 
   try {
-    // Start a transaction
-    const result = await db.sequelize.transaction(async (t) => {
-      // Delete related entities manually if not handled by CASCADE
-      await db.Bay.destroy({ where: { carpark_id: carparkId } }, { transaction: t });
-      await db.CarParkLog.destroy({ where: { carpark_id: carparkId } }, { transaction: t });
-
-      // Attempt to delete the car park
-      const deleted = await db.CarPark.destroy({
-        where: { carpark_id: carparkId },
-        transaction: t
-      });
-
-      return deleted;
+    const deletedUser = await db.User.destroy({
+      where: { user_id: userId },
+      cascade: true,
     });
 
-    if (result) {
-      console.log(`Carpark with ID ${carparkId} deleted successfully by admin ${req.user.userId}`);
-      res.json({ message: `Successfully deleted car park with ID ${carparkId}` });
+    if (deletedUser) {
+      console.log(`User with ID ${userId} deleted successfully by admin ${req.user.userId}`);
+      res.json({ message: `Successfully deleted user with ID ${userId}` });
     } else {
-      res.status(404).json({ error: 'Car park not found' });
+      console.log(`User with ID ${userId} not found`);
+      res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    console.error('Error deleting car park:', error);
+    console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
 
 
 
@@ -1304,6 +1291,7 @@ app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['adm
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 // Fetch booking logs for a user

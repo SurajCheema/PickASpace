@@ -147,3 +147,64 @@ export const checkNewPassword = async (token, newPassword) => {
 
   return response.json();
 };
+
+// Fetch all users (admin)
+export const fetchAllUsers = async () => {
+  const response = await fetch(`${API_URL}/api/admin/users`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  return response.json();
+};
+
+// Update user (admin)
+export const updateUserByAdmin = async (userId, userData) => {
+  const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update user');
+  }
+  return response.json();
+};
+
+// Soft delete user (admin)
+export const softDeleteUser = async (userId) => {
+  const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to soft delete user');
+  }
+  return response.json();
+};
+
+// Force delete user (admin)
+export const forceDeleteUser = async (userId) => {
+  const response = await fetch(`${API_URL}/api/admin/users/${userId}/force`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to force delete user');
+  }
+  return response.json();
+};

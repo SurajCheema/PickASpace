@@ -14,7 +14,7 @@
               <router-link class="nav-link" to="/create-carpark">Rent out your space</router-link>
             </li>
             <li class="nav-item" v-if="isLoggedIn">
-              <router-link class="nav-link" to="/carparks">Search Carpark</router-link>
+              <router-link class="nav-link" to="/dashboard">Search Carpark</router-link>
             </li>
             <li class="nav-item" v-if="isLoggedIn">
               <router-link class="nav-link" to="/user/dashboard">Profile</router-link>
