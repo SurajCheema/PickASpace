@@ -12,13 +12,19 @@
 
     <div class="dashboard-buttons">
       <router-link to="/user/profile" class="dashboard-link">
-        <button type="button" class="btn btn-primary">Profile</button>
+        <button type="button" class="btn btn-info">Profile</button>
       </router-link>
       <router-link to="/user/payments" class="dashboard-link">
-        <button type="button" class="btn btn-secondary">Payment Logs</button>
+        <button type="button" class="btn btn-info">Payment Logs</button>
       </router-link>
       <router-link to="/user/bookings" class="dashboard-link">
         <button type="button" class="btn btn-success">Booking Logs</button>
+      </router-link>
+      <router-link to="/user/carparks" class="dashboard-link">
+        <button type="button" class="btn btn-success">Manage Car Parks</button>
+      </router-link>
+      <router-link to="/user/earnings" class="dashboard-link">
+        <button type="button" class="btn btn-warning">View Earnings</button>
       </router-link>
       <router-link to="/onboarding" class="dashboard-link">
         <button type="button" class="btn btn-warning">Complete Stripe Onboarding</button>
