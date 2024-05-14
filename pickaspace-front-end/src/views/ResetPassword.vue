@@ -1,14 +1,14 @@
 <template>
-  <div class="password-reset-container">
+  <div class="auth-container">
     <h1>Reset Your Password</h1>
     <form @submit.prevent="submitNewPassword" v-if="!isSuccess">
-      <div class="form-group">
+      <div>
         <label for="newPassword">New Password:</label>
         <input type="password" id="newPassword" v-model="newPassword" @input="validatePassword" required
           placeholder="New password">
         <p v-if="passwordError" class="error">{{ passwordError }}</p>
       </div>
-      <div class="form-group">
+      <div>
         <label for="confirmPassword">Confirm New Password:</label>
         <input type="password" id="confirmPassword" v-model="confirmPassword" @input="validatePassword" required
           placeholder="Confirm password">
@@ -16,7 +16,7 @@
       <div v-if="message" :class="{ 'message-success': isSuccess, 'message-error': !isSuccess }">
         {{ message }}
       </div>
-      <button type="submit" class="reset-button">Reset Password</button>
+      <button type="submit">Reset Password</button>
     </form>
     <div v-if="isSuccess" class="message-success">
       {{ message }}
@@ -94,25 +94,33 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.password-reset-container {
+.auth-container {
   max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 1em auto; /* Centered horizontally with margin top and bottom */
+  padding: 2em;
+  background-color: #f4f4f4; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
-.form-group {
-  margin-bottom: 1rem;
+div {
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
 }
 
 input[type="password"] {
   width: 100%;
-  padding: 0.8rem;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.reset-button {
+button {
+  width: 100%; /* Full width button */
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
@@ -121,23 +129,21 @@ input[type="password"] {
   cursor: pointer;
 }
 
-.reset-button:hover {
+button:hover {
   background-color: #45a049;
 }
 
-.error,
+.error {
+  color: red;
+}
+
 .message-success,
 .message-error {
-  color: red;
-  /* default for error messages */
+  color: green; /* success message */
   margin-top: 1rem;
 }
 
-.message-success {
-  color: green;
-}
-
 .message-error {
-  color: red;
+  color: red; /* error message */
 }
 </style>
