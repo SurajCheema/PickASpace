@@ -62,11 +62,11 @@ if (!process.env.STRIPE_SECRET_KEY) {
 // Function to verify if the Stripe onboarding process is complete
 async function verifyStripeOnboarding(stripeAccountId) {
   try {
-      const account = await stripe.accounts.retrieve(stripeAccountId);
-      return account.details_submitted;
+    const account = await stripe.accounts.retrieve(stripeAccountId);
+    return account.details_submitted;
   } catch (error) {
-      console.error('Failed to verify Stripe onboarding:', error);
-      throw new Error('Stripe verification failed');
+    console.error('Failed to verify Stripe onboarding:', error);
+    throw new Error('Stripe verification failed');
   }
 }
 
@@ -183,6 +183,26 @@ app.post('/create-user', async (req, res) => {
       role = 'user', // Default role is 'user'
       blueBadge
     } = req.body;
+
+    const nameRegex = /^[A-Za-z]+(?:[ ]?[A-Za-z]+)*$/;
+
+    if (!nameRegex.test(first_name) || !nameRegex.test(last_name)) {
+      return res.status(400).json({ message: "Names must not contain special characters, start, or end with spaces." });
+    }
+
+    // Validate non-empty fields
+    if (!first_name.trim() || !last_name.trim() || !email.trim() || !password.trim()) {
+      return res.status(400).send({ message: "Required fields must not be empty." });
+    }
+
+    // Validate age
+    const dob = new Date(DOB);
+    const ageDifMs = Date.now() - dob.getTime();
+    const ageDate = new Date(ageDifMs);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    if (age < 16) {
+      return res.status(400).send({ message: "You must be at least 16 years old to register." });
+    }
 
     // Validate vehicle registration number using test data
     const vehicleDetails = await getVehicleDetails(car_registration);
@@ -1824,14 +1844,14 @@ app.get('/api/stripe/balance', authenticateToken, async (req, res) => {
 
   try {
     const balance = await stripe.balance.retrieve({
-      stripeAccount: req.user.stripeAccountId 
+      stripeAccount: req.user.stripeAccountId
     });
 
     console.log('Stripe balance retrieved:', balance);
 
     // Optionally calculate total earnings
     const totalEarnings = balance.available.reduce((acc, curr) => acc + curr.amount, 0) +
-                          balance.pending.reduce((acc, curr) => acc + curr.amount, 0);
+      balance.pending.reduce((acc, curr) => acc + curr.amount, 0);
 
     res.json({ available: balance.available, pending: balance.pending, totalEarnings });
   } catch (error) {

@@ -2,49 +2,58 @@
   <div class="auth-container">
     <h1 class="blue">Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
-      <div>
+      <div class="form-group">
         <label for="carRegistration">Car Registration:</label>
-        <input type="text" id="carRegistration" v-model="user.car_registration"
-          @blur="validateRegistrationPlate" required>
+        <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate"
+          required>
         <p class="error" v-if="registrationError">{{ registrationError }}</p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="firstName">First Name:</label>
         <input type="text" id="firstName" v-model="user.first_name" required>
+        <p class="error" v-if="attemptedToRegister && !validateName(user.first_name)">
+          First name cannot be empty, start/end with a space, or contain special characters.
+        </p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="lastName">Last Name:</label>
         <input type="text" id="lastName" v-model="user.last_name" required>
+        <p class="error" v-if="attemptedToRegister && !validateName(user.last_name)">
+          Last name cannot be empty, start/end with a space, or contain special characters.
+        </p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="email">Email:</label>
         <input type="email" id="email" v-model="user.email" required>
         <p class="error" v-if="emailError">{{ emailError }}</p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="emailConfirm">Confirm Email:</label>
         <input type="email" id="emailConfirm" v-model="emailConfirm" required>
+        <p class="error" v-if="user.email !== emailConfirm">Emails do not match!</p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" id="password" v-model="user.password" @input="validatePassword"
-          required>
+        <input type="password" id="password" v-model="user.password" @input="validatePassword" required>
         <p class="error" v-if="passwordError">{{ passwordError }}</p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="passwordConfirm">Confirm Password:</label>
-        <input type="password" id="passwordConfirm" v-model="passwordConfirm"
-          @input="validatePassword" required>
+        <input type="password" id="passwordConfirm" v-model="passwordConfirm" @input="validatePassword" required>
+        <p class="error" v-if="user.password !== passwordConfirm">Passwords do not match!</p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="phone">Phone Number:</label>
         <input type="tel" id="phone" v-model="user.phone" required>
       </div>
-      <div>
+      <div class="form-group">
         <label for="dob">Date of Birth:</label>
         <input type="date" id="dob" v-model="user.DOB" required>
+        <p class="error" v-if="attemptedToRegister && !isOldEnough">
+          You must be at least 16 years old to register.
+        </p>
       </div>
-      <div>
+      <div class="form-group">
         <label for="blueBadge">Has Blue Badge:</label>
         <input type="checkbox" id="blueBadge" v-model="user.blueBadge">
       </div>
@@ -84,8 +93,10 @@ export default {
       registrationError: '',
       registrationSuccess: false,
       isRegistering: false,
+      attemptedToRegister: false
     };
   },
+
   watch: {
     emailConfirm(newVal) {
       this.validateEmail(newVal);
@@ -100,7 +111,24 @@ export default {
       this.validatePassword(this.passwordConfirm, newVal);
     },
   },
+  computed: {
+    isOldEnough() {
+      const today = new Date();
+      const dob = new Date(this.user.DOB);
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      return age >= 16;
+    }
+  },
   methods: {
+    validateName(name) {
+      // Regex to allow only letters, spaces between words and disallow special characters and trailing spaces
+      const regex = /^[A-Za-z]+(?:[ ]?[A-Za-z]+)*$/;
+      return regex.test(name);
+    },
     async validateRegistrationPlate() {
       if (!this.user.car_registration.trim()) {
         this.registrationError = "Car registration cannot be empty.";
@@ -115,7 +143,9 @@ export default {
         console.error("Registration validation error:", error);
       }
     },
-    validateEmail(confirmEmail, email = this.user.email) {
+    validateEmail() {
+      const confirmEmail = this.emailConfirm;
+      const email = this.user.email;
       if (email !== confirmEmail) {
         this.emailError = 'Emails do not match!';
       } else {
@@ -133,13 +163,12 @@ export default {
       }
     },
     async registerUser() {
-      if (this.emailError || this.passwordError || this.registrationError) {
-        return; // Prevent registration if there are email, password, or registration errors
+      this.attemptedToRegister = true;
+      if (!this.validateName(this.user.first_name) || !this.validateName(this.user.last_name) || !this.isOldEnough || this.emailError || this.passwordError) {
+        return; // Prevent registration if there are validations errors
       }
-
       try {
         this.isRegistering = true;
-
         const result = await registerUser(this.user);
         console.log('User registered:', result);
         this.registrationSuccess = true;
@@ -161,11 +190,15 @@ export default {
 <style scoped>
 .auth-container {
   max-width: 400px;
-  margin: 1em auto; /* Centered horizontally with margin top and bottom */
+  margin: 1em auto;
+  /* Centered horizontally with margin top and bottom */
   padding: 2em;
-  background-color: #f4f4f4; /* Light gray background */
-  border-radius: 8px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  background-color: #f4f4f4;
+  /* Light gray background */
+  border-radius: 8px;
+  /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Soft shadow for depth */
 }
 
 .auth-container div {
@@ -189,7 +222,8 @@ input[type="tel"] {
 }
 
 button {
-  width: 100%; /* Full width button */
+  width: 100%;
+  /* Full width button */
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
