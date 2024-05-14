@@ -23,6 +23,7 @@ import AdminEditCarPark from './views/AdminEditCarPark.vue';
 import { verifyStripeOnboarding } from '@/services/paymentService';
 import UserManagePayouts from './views/UserManagePayouts.vue';
 import AdminManageUsers from './views/AdminManageUsers.vue';
+import AdminEditUser from './views/AdminEditUser.vue';
 
 const routes = [
   { path: '/register', name: 'UserRegister', component: UserRegister },
@@ -125,6 +126,14 @@ const routes = [
     path: '/admin/users',
     name: 'AdminManageUsers',
     component: AdminManageUsers,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+
+  {
+    path: '/admin/edit-user/:userId',
+    name: 'AdminEditUser',
+    component: AdminEditUser,
+    props: true,
     meta: { requiresAuth: true, requiresAdmin: true }
   }
 ];

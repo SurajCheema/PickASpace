@@ -76,6 +76,20 @@ export const getUserDetails = async () => {
   return data;
 };
 
+export const getUserDetailsByAdmin = async (userId) => {
+  const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user details: ${response.statusText}`);
+  }
+  return response.json();
+};
+
 export const updateUserDetails = async (userData) => {
   console.log("Updating user with data:", userData);
   const response = await fetch(`${API_URL}/api/update-user`, {

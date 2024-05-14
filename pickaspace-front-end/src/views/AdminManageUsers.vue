@@ -21,7 +21,7 @@
               </div>
               <p class="mb-1">{{ user.phone }}</p>
               <div class="btn-group mt-2" role="group" aria-label="User Actions">
-                <button class="btn btn-primary" @click="editUser(user)">Edit</button>
+                <button class="btn btn-primary" @click="navigateToEditUser(user.user_id)">Edit</button>
                 <button class="btn btn-warning" @click="softDeleteUser(user.user_id)">Delete</button>
                 <button class="btn btn-danger" @click="forceDeleteUser(user.user_id)">Force Delete</button>
                 <button class="btn btn-secondary" @click="sendPasswordReset(user.email)">Reset Password</button>
@@ -30,56 +30,6 @@
           </div>
         </div>
         <p v-if="message" class="mt-3" :class="{ 'text-success': isSuccess, 'text-danger': !isSuccess }">{{ message }}</p>
-      </div>
-  
-      <div v-if="showModal" class="modal fade show d-block" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Edit User</h5>
-              <button type="button" class="close" @click="closeModal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <form @submit.prevent="saveUser">
-                <div class="form-group">
-                  <label for="firstName">First Name</label>
-                  <input type="text" class="form-control" id="firstName" v-model="selectedUser.first_name" required>
-                </div>
-                <div class="form-group">
-                  <label for="lastName">Last Name</label>
-                  <input type="text" class="form-control" id="lastName" v-model="selectedUser.last_name" required>
-                </div>
-                <div class="form-group">
-                  <label for="email">Email</label>
-                  <input type="email" class="form-control" id="email" v-model="selectedUser.email" required>
-                </div>
-                <div class="form-group">
-                  <label for="phone">Phone</label>
-                  <input type="text" class="form-control" id="phone" v-model="selectedUser.phone" required>
-                </div>
-                <div class="form-group">
-                  <label for="address">Address</label>
-                  <input type="text" class="form-control" id="address" v-model="selectedUser.address" required>
-                </div>
-                <div class="form-group">
-                  <label for="dob">Date of Birth</label>
-                  <input type="date" class="form-control" id="dob" v-model="selectedUser.DOB" required>
-                </div>
-                <div class="form-group">
-                  <label for="carRegistration">Car Registration</label>
-                  <input type="text" class="form-control" id="carRegistration" v-model="selectedUser.car_registration">
-                </div>
-                <div class="form-group">
-                  <label for="blueBadge">Blue Badge</label>
-                  <input type="checkbox" id="blueBadge" v-model="selectedUser.blueBadge" class="form-check-input">
-                </div>
-                <button type="submit" class="btn btn-primary">Save changes</button>
-              </form>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </template>
@@ -114,10 +64,6 @@
         } finally {
           this.loading = false;
         }
-      },
-      editUser(user) {
-        this.selectedUser = { ...user };
-        this.showModal = true;
       },
       async saveUser() {
         try {
@@ -171,10 +117,9 @@
           console.error('Error sending password reset link:', error);
         }
       },
-      closeModal() {
-        this.showModal = false;
-        this.selectedUser = null;
-      }
+      navigateToEditUser(userId) {
+      this.$router.push({ name: 'AdminEditUser', params: { userId: userId } });
+    },
     }
   };
   </script>

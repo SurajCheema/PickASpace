@@ -1,64 +1,63 @@
 <template>
-  <div class="register-container">
-    <h1>Register</h1>
+  <div class="auth-container">
+    <h1 class="blue">Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
-      <div class="form-group">
+      <div>
         <label for="carRegistration">Car Registration:</label>
-        <input type="text" class="form-control" id="carRegistration" v-model="user.car_registration"
+        <input type="text" id="carRegistration" v-model="user.car_registration"
           @blur="validateRegistrationPlate" required>
-        <div v-if="registrationError" class="text-danger">{{ registrationError }}</div>
+        <p class="error" v-if="registrationError">{{ registrationError }}</p>
       </div>
-      <div class="form-group">
+      <div>
         <label for="firstName">First Name:</label>
-        <input type="text" class="form-control" id="firstName" v-model="user.first_name" required>
+        <input type="text" id="firstName" v-model="user.first_name" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="lastName">Last Name:</label>
-        <input type="text" class="form-control" id="lastName" v-model="user.last_name" required>
+        <input type="text" id="lastName" v-model="user.last_name" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="email">Email:</label>
-        <input type="email" class="form-control" id="email" v-model="user.email" required>
-        <div v-if="emailError" class="text-danger">{{ emailError }}</div>
+        <input type="email" id="email" v-model="user.email" required>
+        <p class="error" v-if="emailError">{{ emailError }}</p>
       </div>
-      <div class="form-group">
+      <div>
         <label for="emailConfirm">Confirm Email:</label>
-        <input type="email" class="form-control" id="emailConfirm" v-model="emailConfirm" required>
+        <input type="email" id="emailConfirm" v-model="emailConfirm" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="password">Password:</label>
-        <input type="password" class="form-control" id="password" v-model="user.password" @input="validatePassword"
+        <input type="password" id="password" v-model="user.password" @input="validatePassword"
           required>
-        <div v-if="passwordError" class="text-danger">{{ passwordError }}</div>
+        <p class="error" v-if="passwordError">{{ passwordError }}</p>
       </div>
-      <div class="form-group">
+      <div>
         <label for="passwordConfirm">Confirm Password:</label>
-        <input type="password" class="form-control" id="passwordConfirm" v-model="passwordConfirm"
+        <input type="password" id="passwordConfirm" v-model="passwordConfirm"
           @input="validatePassword" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="phone">Phone Number:</label>
-        <input type="tel" class="form-control" id="phone" v-model="user.phone" required>
+        <input type="tel" id="phone" v-model="user.phone" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="dob">Date of Birth:</label>
-        <input type="date" class="form-control" id="dob" v-model="user.DOB" required>
+        <input type="date" id="dob" v-model="user.DOB" required>
       </div>
-      <div class="form-group">
+      <div>
         <label for="blueBadge">Has Blue Badge:</label>
         <input type="checkbox" id="blueBadge" v-model="user.blueBadge">
       </div>
-
-
-      <button type="submit" class="btn btn-primary" :disabled="isRegistering">
+      <button type="submit" :disabled="isRegistering">
         {{ isRegistering ? 'Registering...' : 'Register' }}
       </button>
     </form>
-    <div v-if="registrationSuccess" class="alert alert-success">
+    <p class="success-message" v-if="registrationSuccess">
       Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.
-    </div>
+    </p>
   </div>
 </template>
+
 
 <script>
 import { registerUser } from '../services/userService';
@@ -160,18 +159,16 @@ export default {
 </script>
 
 <style scoped>
-.register-container {
+.auth-container {
   max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
+  margin: 1em auto; /* Centered horizontally with margin top and bottom */
+  padding: 2em;
+  background-color: #f4f4f4; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
-.success-message {
-  color: green;
-  margin-top: 20px;
-}
-
-.register-container div {
+.auth-container div {
   margin-bottom: 10px;
 }
 
@@ -183,7 +180,8 @@ label {
 input[type="text"],
 input[type="email"],
 input[type="password"],
-input[type="date"] {
+input[type="date"],
+input[type="tel"] {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
@@ -191,6 +189,7 @@ input[type="date"] {
 }
 
 button {
+  width: 100%; /* Full width button */
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
@@ -203,10 +202,17 @@ button:hover {
   background-color: #45a049;
 }
 
+.error {
+  color: red;
+}
+
+.success-message {
+  color: green;
+  margin-top: 20px;
+}
+
 input[type="checkbox"] {
   width: auto;
-  /* Reset width to default */
   margin-top: 5px;
-  /* Provide some spacing from the label */
 }
 </style>

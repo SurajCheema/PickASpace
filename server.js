@@ -1009,8 +1009,8 @@ async function checkBayAvailability(bayId, startTime, endTime, transaction) {
   return overlappingBookings === 0; // true if no overlapping bookings
 }
 
-// Schedule a task to run every minute
-cron.schedule('* * * * *', async () => {
+// Schedule a task to run every minute (FOR TESTING/DEVELOPMENT THIS IS ONCE A DAY)
+cron.schedule('0 0 * * *', async () => {
   console.log('Running a task every minute to check for expired bookings and update statuses');
 
   const now = new Date();
@@ -1198,7 +1198,21 @@ app.put('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), as
   }
 });
 
-
+// Fetch a specific user's details (admin only)
+app.get('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await db.User.findByPk(userId);
+    if (!user) {
+      res.status(404).send('User not found');
+    } else {
+      res.json(user);
+    }
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 // Endpoint to fetch user details
 app.get('/user-details', authenticateToken, async (req, res) => {
