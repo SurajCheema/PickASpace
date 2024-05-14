@@ -6,51 +6,54 @@
       </div>
     </div>
     <div class="row justify-content-center form-section">
-      <div class="col-md-4 booking-section">
-        <h4 class="text-center">Select Arrival and Departure Time</h4>
+
+      <!-- Booking Section -->
+      <div class="col-md-5 booking-section">
+        <h4 class="text-center section-title">Select Arrival and Departure Time</h4>
         <form>
-          <div class="row">
-            <div class="col-6 form-group">
-              <label for="arrivalTime">Arrival Time</label>
-              <input type="datetime-local" id="arrivalTime" class="form-control date-picker" v-model="arrivalTime">
-            </div>
-            <div class="col-6 form-group">
-              <label for="departureTime">Departure Time</label>
-              <input type="datetime-local" id="departureTime" class="form-control date-picker" v-model="departureTime"
-                :min="minDepartureTime">
-              <div v-if="!isDepartureValid" class="text-danger">
-                Departure time cannot be earlier than arrival time.
-              </div>
+          <div class="form-group">
+            <label for="arrivalTime">Arrival Time</label>
+            <input type="datetime-local" id="arrivalTime" class="form-control" v-model="arrivalTime">
+          </div>
+          <div class="form-group">
+            <label for="departureTime">Departure Time</label>
+            <input type="datetime-local" id="departureTime" class="form-control" v-model="departureTime" :min="minDepartureTime">
+            <div v-if="!isDepartureValid" class="alert alert-danger">
+              Departure time cannot be earlier than arrival time.
             </div>
           </div>
           <div class="form-group">
             <label>Selected Bay</label>
             <p>{{ selectedBay ? `Bay ${selectedBay.bay_number}` : 'No bay selected' }}</p>
           </div>
-          <div v-if="!isDepartureValid" class="text-danger">
-            Departure time must be later than arrival time.
-          </div>
           <div class="form-group">
             <label>Duration and Cost</label>
-            <p v-if="stayDuration !== '-'">{{ stayDuration }} hours at {{ formatCurrency(calculatedCost) }}</p>
-            <p v-else>{{ stayDuration }}</p>
+            <p>{{ stayDuration !== '-' ? `${stayDuration} hours at ${formatCurrency(calculatedCost)}` : stayDuration }}</p>
           </div>
         </form>
       </div>
-      <div class="col-md-2"></div>
-      <div class="col-md-4 payment-section text-center">
-        <div class="form-group">
-          <h4>Payment Details</h4>
-          <label>Card Number</label>
-          <div id="card-number"></div> <!-- Stripe.js injects the Card Number Element -->
-          <label>Card Expiry</label>
-          <div id="card-expiry"></div> <!-- Stripe.js injects the Card Expiry Element -->
-          <label>Card CVC</label>
-          <div id="card-cvc"></div> <!-- Stripe.js injects the Card CVC Element -->
+
+      <div class="col-1"></div>
+
+      <!-- Payment Section -->
+      <div class="col-md-5 payment-section">
+        <h4 class="text-center section-title">Payment Details</h4>
+        <div class="payment-container">
+          <div class="payment-form-group">
+            <label>Card Number</label>
+            <div id="card-number" class="stripe-element"></div>
+          </div>
+          <div class="payment-form-group">
+            <label>Card Expiry</label>
+            <div id="card-expiry" class="stripe-element"></div>
+          </div>
+          <div class="payment-form-group">
+            <label>Card CVC</label>
+            <div id="card-cvc" class="stripe-element"></div>
+          </div>
           <button @click.prevent="submitBooking"
-            :disabled="!isDepartureValid || !selectedBay || !selectedBay.isAvailable" id="submit">
-            <div class="spinner hidden" id="spinner"></div>
-            <span id="button-text">Pay now</span>
+            :disabled="!isDepartureValid || !selectedBay || !selectedBay.isAvailable" class="submit-button">
+            Pay now
           </button>
           <div v-if="loading" class="loading-spinner"></div>
           <p id="card-error" role="alert"></p>
@@ -61,20 +64,21 @@
           </p>
         </div>
       </div>
+
     </div>
-    <div class="row mt-5-bay-cards-row">
+    <div class="row mt-5 bay-cards-row">
       <div class="col-12">
-        <h4 class="col-12-h4">Available Bays</h4>
+        <h4 class="text-center">Available Bays</h4>
         <div class="row">
           <div class="col-md-3" v-for="bay in bays" :key="bay.bay_id"
             :class="{ 'selected-bay': selectedBay && selectedBay.bay_id === bay.bay_id }" @click="selectBay(bay)">
             <div class="card mb-3 hover-highlight">
               <div class="card-body">
-                <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
-                <p class="card-text">EV Charging: {{ bay.hasEVCharging ? 'Yes' : 'No' }}</p>
-                <p class="card-text">Disabled Access: {{ bay.disabled ? 'Yes' : 'No' }}</p>
-                <p class="card-text">Available: {{ getAvailabilityText(bay) }}</p>
-                <p class="card-text">Vehicle Size: {{ bay.vehicleSize }}</p>
+                <h3 class="card-title"><span class="blue">Bay</span> {{ bay.bay_number }}</h3>
+                <p class="card-text"><span class="label blue">EV Charging:</span> {{ bay.hasEVCharging ? 'Yes' : 'No' }}</p>
+                <p class="card-text"><span class="label blue">Disabled Access:</span> {{ bay.disabled ? 'Yes' : 'No' }}</p>
+                <p class="card-text"><span class="label blue">Available:</span> {{ getAvailabilityText(bay) }}</p>
+                <p class="card-text"><span class="label blue">Vehicle Size:</span> {{ bay.vehicleSize }}</p>
               </div>
             </div>
           </div>
@@ -82,11 +86,10 @@
       </div>
     </div>
   </div>
-
   <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage"
     @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
-
 </template>
+
 
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
@@ -135,28 +138,28 @@ export default {
       }
       return ((new Date(this.departureTime) - new Date(this.arrivalTime)) / (1000 * 60 * 60)).toFixed(2);
     },
-
+    
     calculatedCost() {
-      if (!this.selectedBay || !this.arrivalTime || !this.departureTime || !this.pricing || this.stayDuration === "-") {
-        return "-";
-      }
+  if (!this.selectedBay || !this.arrivalTime || !this.departureTime || !this.pricing || this.stayDuration === "-") {
+    return "-";
+  }
 
-      const hours = parseFloat(this.stayDuration);
-      const { hourly, daily, weekly, monthly } = this.pricing;
+  const hours = parseFloat(this.stayDuration);
+  const { hourly, daily, weekly, monthly } = this.pricing;
 
-      const months = Math.floor(hours / (24 * 30));
-      const weeks = Math.floor((hours % (24 * 30)) / (24 * 7));
-      const days = Math.floor((hours % (24 * 7)) / 24);
-      const remainingHours = hours % 24;
+  const months = Math.floor(hours / (24 * 30));
+  const weeks = Math.floor((hours % (24 * 30)) / (24 * 7));
+  const days = Math.floor((hours % (24 * 7)) / 24);
+  const remainingHours = hours % 24;
 
-      let totalCost = (months * monthly) + (weeks * weekly) + (days * daily) + (remainingHours * hourly);
-      const allHourlyCost = hours * hourly;
-      const cost = Math.min(totalCost, allHourlyCost);
-
-      const processingFee = 0.30; // Add the £0.30 processing fee
-
-      return cost + processingFee;
-    }
+  let totalCost = (months * monthly) + (weeks * weekly) + (days * daily) + (remainingHours * hourly);
+  const allHourlyCost = hours * hourly;
+  const cost = Math.min(totalCost, allHourlyCost);
+  
+  const processingFee = 0.30; // Add the £0.30 processing fee
+  
+  return cost + processingFee;
+}
   },
 
   watch: {
@@ -425,7 +428,7 @@ export default {
   }
 }
 
-.col-md-6.text-center {
+.col-md-5.text-center {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -461,5 +464,176 @@ background-color: #4CAF50;
 #submit:disabled {
   background-color: #ccc;
   /* Gray out when disabled */
+}
+
+.bay-cards-row {
+  margin-top: 2rem; /* Add space above the bay cards section for better visual separation */
+  padding: 1rem; /* Padding around the card container for better spacing */
+  background-color: #f4f4f4; /* Neutral background to highlight the cards */
+}
+
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transition for hover effects */
+  cursor: pointer; /* Indicates that the cards are interactive */
+  border: 1px solid #ddd; /* Subtle border for each card */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  background-color: #ffffff; /* White background for each card */
+}
+
+.card:hover {
+  transform: scale(1.05); /* Slightly enlarge the card on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow to lift the card visually */
+}
+
+.card-body {
+  padding: 1rem; /* Padding inside the card for content */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content vertically for better alignment */
+}
+
+.card-title {
+  color: #333; /* Dark color for the title for better readability */
+  margin-bottom: 0.5rem; /* Space below the title */
+}
+
+.card-text {
+  font-size: 0.9rem; /* Smaller font size for details */
+  color: #666; /* Lighter text color for less emphasis on details */
+  margin-bottom: 0.25rem; /* Reduce margin for compact appearance */
+}
+
+.selected-bay .card {
+  border-color: #007bff; /* Blue border for selected bay */
+  background-color: #e7f1ff; /* Light blue background for selected bay */
+}
+
+.label {
+  font-weight: bold;
+  font-size: medium;
+}
+
+.payment-section {
+  background-color: #f8f9fa;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem; /* Space from other content */
+}
+
+.payment-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align the elements */
+}
+
+.payment-form-group {
+  margin-bottom: 1rem; /* Space between form groups */
+  width: 100%; /* Full width for alignment */
+}
+
+.stripe-element {
+  background-color: #f4f4f4; /* Slightly off-white for the input backgrounds */
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 4px;
+  width: calc(100% - 20px); /* Full width minus padding */
+}
+
+.submit-button {
+  background-color: #4CAF50; /* Primary action color */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #333;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+.result-message a {
+  color: #007bff;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.booking-section {
+  background-color: #f8f9fa;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  color: #0056b3; /* Consistent blue color across all section titles */
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.selected-bay-info, .cost-info {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #284777; /* Dark blue for important info */
 }
 </style>
