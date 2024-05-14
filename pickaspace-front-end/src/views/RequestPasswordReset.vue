@@ -1,15 +1,16 @@
 <template>
-  <div class="password-reset-container">
+  <div class="auth-container">
     <h1>Reset Your Password</h1>
     <form @submit.prevent="requestPasswordResetForm">
-      <div class="form-group">
+      <div>
         <label for="email">Enter your email:</label>
         <input type="email" id="email" v-model="email" required placeholder="Your email">
+        <p class="error" v-if="message && !isSuccess">{{ message }}</p>
       </div>
       <div v-if="message" :class="{'message-success': isSuccess, 'message-error': !isSuccess}">
         {{ message }}
       </div>
-      <button type="submit" class="reset-button">Send Reset Link</button>
+      <button type="submit">Send Reset Link</button>
     </form>
   </div>
 </template>
@@ -36,25 +37,34 @@ async function requestPasswordResetForm() {
 </script>
 
 <style scoped>
-.password-reset-container {
+.auth-container {
   max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 1em auto; /* Centered horizontally with margin top and bottom */
+  padding: 2em;
+  background-color: #f4f4f4; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
-.form-group {
-  margin-bottom: 1rem;
+div {
+  margin-bottom: 10px;
+  width: 100%; /* Full width within the container */
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
 }
 
 input[type="email"] {
   width: 100%;
-  padding: 0.8rem;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.reset-button {
+button {
+  width: 100%; /* Full width button */
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
@@ -63,17 +73,20 @@ input[type="email"] {
   cursor: pointer;
 }
 
-.reset-button:hover {
+button:hover {
   background-color: #45a049;
 }
 
-.message-success {
+.error {
+  color: red;
+}
+
+.message-success, .message-error {
   color: green;
   margin-top: 1rem;
 }
 
 .message-error {
   color: red;
-  margin-top: 1rem;
 }
 </style>

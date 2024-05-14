@@ -1,5 +1,6 @@
 <template>
   <div class="auth-container">
+    <div class="form-container">
     <h1 class="blue">Register</h1>
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
@@ -66,6 +67,7 @@
       Registration successful! Redirecting in {{ countdown }} seconds... <br>
       <a href="/login" @click="cancelRedirect">Click here to login!</a>
     </p>
+  </div>
   </div>
 </template>
 
