@@ -4,8 +4,7 @@
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
         <label for="carRegistration">Car Registration:</label>
-        <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate"
-          required>
+        <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate" required>
         <p class="error" v-if="registrationError">{{ registrationError }}</p>
       </div>
       <div class="form-group">
@@ -62,11 +61,11 @@
       </button>
     </form>
     <p class="success-message" v-if="registrationSuccess">
-      Registration successful! <a href="#" @click="redirectToLogin">Click here</a> to go to the login page.
+      Registration successful! Redirecting in {{ countdown }} seconds... <br>
+      <a href="/login" @click="cancelRedirect">Click here to login!</a>
     </p>
   </div>
 </template>
-
 
 <script>
 import { registerUser } from '../services/userService';
@@ -93,7 +92,9 @@ export default {
       registrationError: '',
       registrationSuccess: false,
       isRegistering: false,
-      attemptedToRegister: false
+      attemptedToRegister: false,
+      countdown: 10,
+      timer: null
     };
   },
 
@@ -172,6 +173,7 @@ export default {
         const result = await registerUser(this.user);
         console.log('User registered:', result);
         this.registrationSuccess = true;
+        this.startCountdown(); // Start countdown on successful registration
       } catch (error) {
         console.error('Registration failed:', error);
         this.registrationError = 'Registration failed. Please try again.';
@@ -179,11 +181,28 @@ export default {
         this.isRegistering = false;
       }
     },
-
+    startCountdown() {
+      this.timer = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          this.redirectToLogin();
+        }
+      }, 1000);
+    },
+    cancelRedirect() {
+      clearInterval(this.timer);
+      this.countdown = 10; // Reset countdown
+    },
     redirectToLogin() {
+      clearInterval(this.timer);
       this.$router.push('/login');
     },
   },
+  beforeUnmount() {
+    // Clear the interval when the component is destroyed
+    this.cancelRedirect();
+  }
 };
 </script>
 
