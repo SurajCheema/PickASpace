@@ -12,9 +12,12 @@ export const registerUser = async (userData) => {
     },
     body: JSON.stringify(userData),
   });
+
   if (!response.ok) {
-    throw new Error('Server error');
+    const errorData = await response.json(); // Safely assuming the response is in JSON format
+    throw new Error(errorData.message || 'Registration failed.');
   }
+
   return response.json();
 };
 

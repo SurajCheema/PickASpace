@@ -171,6 +171,13 @@ app.post('/api/vehicle-proxy/:registrationNumber', async (req, res) => {
 
 // Register user and create a Stripe connected account if necessary
 app.post('/create-user', async (req, res) => {
+
+  const { email } = req.body;
+  const existingUser = await db.User.findOne({ where: { email } });
+  if (existingUser) {
+    return res.status(400).json({ message: 'An account with this email already exists.' });
+  }
+  
   try {
     const {
       car_registration,

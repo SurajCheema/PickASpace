@@ -7,7 +7,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
 import './assets/css/global.css';
 
-
 const app = createApp(App);
 
 // Use BootstrapVue3 plugins

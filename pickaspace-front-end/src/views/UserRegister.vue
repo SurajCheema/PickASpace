@@ -4,7 +4,8 @@
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
         <label for="carRegistration">Car Registration:</label>
-        <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate" required>
+        <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate"
+          required>
         <p class="error" v-if="registrationError">{{ registrationError }}</p>
       </div>
       <div class="form-group">
@@ -24,7 +25,7 @@
       <div class="form-group">
         <label for="email">Email:</label>
         <input type="email" id="email" v-model="user.email" required>
-        <p class="error" v-if="emailError">{{ emailError }}</p>
+        <p class="error" v-html="emailError"></p>
       </div>
       <div class="form-group">
         <label for="emailConfirm">Confirm Email:</label>
@@ -43,7 +44,8 @@
       </div>
       <div class="form-group">
         <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" v-model="user.phone" required>
+        <input type="tel" id="phone" v-model="user.phone" @input="validatePhone" required>
+        <p class="error" v-if="attemptedToRegister && phoneError">{{ phoneError }}</p>
       </div>
       <div class="form-group">
         <label for="dob">Date of Birth:</label>
@@ -73,6 +75,7 @@ import { fetchVehicleDetails } from '../services/vehicleService';
 
 export default {
   name: 'UserRegister',
+  components: {},
   data() {
     return {
       user: {
@@ -83,33 +86,33 @@ export default {
         password: '',
         phone: '',
         DOB: '',
-        blueBadge: false
+        blueBadge: false,
       },
       emailConfirm: '',
       passwordConfirm: '',
       emailError: '',
       passwordError: '',
+      phoneError: '',
       registrationError: '',
       registrationSuccess: false,
       isRegistering: false,
       attemptedToRegister: false,
       countdown: 10,
-      timer: null
+      timer: null,
     };
   },
-
   watch: {
-    emailConfirm(newVal) {
-      this.validateEmail(newVal);
+    emailConfirm() {
+      this.validateEmail();
     },
-    'user.email'(newVal) {
-      this.validateEmail(this.emailConfirm, newVal);
+    'user.email'() {
+      this.validateEmail();
     },
-    passwordConfirm(newVal) {
-      this.validatePassword(newVal);
+    passwordConfirm() {
+      this.validatePassword();
     },
-    'user.password'(newVal) {
-      this.validatePassword(this.passwordConfirm, newVal);
+    'user.password'() {
+      this.validatePassword();
     },
   },
   computed: {
@@ -122,7 +125,7 @@ export default {
         age--;
       }
       return age >= 16;
-    }
+    },
   },
   methods: {
     validateName(name) {
@@ -132,7 +135,7 @@ export default {
     },
     async validateRegistrationPlate() {
       if (!this.user.car_registration.trim()) {
-        this.registrationError = "Car registration cannot be empty.";
+        this.registrationError = 'Car registration cannot be empty.';
         return;
       }
 
@@ -140,8 +143,8 @@ export default {
         await fetchVehicleDetails(this.user.car_registration);
         this.registrationError = ''; // Clear any previous error
       } catch (error) {
-        this.registrationError = error.message || "Failed to validate car registration.";
-        console.error("Registration validation error:", error);
+        this.registrationError = error.message || 'Failed to validate car registration.';
+        console.error('Registration validation error:', error);
       }
     },
     validateEmail() {
@@ -158,29 +161,56 @@ export default {
       if (this.user.password !== this.passwordConfirm) {
         this.passwordError = 'Passwords do not match!';
       } else if (!passwordRegex.test(this.user.password)) {
-        this.passwordError = 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.';
+        this.passwordError =
+          'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.';
       } else {
         this.passwordError = '';
       }
     },
-    async registerUser() {
-      this.attemptedToRegister = true;
-      if (!this.validateName(this.user.first_name) || !this.validateName(this.user.last_name) || !this.isOldEnough || this.emailError || this.passwordError) {
-        return; // Prevent registration if there are validations errors
-      }
-      try {
-        this.isRegistering = true;
-        const result = await registerUser(this.user);
-        console.log('User registered:', result);
-        this.registrationSuccess = true;
-        this.startCountdown(); // Start countdown on successful registration
-      } catch (error) {
-        console.error('Registration failed:', error);
-        this.registrationError = 'Registration failed. Please try again.';
-      } finally {
-        this.isRegistering = false;
+    validatePhone() {
+      const phoneNumber = this.user.phone;
+      const phoneRegex = /^\+(?:[0-9] ?){6,14}[0-9]$/;
+
+      if (!phoneNumber) {
+        this.phoneError = 'Phone number is required.';
+      } else if (!phoneRegex.test(phoneNumber)) {
+        this.phoneError = 'Please enter a valid international phone number.';
+      } else {
+        this.phoneError = '';
       }
     },
+    async registerUser() {
+    this.attemptedToRegister = true;
+    this.validatePhone();
+
+    if (
+      !this.validateName(this.user.first_name) ||
+      !this.validateName(this.user.last_name) ||
+      !this.isOldEnough ||
+      this.emailError ||
+      this.passwordError ||
+      this.phoneError
+    ) {
+      return; // Prevent registration if there are validation errors
+    }
+
+    this.isRegistering = true;
+    try {
+      const result = await registerUser(this.user);
+      console.log('User registered:', result);
+      this.registrationSuccess = true;
+      this.startCountdown();
+    } catch (error) {
+      this.isRegistering = false;
+      console.error('Registration failed:', error);
+      if (error.message.includes('email already exists')) {
+        this.emailError = 'An account with this email already exists. <a href="/login">Login</a> or <a href="/reset-password">reset your password</a>.';
+      } else {
+        this.registrationError = error.message || 'Registration failed. Please try again.';
+      }
+    }
+  },
+
     startCountdown() {
       this.timer = setInterval(() => {
         if (this.countdown > 0) {
@@ -202,7 +232,7 @@ export default {
   beforeUnmount() {
     // Clear the interval when the component is destroyed
     this.cancelRedirect();
-  }
+  },
 };
 </script>
 
@@ -229,15 +259,16 @@ label {
   margin-bottom: 5px;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="date"],
-input[type="tel"] {
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='date'],
+input[type='tel'] {
   width: 100%;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  height: 42px;
 }
 
 button {
@@ -264,7 +295,7 @@ button:hover {
   margin-top: 20px;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   width: auto;
   margin-top: 5px;
 }

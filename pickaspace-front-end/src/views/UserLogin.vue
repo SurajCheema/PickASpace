@@ -13,7 +13,7 @@
       </div>
       <p class="error" v-if="loginError">{{ loginError }}</p>
       <div>
-        <p>Don't have an account yet? Register <a href="#">here!</a>
+        <p>Don't have an account yet? Register <a href="/register">here!</a>
         <a href="/user/requestpasswordreset" class="password-reset-link">Forgot Password?</a>
         </p>
       </div>
