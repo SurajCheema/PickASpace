@@ -70,6 +70,15 @@ export default {
   background-color: #f4f4f4; /* Light gray background */
   border-radius: 8px; /* Rounded corners */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  position: relative; /* Ensures the container is positioned relative for z-index context */
+  z-index: 2; /* Higher z-index so it appears above the background */
+}
+
+body, html {
+  height: 100%; /* Ensures full height */
+  margin: 0; /* Remove default margin */
+  background: url('../assets/images/loginRegisterBackground.jpg') no-repeat center center fixed;
+  background-size: cover; /* Cover the entire page */
 }
 
 .auth-container div {

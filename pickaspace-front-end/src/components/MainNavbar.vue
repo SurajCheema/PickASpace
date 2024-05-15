@@ -1,9 +1,11 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
-      <!-- Content Container centered and taking up 60% width -->
       <div class="content-container">
-        <router-link id="brand-name" class="navbar-brand" to="/"><span class="blue">PickASpace</span></router-link>
+        <router-link id="brand-name" class="navbar-brand" to="/">
+          <img src="../assets/logo.jpg" alt="PickASpace Logo" class="navbar-logo"> <!-- Logo image added here -->
+          <span class="blue">PickASpace</span>
+        </router-link>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
           aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -34,6 +36,7 @@
     </div>
   </nav>
 </template>
+
 
 <script>
 import { eventBus } from '../eventBus.js';
@@ -80,6 +83,13 @@ export default {
   background-color: #6495ed; /* Darker shade of blue */
   width: 100%; /* Navbar takes full width */
 }
+
+.navbar-logo {
+  height: 40px; /* Adjust the height to fit the navbar */
+  width: auto; /* Maintain aspect ratio */
+  margin-right: 10px; /* Space between logo and brand name */
+}
+
 
 .container-fluid {
   width: 100%; /* Ensure the container-fluid takes full width */
