@@ -59,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // Define associations
   CarPark.associate = (models) => {
-    CarPark.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
+    CarPark.belongsTo(models.User, { foreignKey: 'user_id', as: 'User', onDelete: 'CASCADE' });
     CarPark.hasMany(models.Bay, { foreignKey: 'carpark_id', as: 'bays', onDelete: 'CASCADE' });
     CarPark.hasMany(models.CarParkLog, { foreignKey: 'carpark_id', as: 'logs', onDelete: 'CASCADE' });
   };

@@ -7,18 +7,14 @@
           <div @click="showDetails(carpark)">
             <p><strong>ID:</strong> {{ carpark.carpark_id }}</p>
             <p><strong>Address:</strong> {{ carpark.addressLine1 }}, {{ carpark.city }}</p>
-            <p v-if="carpark.deletedAt" class="text-danger">Deletes in {{ getRemainingDays(carpark.deletedAt) }} days
-            </p>
+            <p v-if="carpark.deletedAt" class="text-danger">Deletes in {{ getRemainingDays(carpark.deletedAt) }} days</p>
           </div>
           <button class="btn btn-primary" @click="openEditModal(carpark)">Edit</button>
           <button class="btn btn-danger" @click="softDeleteCarPark(carpark.carpark_id)">Delete</button>
         </li>
       </ul>
     </div>
-
-    <!-- CarParkDetailsModal Component -->
-    <car-park-details-modal v-if="selectedCarPark" :carPark="selectedCarPark" @close="selectedCarPark = null"
-      :hide-book-button="true" :is-visible="!!selectedCarPark"></car-park-details-modal>
+    <car-park-details-modal v-if="selectedCarPark" :carPark="selectedCarPark" @close="selectedCarPark = null" :hide-book-button="true" :is-visible="!!selectedCarPark"></car-park-details-modal>
   </div>
 </template>
 
@@ -26,7 +22,8 @@
 import { reactive, toRefs } from 'vue';
 import { useRouter } from 'vue-router';
 import CarParkDetailsModal from '@/components/CarParkDetailsModal.vue';
-import { fetchCarParks, softDeleteCarPark as deleteCarParkAPI, fetchCarParkBays } from '@/services/carParkService'; 
+import { fetchUserCarParks, softDeleteCarPark as deleteCarParkAPI, fetchCarParkBays } from '@/services/carParkService';
+import { getUserDetails } from '../services/userService';
 
 export default {
   components: {
@@ -41,8 +38,10 @@ export default {
     });
 
     async function loadCarParks() {
-      const searchParams = new URLSearchParams({ query: state.searchQuery || '' }).toString();
-      state.carparks = await fetchCarParks(searchParams);
+      state.carparks = await fetchUserCarParks();
+      const details = await getUserDetails();
+      const user_id = details['user_id'];
+      console.log(user_id);
       state.carparks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 

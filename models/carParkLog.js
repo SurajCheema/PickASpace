@@ -25,12 +25,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     bay_id: {
       type: DataTypes.INTEGER,
-      allowNull: true, // Allow null values
+      allowNull: true,
       references: {
         model: 'Bays',
         key: 'bay_id'
       },
-      onDelete: 'SET NULL' // Set the foreign key constraint to ON DELETE SET NULL
+      onDelete: 'SET NULL' 
     },
     payment_id: {
       type: DataTypes.INTEGER,
@@ -61,14 +61,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     cancelledAt: {
       type: DataTypes.DATE,
-      allowNull: true // This field is null until the booking is cancelled
+      allowNull: true
     },
   });
 
   CarParkLog.associate = (models) => {
     CarParkLog.belongsTo(models.CarPark, { foreignKey: 'carpark_id', as: 'carPark', onDelete: 'CASCADE' });
-    CarParkLog.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-    CarParkLog.belongsTo(models.Bay, { foreignKey: 'bay_id', as: 'bay' });
+    CarParkLog.belongsTo(models.User, { foreignKey: 'user_id', as: 'user', onDelete: 'CASCADE' });
+    CarParkLog.belongsTo(models.Bay, { foreignKey: 'bay_id', as: 'bay', onDelete: 'CASCADE' });
     CarParkLog.belongsTo(models.Payment, { foreignKey: 'payment_id', as: 'payment', onDelete: 'CASCADE' });
   };
 

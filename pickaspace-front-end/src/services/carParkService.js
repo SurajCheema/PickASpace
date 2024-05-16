@@ -320,7 +320,7 @@ export const adminSoftDeleteCarPark = async (carparkId) => {
   }
 };
 
-// Admin force delete a carpark immediately (for admin)
+// Force delete a carpark by admin
 export const forceDeleteCarPark = async (carparkId) => {
   const url = `${API_BASE_URL}/admin/carparks/${carparkId}/force`;
   try {
@@ -357,6 +357,23 @@ export const adminUpdateCarPark = async (carparkId, carParkData) => {
     return updatedData;
   } catch (error) {
     console.error('Error updating car park:', error);
+    throw error;
+  }
+};
+
+export const fetchUserCarParks = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/carparks`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch user car parks');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching user car parks:', error);
     throw error;
   }
 };

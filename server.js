@@ -601,6 +601,32 @@ app.delete('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['adm
   }
 });
 
+// Force delete a carpark (admin only)
+app.delete('/api/admin/carparks/:carparkId/force', authenticateToken, verifyRole(['admin']), async (req, res) => {
+  const { carparkId } = req.params;
+
+  try {
+    const carPark = await db.CarPark.findOne({
+      where: { carpark_id: carparkId }
+    });
+
+    if (!carPark) {
+      return res.status(404).json({ error: 'Car park not found' });
+    }
+
+    // Delete associated bays and logs
+    await db.Bay.destroy({ where: { carpark_id: carparkId } });
+    await db.CarParkLog.destroy({ where: { carpark_id: carparkId } });
+
+    // Force delete the car park
+    await carPark.destroy();
+
+    res.json({ message: 'Car park deleted permanently' });
+  } catch (error) {
+    console.error('Error deleting car park permanently:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // Schedule to delete marked car parks and users once a day at midnight
 cron.schedule('0 0 * * *', async () => {
@@ -664,18 +690,40 @@ app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['adm
   const { userId } = req.params;
 
   try {
-    const deletedUser = await db.User.destroy({
-      where: { user_id: userId },
-      cascade: true,
+    const user = await db.User.findByPk(userId, {
+      include: [
+        { model: db.CarPark, as: 'carParks' },
+        { model: db.CarParkLog, as: 'logs' },
+        { model: db.Payment, as: 'payments' },
+        { model: db.Refund, as: 'createdRefunds' },
+        { model: db.Refund, as: 'updatedRefunds' }
+      ]
     });
 
-    if (deletedUser) {
-      console.log(`User with ID ${userId} deleted successfully by admin ${req.user.userId}`);
-      res.json({ message: `Successfully deleted user with ID ${userId}` });
-    } else {
-      console.log(`User with ID ${userId} not found`);
-      res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+
+    // Using transactions to ensure data integrity
+    await db.sequelize.transaction(async (transaction) => {
+      // Delete related car parks and their dependencies
+      for (const carPark of user.carParks) {
+        await db.Bay.destroy({ where: { carpark_id: carPark.carpark_id }, transaction });
+        await db.CarParkLog.destroy({ where: { carpark_id: carPark.carpark_id }, transaction });
+        await carPark.destroy({ transaction });
+      }
+
+      // Delete user logs, payments, and refunds
+      await db.CarParkLog.destroy({ where: { user_id: userId }, transaction });
+      await db.Payment.destroy({ where: { userId: userId }, transaction });
+      await db.Refund.destroy({ where: { createdBy: userId }, transaction });
+      await db.Refund.destroy({ where: { updatedBy: userId }, transaction });
+
+      // Finally, delete the user
+      await user.destroy({ transaction });
+    });
+
+    res.json({ message: `Successfully deleted user with ID ${userId}` });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -1880,5 +1928,21 @@ app.get('/api/user/transactions/:accountId', authenticateToken, async (req, res)
   } catch (error) {
     console.error('Failed to retrieve transactions:', error);
     res.status(500).send('Failed to retrieve transactions');
+  }
+});
+
+// Add this endpoint to fetch user's car parks
+app.get('/api/user/carparks', authenticateToken, async (req, res) => {
+  try {
+    const carParks = await db.CarPark.findAll({
+      where: {
+        user_id: req.user.userId,
+        deletedAt: null, // Ensure we are not fetching soft-deleted car parks
+      },
+    });
+    res.json(carParks);
+  } catch (error) {
+    console.error('Failed to fetch user car parks:', error);
+    res.status(500).send('Internal Server Error');
   }
 });

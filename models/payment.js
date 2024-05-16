@@ -45,9 +45,9 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Payment.associate = (models) => {
-    Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    Payment.hasOne(models.Refund, { foreignKey: 'payment_id', as: 'refund' });
-    Payment.hasOne(models.CarParkLog, { foreignKey: 'payment_id', as: 'log' });
+    Payment.belongsTo(models.User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' });
+    Payment.hasOne(models.Refund, { foreignKey: 'payment_id', as: 'refund', onDelete: 'CASCADE' });
+    Payment.hasOne(models.CarParkLog, { foreignKey: 'payment_id', as: 'log', onDelete: 'CASCADE' });
   };
 
   return Payment;

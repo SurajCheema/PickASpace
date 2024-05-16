@@ -36,11 +36,15 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     // Insert additional settings here.
+    paranoid: true
   });
 
   User.associate = (models) => {
-    User.hasMany(models.CarPark, { foreignKey: 'user_id', as: 'carParks' });
-    User.hasMany(models.CarParkLog, { foreignKey: 'user_id', as: 'logs' });
+    User.hasMany(models.CarPark, { foreignKey: 'user_id', as: 'carParks', onDelete: 'CASCADE' });
+    User.hasMany(models.CarParkLog, { foreignKey: 'user_id', as: 'logs', onDelete: 'CASCADE' });
+    User.hasMany(models.Payment, { foreignKey: 'userId', as: 'payments', onDelete: 'CASCADE' });
+    User.hasMany(models.Refund, { foreignKey: 'createdBy', as: 'createdRefunds', onDelete: 'CASCADE' });
+    User.hasMany(models.Refund, { foreignKey: 'updatedBy', as: 'updatedRefunds', onDelete: 'CASCADE' });
   };
 
   return User;
