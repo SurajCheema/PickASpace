@@ -28,15 +28,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "mocha --timeout 10000 --exit 'test/**/*.test.js'"
+    "test": "mocha --timeout 10000 --exit 'test/**/*.test.js'",
+    "coverage": "npx nyc npm test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@istanbuljs/nyc-config-babel": "^3.0.0",
     "chai": "^4.3.6",
     "mocha": "^10.0.0",
+    "nyc": "^15.1.0",
     "supertest": "^6.2.4"
   }
 }

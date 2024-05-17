@@ -6,6 +6,8 @@ const bcrypt = require('bcrypt');
 const app = require('../server');
 const db = require('../models');
 
+require('./testSetup'); // Include the common setup and teardown
+
 describe('Admin Routes', function () {
   let adminToken;
   let admin;
@@ -13,7 +15,6 @@ describe('Admin Routes', function () {
 
   before(async function () {
     sandbox = sinon.createSandbox();
-    await db.sequelize.sync({ force: true });
 
     // Create a fake admin user in the database
     admin = await db.User.create({
@@ -34,7 +35,6 @@ describe('Admin Routes', function () {
 
   after(async function () {
     sandbox.restore();
-    await db.sequelize.close();
   });
 
   describe('DELETE /api/admin/carparks/:carparkId', function () {

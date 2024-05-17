@@ -3,17 +3,9 @@ const { expect } = require('chai');
 const app = require('../server');
 const db = require('../models');
 
+require('./testSetup'); // Include the common setup and teardown
+
 describe('User Endpoints', function () {
-
-  before(async function () {
-    await db.sequelize.sync({ force: true });
-  });
-
-  after(async function () {
-    // Do not close the connection here if other tests might still use it
-    // await db.sequelize.close();
-  });
-
   describe('POST /create-user', function () {
     it('should create a new user', async function () {
       const res = await request(app)
@@ -68,7 +60,6 @@ describe('User Endpoints', function () {
         });
       expect(res.statusCode).to.equal(500);
     });
-  
 
     it('should return an error if age is less than 16', async function () {
       const res = await request(app)
