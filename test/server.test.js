@@ -17,12 +17,12 @@ describe('User Endpoints', function () {
       const res = await request(app)
         .post('/create-user')
         .send({
-          car_registration: 'ABC123',
-          first_name: 'John',
+          car_registration: 'AA19AAA',
+          first_name: 'Jack',
           last_name: 'Doe',
           email: 'john@example.com',
-          password: 'password123',
-          phone: '1234567890',
+          password: 'Pass123!',
+          phone: '+441234567890',
           DOB: '1990-01-01',
           role: 'user',
           blueBadge: false
@@ -36,12 +36,12 @@ describe('User Endpoints', function () {
       const res = await request(app)
         .post('/create-user')
         .send({
-          car_registration: 'ABC123',
-          first_name: 'John',
+          car_registration: 'AA19AAA',
+          first_name: 'Jack',
           last_name: 'Doe',
           email: 'john@example.com',
-          password: 'password123',
-          phone: '1234567890',
+          password: 'Pass123!',
+          phone: '+441234567890',
           DOB: '1990-01-01',
           role: 'user',
           blueBadge: false
@@ -57,7 +57,7 @@ describe('User Endpoints', function () {
         .post('/login')
         .send({
           email: 'john@example.com',
-          password: 'password123'
+          password: 'Pass123!'
         });
       expect(res.statusCode).to.equal(200);
       expect(res.body).to.have.property('message', 'Login successful');
@@ -75,5 +75,6 @@ describe('User Endpoints', function () {
       expect(res.text).to.equal('Authentication failed');
     });
   });
-  
+  // Add more tests for other user endpoints...
+
 });

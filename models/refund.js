@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'CarParkLog',
+        model: 'CarParkLogs', 
         key: 'log_id'
       }
     },
