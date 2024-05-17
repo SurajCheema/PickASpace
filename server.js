@@ -177,7 +177,7 @@ app.post('/create-user', async (req, res) => {
   if (existingUser) {
     return res.status(400).json({ message: 'An account with this email already exists.' });
   }
-  
+
   try {
     const {
       car_registration,
@@ -827,7 +827,7 @@ app.put('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['admin'
 
     if (!carPark) {
       console.log(`Car park with ID ${carparkId} not found`);
-      return res.status(404).send('Car park not found');
+      return res.status(404).json({ error: 'Car park not found' }); // Return JSON response
     }
 
     // Parse openTime and closeTime as Date objects
@@ -888,7 +888,7 @@ app.put('/api/admin/carparks/:carparkId', authenticateToken, verifyRole(['admin'
     res.json({ message: 'Car park updated successfully' });
   } catch (error) {
     console.error('Error updating car park:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ error: 'Internal Server Error' }); // Return JSON response
   }
 });
 
@@ -1264,7 +1264,7 @@ app.put('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), as
     if (result[0] === 1) { // Check if the update was successful
       res.json({ message: 'User updated successfully by admin' });
     } else {
-      res.status(404).send('User not found');
+      res.status(404).json({ error: 'User not found' }); // Return JSON response
     }
   } catch (error) {
     if (transaction) await transaction.rollback(); // Rollback transaction on error
@@ -1273,18 +1273,20 @@ app.put('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), as
   }
 });
 
-// Fetch a specific user's details (admin only)
+// Admin endpoint to fetch a specific user by ID
 app.get('/api/admin/users/:userId', authenticateToken, verifyRole(['admin']), async (req, res) => {
   const { userId } = req.params;
+
   try {
     const user = await db.User.findByPk(userId);
+
     if (!user) {
-      res.status(404).send('User not found');
-    } else {
-      res.json(user);
+      return res.status(404).json({ error: 'User not found' }); // Return JSON response
     }
+
+    res.json(user);
   } catch (error) {
-    console.error('Error fetching user details:', error);
+    console.error('Failed to fetch user details:', error);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -1947,4 +1949,4 @@ app.get('/api/user/carparks', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = app;
+module.exports = app; 

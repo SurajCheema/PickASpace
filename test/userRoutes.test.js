@@ -4,12 +4,14 @@ const app = require('../server');
 const db = require('../models');
 
 describe('User Endpoints', function () {
+
   before(async function () {
     await db.sequelize.sync({ force: true });
   });
 
   after(async function () {
-    await db.sequelize.close();
+    // Do not close the connection here if other tests might still use it
+    // await db.sequelize.close();
   });
 
   describe('POST /create-user', function () {
