@@ -6,7 +6,7 @@
       <button class="btn mx-2" @click="setActive('past')">Past</button>
       <button class="btn mx-2" @click="setActive('cancelled')">Cancelled</button>
     </div>
-    <div>
+    <div class="booking-content">
       <booking-list :bookings="activeBookings" @booking-selected="showBookingDetailsModal"
         @booking-cancelled="handleBookingCancelled" />
       <booking-details-modal v-if="isBookingDetailsModalVisible" :booking="bookingDetails"
@@ -156,9 +156,14 @@ export default {
   width: 100%; /* Full width for small screens */
   padding: 20px;
   margin: auto; /* Centers the div horizontally */
+  margin-top: 2vw;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  background: #f8f9fa;
+  background: #f0f0f0;
+}
+
+.booking-content {
+  margin-top: 20px; /* Add margin between the booking logs list and navbar */
 }
 
 @media (min-width: 768px) { /* Medium screens and up */
@@ -193,6 +198,8 @@ export default {
   margin: 0 5px;
   border-radius: 5px;
   transition: background-color 0.3s, transform 0.2s;
+  width: 150px; /* Ensures buttons are the same size */
+  display: inline-block; /* Ensures buttons align properly */
 }
 
 .button-group button:hover {
@@ -202,4 +209,3 @@ export default {
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 </style>
-

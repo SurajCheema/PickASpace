@@ -1,13 +1,13 @@
 <template>
   <div class="user-payment-logs">
     <div class="text-center mb-4 button-group">
-      <button class="btn-filter" @click="setFilter('all')">All</button>
-      <button class="btn-filter" @click="setFilter('completed')">Completed</button>
-      <button class="btn-filter" @click="setFilter('pending')">Pending</button>
-      <button class="btn-filter" @click="setFilter('failed')">Failed</button>
-      <button class="btn-filter" @click="setFilter('refunded')">Refunded</button>
+      <button class="btn mx-2" @click="setFilter('all')">All</button>
+      <button class="btn mx-2" @click="setFilter('completed')">Completed</button>
+      <button class="btn mx-2" @click="setFilter('pending')">Pending</button>
+      <button class="btn mx-2" @click="setFilter('failed')">Failed</button>
+      <button class="btn mx-2" @click="setFilter('refunded')">Refunded</button>
     </div>
-    <div>
+    <div class="payment-content">
       <payment-list
         :payments="filteredPayments"
         @view-payment="openPaymentDetailsModal"
@@ -174,45 +174,31 @@ export default {
 
 <style scoped>
 .user-payment-logs {
+  display: block; /* Ensures the div behaves as a block-level element */
   width: 100%; /* Full width for small screens */
-  margin: auto;
   padding: 20px;
+  margin: auto; /* Centers the div horizontally */
+  margin-top: 2vw;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  background: #f8f9fa;
+  background: #f0f0f0;
+}
+
+.payment-content {
+  margin-top: 20px; /* Add margin between the payment logs list and navbar */
+
 }
 
 @media (min-width: 768px) { /* Medium screens and up */
   .user-payment-logs {
-    width: 70%; /* 70% width for medium screens */
+    width: 80%; /* 80% width for medium screens */
   }
 }
 
 @media (min-width: 992px) { /* Large screens and up */
   .user-payment-logs {
-    width: 60%; /* 60% width for large screens */
+    width: 70%; /* 70% width for large screens */
   }
-}
-
-.button-group button.btn-filter {
-  background-color: #ffffff; /* White background */
-  color: #333; /* Dark text for better contrast */
-  border: 1px solid #cccccc; /* Slight border */
-  padding: 10px 20px;
-  margin: 0 5px;
-  border-radius: 5px;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.button-group button.btn-filter:hover {
-  background-color: #007bff; /* Bootstrap primary color on hover */
-  color: #ffffff;
-  transform: translateY(-2px); /* Slight raise effect */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.payment-list, .payment-details-modal, .booking-details, .refund-request-modal {
-  margin-top: 20px;
 }
 
 .payment-list {
@@ -221,42 +207,32 @@ export default {
   gap: 20px; /* Spacing between grid items */
 }
 
+.list-group-item{
+  margin-top: 1vw;
+}
+
 @media (min-width: 992px) { /* Large screens and up */
   .payment-list {
     grid-template-columns: repeat(2, 1fr); /* Two columns for large screens */
   }
 }
 
-/* Modal styles to align with previously suggested styles */
-.modal-content {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-  border: none;
+.button-group button {
+  background-color: #ffffff; /* White background */
+  color: #333; /* Dark text for better contrast */
+  border: 1px solid #cccccc; /* Slight border */
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.2s;
+  width: 150px; /* Ensures buttons are the same size */
+  display: inline-block; /* Ensures buttons align properly */
 }
 
-.modal-header {
-  background-color: white;
-  padding: 20px;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.modal-title {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-  background-color: #f7f9fb;
-}
-
-.close {
-  color: #aaa;
-  font-size: 1.5rem;
-}
-
-.close:hover {
-  color: #f00;
-  opacity: 1;
+.button-group button:hover {
+  background-color: #007bff; /* Bootstrap primary color on hover */
+  color: #ffffff;
+  transform: translateY(-2px); /* Slight raise effect */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 </style>
