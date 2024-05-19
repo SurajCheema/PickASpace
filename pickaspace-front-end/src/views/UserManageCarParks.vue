@@ -7,14 +7,19 @@
           <div @click="showDetails(carpark)">
             <p><strong>ID:</strong> {{ carpark.carpark_id }}</p>
             <p><strong>Address:</strong> {{ carpark.addressLine1 }}, {{ carpark.city }}</p>
-            <p v-if="carpark.deletedAt" class="text-danger">Deletes in {{ getRemainingDays(carpark.deletedAt) }} days</p>
+            <p v-if="carpark.deletedAt" class="text-danger">Deletes in {{ getRemainingDays(carpark.deletedAt) }} days
+            </p>
           </div>
-          <button class="btn btn-primary" @click="openEditModal(carpark)">Edit</button>
-          <button class="btn btn-danger" @click="softDeleteCarPark(carpark.carpark_id)">Delete</button>
+          <div class="button-container">
+            <button class="btn btn-primary" @click="openEditModal(carpark)">Edit</button>
+            <button class="btn btn-danger" @click="softDeleteCarPark(carpark.carpark_id)">Delete</button>
+          </div>
         </li>
+
       </ul>
     </div>
-    <car-park-details-modal v-if="selectedCarPark" :carPark="selectedCarPark" @close="selectedCarPark = null" :hide-book-button="true" :is-visible="!!selectedCarPark"></car-park-details-modal>
+    <car-park-details-modal v-if="selectedCarPark" :carPark="selectedCarPark" @close="selectedCarPark = null"
+      :hide-book-button="true" :is-visible="!!selectedCarPark"></car-park-details-modal>
   </div>
 </template>
 
@@ -61,7 +66,7 @@ export default {
 
     async function softDeleteCarPark(carparkId) {
       try {
-        await deleteCarParkAPI(carparkId);  
+        await deleteCarParkAPI(carparkId);
         await loadCarParks();
         alert('Car park marked for deletion successfully.');
       } catch (error) {
@@ -114,4 +119,22 @@ export default {
 .list-group-item button {
   margin-left: 10px;
 }
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; /* Adds space between buttons */
+  width: 100%;
+}
+
+.button-container .btn {
+  width: 100px; /* Sets the same width for both buttons */
+}
+
+@media (max-width: 767px) {
+  .button-container .btn {
+    width: 90px; /* Slightly smaller width for smaller screens */
+  }
+}
+
 </style>

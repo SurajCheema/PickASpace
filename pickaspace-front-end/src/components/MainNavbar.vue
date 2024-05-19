@@ -131,6 +131,12 @@ export default {
   text-decoration: none;
 }
 
+/* Specific rule for logout link hover state */
+.nav-link[href='#']:hover {
+  background-color: #dc3545; /* Red background color */
+  color: white; /* White text color */
+}
+
 .nav-item {
   margin: 0 5px;
 }
