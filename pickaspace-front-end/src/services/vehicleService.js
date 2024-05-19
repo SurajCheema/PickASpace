@@ -1,6 +1,6 @@
 // vehicleService.js
 
-const API_URL = 'http://localhost:3000'; // Update to your backend server URL
+const API_URL = 'http://localhost:3000'; 
 
 export const fetchVehicleDetails = async (registrationNumber) => {
     if (!registrationNumber.trim()) {

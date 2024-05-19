@@ -1,8 +1,7 @@
 <template>
   <div class="container mt-5" style="max-width: 70%; margin: 0 auto;">
     <div class="input-group mb-3">
-      <input type="text" class="form-control" placeholder="Search by address..." v-model="searchQuery"
-        @input="fetchCarParks">
+      <input type="text" class="form-control" placeholder="Search by address..." v-model="searchQuery" @input="fetchCarParks">
       <div class="input-group-append">
         <button class="btn btn-outline-secondary" type="button" @click="fetchCarParks">Search</button>
       </div>
@@ -38,19 +37,17 @@
             </button>
           </div>
           <div class="modal-body">
-            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{
-        selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
-            <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
-            <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
+            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{ selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
+            <p><strong>Open Time:</strong> {{ formattedOpenTime }}</p>
+            <p><strong>Close Time:</strong> {{ formattedCloseTime }}</p>
             <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
             <p><strong>Total Number of Bays:</strong> {{ selectedCarPark.bays.length }}</p>
             <p><strong>Number of Bays with EV Charging:</strong> {{ selectedCarPark.baysWithEVCharging }}</p>
-            <p><strong>Number of Bays with Disabled Access:</strong> {{ selectedCarPark.baysWithDisabledAccess || 'N/A'
-              }}</p>
+            <p><strong>Number of Bays with Disabled Access:</strong> {{ selectedCarPark.baysWithDisabledAccess || 'N/A' }}</p>
             <p><strong>Largest Vehicle Size:</strong> {{ selectedCarPark.largestVehicleSize }}</p>
             <!-- Pricing details for car park -->
             <div class="pricing-container">
-              <h6><strong>Pricing:</strong></h6>
+              <h6 style="text-align:center;"><strong>Pricing:</strong></h6>
               <div class="grid grid-cols-2 gap-4">
                 <div class="pricing-card">
                   <p><strong>Hourly:</strong> £{{ selectedCarPark.pricing.hourly.toFixed(2) }}</p>
@@ -66,7 +63,7 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary" @click="bookCarPark">Book Car Park</button>
+            <button class="btn btn-primary" @click="bookCarPark" style="text-align:center;">Book Car Park</button>
           </div>
         </div>
       </div>
@@ -121,6 +118,14 @@ export default {
         carPark.postcode.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
     },
+    formattedOpenTime() {
+      if (!this.selectedCarPark || !this.selectedCarPark.openTime) return '';
+      return new Date(this.selectedCarPark.openTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    },
+    formattedCloseTime() {
+      if (!this.selectedCarPark || !this.selectedCarPark.closeTime) return '';
+      return new Date(this.selectedCarPark.closeTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
   },
   methods: {
     async fetchCarParks() {
@@ -304,6 +309,7 @@ export default {
 
 .modal-body {
   padding: 20px;
+  text-align: justify;
   background: linear-gradient(to right, #ffffff, #b3d4fc);
 }
 

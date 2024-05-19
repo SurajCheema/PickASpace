@@ -14,7 +14,7 @@ export const registerUser = async (userData) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json(); // Safely assuming the response is in JSON format
+    const errorData = await response.json(); 
     throw new Error(errorData.message || 'Registration failed.');
   }
 

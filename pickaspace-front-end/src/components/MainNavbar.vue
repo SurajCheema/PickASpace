@@ -70,9 +70,21 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #brand-name {
   padding-left: 1.5em;
+  color: #6495ed;
+  font-weight: bold;
+  padding: 10px 20px;
+  background-color: #fff;
+  border-radius: 5px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+}
+
+#brand-name:hover {
+  transform: scale(1.05); /* Grow in size on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow on hover */
 }
 
 #menu-options {
@@ -90,7 +102,6 @@ export default {
   margin-right: 10px; /* Space between logo and brand name */
 }
 
-
 .container-fluid {
   width: 100%; /* Ensure the container-fluid takes full width */
 }
@@ -103,11 +114,49 @@ export default {
   flex-grow: 1;
 }
 
+.nav-link {
+  color: #fff;
+  font-weight: bold;
+  margin: 0 10px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: #ffffff;
+  color: #6495ed;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+
+.nav-item {
+  margin: 0 5px;
+}
+
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler:focus {
+  outline: none;
+}
+
 @media (max-width: 992px) {
   .content-container {
     width: 100%; /* Full width on smaller screens */
     flex-direction: column; /* Stack items vertically on smaller screens */
   }
+
+  .nav-link {
+    margin: 5px 0;
+    text-align: center;
+    padding: 10px 15px;
+  }
+
+  #menu-options {
+    padding-right: 0;
+  }
 }
 </style>
-

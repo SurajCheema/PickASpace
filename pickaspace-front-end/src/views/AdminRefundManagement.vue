@@ -1,19 +1,15 @@
 <template>
-  <div class="admin-refund-management container">
-    <h2 class="text-center mb-4">Refund Management</h2>
-
+  <div class="admin-refund-management">
     <div class="filters mb-4">
       <div class="d-flex justify-content-center align-items-center filter-group">
-        <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID"
-          class="filter-input mr-2"></b-form-input>
+        <b-form-input v-model="searchTerm" placeholder="Search by payment ID or user ID" class="filter-input mr-2"></b-form-input>
         <b-form-select v-model="selectedStatus" :options="statusOptions" class="filter-input mr-2"></b-form-select>
         <b-button variant="primary" size="sm" @click="fetchRefunds">Apply</b-button>
       </div>
     </div>
 
     <b-list-group class="list-container">
-      <b-list-group-item v-for="refund in filteredRefunds" :key="refund.refund_id"
-        class="d-flex justify-content-between align-items-center refund-item">
+      <b-list-group-item v-for="refund in filteredRefunds" :key="refund.refund_id" class="d-flex justify-content-between align-items-center refund-item">
         <div class="refund-info text-left">
           <div><strong>Refund ID:</strong> {{ refund.refund_id }}</div>
           <div><strong>User ID:</strong> {{ refund.payment.user.user_id }}</div>
@@ -25,8 +21,7 @@
       </b-list-group-item>
     </b-list-group>
 
-    <refund-details-modal :refund="selectedRefund" v-model="showModal"
-      @refund-updated="fetchRefunds"></refund-details-modal>
+    <refund-details-modal :refund="selectedRefund" v-model="showModal" @refund-updated="fetchRefunds"></refund-details-modal>
   </div>
 </template>
 
@@ -67,7 +62,6 @@ export default {
   },
   methods: {
     async fetchRefunds() {
-
       try {
         const filters = {
           paymentId: this.searchTerm,
@@ -98,7 +92,7 @@ export default {
     openRefundModal(refund) {
       if (refund) {
         console.log('Selected refund:', refund);
-        this.selectedRefund = refund; 
+        this.selectedRefund = refund;
         this.showModal = true;
         console.log('Show modal:', this.showModal);
       }
@@ -120,10 +114,14 @@ export default {
 
 <style scoped>
 .admin-refund-management {
-  max-width: 600px;
-  /* Adjust width for overall form width */
-  margin: 0 auto;
-  /* Centers the entire component on the page */
+  display: block;
+  padding: 20px;
+  width: 60%;
+  margin: auto;
+  margin-top: 2vw;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: #f0f0f0;
 }
 
 .filters {
@@ -137,10 +135,8 @@ export default {
 }
 
 .filter-input {
-  margin-right: 20px;
-  /* Adjust spacing between inputs */
-  width: 150px;
-  /* Adjust width of input elements */
+  margin-right: 10px;
+  width:300px;
 }
 
 .list-container {
@@ -151,9 +147,11 @@ export default {
 
 .refund-item {
   width: 100%;
-  /* Make refund items match the width of the container */
   margin-bottom: 10px;
-  /* Space between items */
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .refund-info {
