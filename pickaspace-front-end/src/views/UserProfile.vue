@@ -65,17 +65,15 @@
         <input type="checkbox" id="blueBadge" v-model="user.blueBadge" class="form-check-input">
       </div>
 
-      <button type="submit" class="btn btn-primary" :disabled="!isValidForm">Update Profile</button>
     </form>
-    <button class="btn btn-secondary mt-3" @click="requestPasswordReset">Reset Password</button>
+    <button type="submit" class="btn btn-primary btn-sm" :disabled="!isValidForm">Update Profile</button>
+<button class="btn btn-danger btn-sm mt-3" @click="requestPasswordReset">Reset Password</button>
     <div v-if="message" class="mt-3" :class="{ 'text-success': isSuccess, 'text-danger': !isSuccess }">
       {{ message }}
     </div>
-    <div v-if="updateSuccess" class="alert alert-success mt-3">
-      Profile successfully updated!
-    </div>
   </div>
 </template>
+
 
 <script>
 import { getUserDetails, updateUserDetails, requestPasswordReset as requestPasswordResetService } from '../services/userService';
@@ -94,7 +92,6 @@ export default {
         DOB: ''
       },
       emailConfirm: '',
-      updateSuccess: false,
       registrationError: '',
       message: '',
       isSuccess: false
@@ -150,10 +147,8 @@ export default {
 
         try {
           await updateUserDetails(updateData);
-          this.updateSuccess = true;
           this.message = 'Profile successfully updated!';
           this.isSuccess = true;
-          setTimeout(() => { this.updateSuccess = false; }, 3000);
         } catch (error) {
           console.error('Update failed:', error);
           this.message = 'Update failed. Please try again.';
@@ -216,16 +211,29 @@ export default {
 
 button {
   width: 100%; /* Full width button */
-  background-color: #4CAF50; /* Consistent button color */
-  color: white;
-  padding: 10px 20px;
+  padding: 4px 8px; /* Smaller padding for smaller buttons */
   border: none;
   border-radius: .25rem;
   cursor: pointer;
+  font-size: 0.875rem; /* Smaller font size for buttons */
 }
 
-button:hover {
+.btn-primary {
+  background-color: #4CAF50; /* Consistent button color */
+  color: white;
+}
+
+.btn-primary:hover {
   background-color: #45a049; /* Darken button on hover for better user feedback */
+}
+
+.btn-danger {
+  background-color: #dc3545; /* Red color for reset password button */
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333; /* Darken button on hover for better user feedback */
 }
 
 .invalid-feedback {

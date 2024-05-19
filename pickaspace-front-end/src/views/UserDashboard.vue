@@ -47,7 +47,7 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   text-align: center;
-  background-color: #f4f4f4; /* Matching the light gray from login */
+  background-color: #f4f4f4;
 }
 
 .dashboard-buttons {
@@ -65,6 +65,41 @@ export default {
 .dashboard-buttons .btn {
   width: 100%; /* Full width buttons for better touch targets */
   padding: 10px; /* Larger click area */
+  transition: background-color 0.3s, color 0.3s, transform 0.3s; /* Smooth transition for hover effects */
+  border: none; /* Remove default borders */
+  border-radius: 5px; /* Rounded corners for a softer look */
+  color: white; /* Ensure text is white for better readability */
+  font-weight: bold; /* Make the text bold */
+}
+
+/* Blue background for Profile, Payment Logs, Booking Logs, and Manage Car Parks buttons */
+.dashboard-buttons .btn-info,
+.dashboard-buttons .btn-success {
+  background-color: #6495ed; /* Blue color matching the navbar */
+}
+
+.dashboard-buttons .btn-warning {
+  background-color: #ffc107; /* Gold color */
+}
+
+/* Hover effects */
+.dashboard-buttons .btn-info:hover,
+.dashboard-buttons .btn-success:hover {
+  background-color: white; /* White background on hover */
+  color: #6495ed; /* Blue text on hover */
+  transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+.dashboard-buttons .btn-warning:hover {
+  background-color: white; /* White background on hover */
+  color: #ffc107; /* Gold text on hover */
+  transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+/* Focus effects for accessibility */
+.dashboard-buttons .btn:focus {
+  outline: none; /* Remove default focus outline */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Custom focus shadow */
 }
 
 .dashboard-link {

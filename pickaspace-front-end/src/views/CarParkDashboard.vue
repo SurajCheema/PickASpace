@@ -63,7 +63,7 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary" @click="bookCarPark" style="text-align:center;">Book Car Park</button>
+            <button class="btn btn-primary booking-button" @click="bookCarPark">Book Car Park</button>
           </div>
         </div>
       </div>
@@ -225,7 +225,7 @@ export default {
 
 <style scoped>
 .card {
-  background-color: white; /* Default background color */
+  background-color: #f8f9fa; /* Light grey background color when not hovering */
   transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
   cursor: pointer;
 }
@@ -311,6 +311,14 @@ export default {
   padding: 20px;
   text-align: justify;
   background: linear-gradient(to right, #ffffff, #b3d4fc);
+}
+
+.booking-button {
+  margin-top: 20px; /* Add space on top of the button */
+  display: block; /* Makes the button take up the full width of its container */
+  margin-left: auto; /* Center the button horizontally */
+  margin-right: auto; /* Center the button horizontally */
+  text-align: center; /* Center the text within the button */
 }
 
 

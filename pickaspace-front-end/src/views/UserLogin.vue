@@ -4,12 +4,12 @@
     <form @submit.prevent="loginUser">
       <div>
         <label for="email">Email:</label>
-        <input type="email" id="email" v-model="user.email" required>
+        <input type="email" id="email" placeholder="Your email" v-model="user.email" required>
         <p class="error" v-if="emailError">{{ emailError }}</p>
       </div>
       <div>
         <label for="password">Password:</label>
-        <input type="password" id="password" v-model="user.password" required>
+        <input type="password" id="password"  placeholder="Your password" v-model="user.password" required>
       </div>
       <p class="error" v-if="loginError">{{ loginError }}</p>
       <div>

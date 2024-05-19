@@ -12,11 +12,11 @@
         <h4 class="text-center section-title">Select Arrival and Departure Time</h4>
         <form>
           <div class="form-group">
-            <label for="arrivalTime">Arrival Time</label>
+            <label for="arrivalTime"><b>Arrival Time</b></label>
             <input type="datetime-local" id="arrivalTime" class="form-control" v-model="arrivalTime">
           </div>
           <div class="form-group">
-            <label for="departureTime">Departure Time</label>
+            <label for="departureTime"><b>Departure Time</b></label>
             <input type="datetime-local" id="departureTime" class="form-control" v-model="departureTime"
               :min="minDepartureTime">
             <div v-if="arrivalTime && departureTime && !isDepartureValid" class="alert alert-danger">
@@ -59,10 +59,8 @@
           </button>
           <div v-if="loading" class="loading-spinner"></div>
           <p id="card-error" role="alert"></p>
-          <p class="result-message" v-if="paymentSuccessful">
-            Payment succeeded, see the result in your
-            <a href="https://dashboard.stripe.com/test/payments" target="_blank">Stripe dashboard.</a> Refresh the page
-            to pay again.
+          <p v-if="paymentSuccessful" class="alert alert-success">
+            Successful payment - Booking Complete
           </p>
         </div>
       </div>
@@ -93,7 +91,6 @@
   <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage"
     @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
 </template>
-
 
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
@@ -485,6 +482,7 @@ background-color: #4CAF50;
   /* Padding around the card container for better spacing */
   background-color: #f4f4f4;
   /* Neutral background to highlight the cards */
+  margin-bottom: 50px;
 }
 
 .card {
@@ -665,6 +663,15 @@ background-color: #4CAF50;
   color: #721c24;
   background-color: #f8d7da;
   border-color: #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.alert-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
   padding: 0.75rem 1.25rem;
   border-radius: 0.25rem;
   margin-top: 0.5rem;

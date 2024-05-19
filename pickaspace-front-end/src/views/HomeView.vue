@@ -12,8 +12,8 @@
           unprecedented ease and efficiency.
         </p>
         <div class="d-flex justify-content-center gap-2">
-          <router-link to="/login" class="btn btn-primary">Login</router-link>
-          <router-link to="/register" class="btn btn-secondary">Register</router-link>
+          <router-link to="/login" class="btn btn-primary btn-wide">Login</router-link>
+          <router-link to="/register" class="btn btn-secondary btn-wide">Register</router-link>
         </div>
       </div>
 
@@ -32,10 +32,24 @@ export default {
 </script>
 
 <style scoped>
-h1{
-  padding-top:5vw;
+h1 {
+  padding-top: 5vw;
 }
-.blue{
-  color:blue;
+
+.blue {
+  color: blue;
+}
+
+.btn-wide {
+  width: 150px; /* Set the desired width */
+  text-align: center; /* Center the text */
+}
+
+.d-flex .gap-2 > * {
+  flex: 1 1 auto; /* Ensure buttons have equal width and spacing */
+}
+
+.container{
+  padding-bottom: 50px;
 }
 </style>

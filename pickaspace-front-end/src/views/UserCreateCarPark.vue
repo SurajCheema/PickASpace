@@ -2,7 +2,7 @@
   <div class="container mt-5">
     <h2 class="text-center"><span class="blue">Create a</span> New Car Park</h2>
     <form @submit.prevent="handleSubmit" class="form-container mt-4">
-      
+
       <div class="card mb-4">
         <div class="card-body">
           <h4 class="card-title">Location Details</h4>
@@ -18,12 +18,12 @@
           </div>
           <div class="row">
             <div class="col-md-6">
-              <label for="city" class="form-label">City:</label>
-              <input type="text" class="form-control" id="city" v-model="carPark.city" required>
+              <label for="city" class="form-label"  id="city">City:</label>
+              <input type="text" class="form-control" v-model="carPark.city" required>
             </div>
             <div class="col-md-6">
-              <label for="postcode" class="form-label">Postcode:</label>
-              <input type="text" class="form-control" id="postcode" v-model="carPark.postcode" required>
+              <label for="postcode" class="form-label" id="postcode">Postcode:</label>
+              <input type="text" class="form-control"  v-model="carPark.postcode" required>
             </div>
           </div>
         </div>
@@ -49,9 +49,11 @@
         <div class="card-body">
           <h4 class="card-title">Additional Information</h4>
           <label for="accessInstructions" class="form-label">Access Instructions:</label>
-          <textarea class="form-control" id="accessInstructions" v-model="carPark.accessInstructions" rows="3"></textarea>
+          <textarea class="form-control" id="accessInstructions" v-model="carPark.accessInstructions"
+            rows="3"></textarea>
           <label for="totalBays" class="form-label mt-3">Total Number of Bays:</label>
-          <input type="number" class="form-control" id="totalBays" v-model.number="totalBays" @change="updateBays" required>
+          <input type="number" class="form-control" id="totalBays" v-model.number="totalBays" @change="updateBays"
+            required>
         </div>
       </div>
 
@@ -62,8 +64,7 @@
             <div class="card-body">
               <h5 class="card-title">Bay {{ bay.bay_number }}</h5>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging"
-                  :id="'evCharging' + index">
+                <input class="form-check-input" type="checkbox" v-model="bay.hasEVCharging" :id="'evCharging' + index">
                 <label class="form-check-label" :for="'evCharging' + index">EV Charging</label>
               </div>
               <div class="form-check">
@@ -90,8 +91,8 @@
               <div class="input-group">
                 <span class="input-group-text">£</span>
                 <input type="number" class="form-control" :placeholder="`£${getDefaultPrice(pricing)}`"
-                  :aria-label="`${pricing} price`" v-model.number="carPark.pricing[pricing.toLowerCase()]"
-                  step="0.01" min="0">
+                  :aria-label="`${pricing} price`" v-model.number="carPark.pricing[pricing.toLowerCase()]" step="0.01"
+                  min="0">
               </div>
             </div>
           </div>
@@ -239,49 +240,63 @@ export default {
 </script>
 <style scoped>
 .container {
-  max-width: 960px; /* Adjust max width for larger screens */
+  max-width: 960px;
+  /* Adjust max width for larger screens */
   margin: 40px auto;
   padding: 20px;
-  background: #ffffff; /* Start with a plain white to match the gradient start */
+  background: #ffffff;
+  /* Start with a plain white to match the gradient start */
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .form-container {
-  background: linear-gradient(to right, #ffffff, #b3d4fc); /* Gradient from white to light blue */
+  background: linear-gradient(to right, #ffffff, #b3d4fc);
+  /* Gradient from white to light blue */
   border-radius: 8px;
   padding: 20px;
 }
 
 .card {
   background: #fff;
-  border: 1px solid #ddd; /* Light border for definition */
-  border-radius: 5px; /* Rounded corners for a softer look */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow for depth */
-  transition: transform 0.3s ease-in-out; /* Smooth transformation on hover */
+  border: 1px solid #ddd;
+  /* Light border for definition */
+  border-radius: 5px;
+  /* Rounded corners for a softer look */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Subtle shadow for depth */
+  transition: transform 0.3s ease-in-out;
+  /* Smooth transformation on hover */
 }
 
 .card:hover {
-  transform: scale(1.05); /* Slight scale to indicate interactivity */
+  transform: scale(1.05);
+  /* Slight scale to indicate interactivity */
 }
 
 .card-body {
-  padding: 20px; /* Ample padding for content separation */
+  padding: 20px;
+  /* Ample padding for content separation */
 }
 
 .form-check-input {
-  margin-top: 0.3em; /* Align checkbox better with the text */
-  cursor: pointer; /* Indicate that the checkbox is interactive */
+  margin-top: 0.3em;
+  /* Align checkbox better with the text */
+  cursor: pointer;
+  /* Indicate that the checkbox is interactive */
 }
 
 .form-select {
-  margin-top: 10px; /* Spacing above the select box */
-  cursor: pointer; /* Indicate that the select is interactive */
+  margin-top: 10px;
+  /* Spacing above the select box */
+  cursor: pointer;
+  /* Indicate that the select is interactive */
 }
 
 @media (max-width: 767px) {
   .col-md-6 {
-    max-width: 100%; /* Full width for small screens to ensure readability */
+    max-width: 100%;
+    /* Full width for small screens to ensure readability */
   }
 }
 
@@ -298,12 +313,14 @@ export default {
 }
 
 .input-group-text {
-  background-color: #dee2e6; /* Light gray background for input group */
+  background-color: #dee2e6;
+  /* Light gray background for input group */
 }
 
 @media (min-width: 768px) {
   .card {
-    margin-bottom: 20px; /* Ensures consistent margin-bottom for all cards */
+    margin-bottom: 20px;
+    /* Ensures consistent margin-bottom for all cards */
   }
 }
 
@@ -331,27 +348,38 @@ export default {
   color: #8707f7;
 }
 
-.error-messages > li {
+.error-messages>li {
   color: red;
   margin-bottom: 5px;
 }
 
 @media (min-width: 992px) {
   .container {
-    width: 60%; /* Use 50% of the screen width on large screens */
+    width: 60%;
+    /* Use 50% of the screen width on large screens */
   }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
   .container {
-    width: 70%; /* Use 60% of the screen width on medium screens */
+    width: 70%;
+    /* Use 60% of the screen width on medium screens */
   }
 }
 
 @media (max-width: 767px) {
   .container {
-    width: 100%; /* Use 100% of the screen width on small screens */
+    width: 100%;
+    /* Use 100% of the screen width on small screens */
   }
 }
-</style>
 
+#city {
+  margin-top: 20px; /* Adds spacing above the City field */
+}
+
+#postcode {
+  margin-top: 20px; /* Adds spacing above the Postcode field */
+}
+
+</style>
