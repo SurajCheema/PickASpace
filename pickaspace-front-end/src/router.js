@@ -32,21 +32,21 @@ const routes = [
     path: '/dashboard',
     name: 'CarParkDashboard',
     component: CarParkDashboard,
-    meta: { requiresAuth: true } // Requires authentication
+    meta: { requiresAuth: true, title: 'Search For Carpark' } // Requires authentication
   },
 
   {
     path: '/create-carpark',
     name: 'UserCreateCarPark',
     component: UserCreateCarPark,
-    meta: { requiresAuth: true, requiresOnboarding: true } // Requires authentication and Stripe onboarding
+    meta: { requiresAuth: true, requiresOnboarding: true, title: 'Create Carpark' } // Requires authentication and Stripe onboarding
   },
   {
     path: '/booking/:carparkId',
     name: 'BayBooking',
     component: BayBooking,
     props: true,
-    meta: { requiresAuth: true } // Requires authentication
+    meta: { requiresAuth: true, title: 'Book a Bay' } // Requires authentication
   },
   {
     path: '/',
@@ -54,29 +54,29 @@ const routes = [
     component: HomeView
   },
   // User settings routes
-  { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
-  { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true } },
-  { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true } },
-  { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true } },
-  { path: '/user/requestpasswordreset', name: 'RequestPasswordReset', component: RequestPasswordReset, meta: { requiresAuth: false } },
+  { path: '/user/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true, title: 'User Profile' }},
+  { path: '/user/bookings', name: 'UserBookingLogs', component: UserBookingLogs, meta: { requiresAuth: true, title: 'Booking Logs' } },
+  { path: '/user/payments', name: 'UserPaymentLogs', component: UserPaymentLogs, meta: { requiresAuth: true, title: 'Payment Logs' } },
+  { path: '/user/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true, title: 'User Dashboard' } },
+  { path: '/user/requestpasswordreset', name: 'RequestPasswordReset', component: RequestPasswordReset, meta: { requiresAuth: false, title: 'Request Password Reset' } },
   {
     path: '/user/carparks',
     name: 'UserManageCarParks',
     component: UserManageCarParks,
-    meta: { requiresAuth: true, requiresOnboarding: true } 
+    meta: { requiresAuth: true, requiresOnboarding: true, title: 'Manage Carparks' } 
   },
   {
     path: '/edit-carpark/:carparkId',
     name: 'EditCarPark',
     component: UserEditCarPark,
-    meta: { requiresAuth: true, requiresOnboarding: true } 
+    meta: { requiresAuth: true, requiresOnboarding: true, title: 'Edit Carpark' } 
   },
 
   {
     path: '/user/earnings',
     name: 'ManagePayouts',
     component: UserManagePayouts,
-    meta: { requiresAuth: true, requiresOnboarding: true }
+    meta: { requiresAuth: true, requiresOnboarding: true, title: 'Earnings' }
   },
 
   // Admin routes
@@ -84,27 +84,27 @@ const routes = [
     path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: AdminDashboard,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Admin Dashboard' }
   },
   {
     path: '/admin/refunds',
     name: 'AdminRefundManagement',
     component: AdminRefundManagement,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Manage Refunds' }
   },
 
   {
     path: '/admin/carparks',
     name: 'AdminManageCarParks',
     component: AdminManageCarParks,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Manage Carparks' }
   },
 
   {
     path: '/admin/edit-carpark/:carparkId',
     name: 'AdminEditCarPark',
     component: AdminEditCarPark,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Edit Carpark' }
   },
 
   {
@@ -112,21 +112,21 @@ const routes = [
     name: 'ResetPassword',
     component: ResetPassword,
     props: true,
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false, title: 'Password Reset' }
   },
 
   {
     path: '/onboarding',
     name: 'StripeOnBoarding',
     component: StripeOnBoarding,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, title: 'Stripe Onboarding' }
   },
 
   {
     path: '/admin/users',
     name: 'AdminManageUsers',
     component: AdminManageUsers,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Manage Users' }
   },
 
   {
@@ -134,7 +134,7 @@ const routes = [
     name: 'AdminEditUser',
     component: AdminEditUser,
     props: true,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, title: 'Edit User' }
   }
 ];
 
@@ -146,7 +146,8 @@ const router = createRouter({
 // Global beforeEach guard to check for routes requiring authentication
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
-
+  document.title = to.meta.title || 'PickASpace';
+  next();
   if (!token) {
     // No token found and route requires authentication
     if (to.matched.some(record => record.meta.requiresAuth)) {
