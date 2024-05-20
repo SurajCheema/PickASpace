@@ -1084,8 +1084,8 @@ async function checkBayAvailability(bayId, startTime, endTime, transaction) {
   return overlappingBookings === 0; // true if no overlapping bookings
 }
 
-// Schedule a task to run every minute (FOR TESTING/DEVELOPMENT THIS IS ONCE A DAY)
-cron.schedule('0 0 * * *', async () => {
+// Schedule a task to run every minute
+cron.schedule('* * * * *', async () => {
   console.log('Running a task every minute to check for expired bookings and update statuses');
 
   const now = new Date();
@@ -1517,6 +1517,7 @@ app.get('/api/payments/:paymentId', authenticateToken, async (req, res) => {
   }
 });
 
+// User request refund function
 app.post('/api/request-refund', authenticateToken, async (req, res) => {
   const { paymentId, reason, receiptUrl } = req.body;
   const userId = req.user.userId;

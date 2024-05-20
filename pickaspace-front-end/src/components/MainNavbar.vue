@@ -3,10 +3,10 @@
     <div class="container-fluid">
       <div class="content-container">
         <router-link id="brand-name" class="navbar-brand" to="/">
-          <img src="../assets/logo.jpg" alt="PickASpace Logo" class="navbar-logo"> <!-- Logo image added here -->
+          <img src="../assets/logo.jpg" alt="PickASpace Logo" class="navbar-logo">
           <span class="blue">PickASpace</span>
         </router-link>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
           aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -165,4 +165,43 @@ export default {
     padding-right: 0;
   }
 }
+
+@media (max-width: 992px) {
+  .content-container {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .nav-link {
+    margin: 5px 0;
+    text-align: center;
+    padding: 10px 15px;
+  }
+
+  #menu-options {
+    padding-right: 0;
+  }
+
+  .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #6495ed;
+    z-index: 999;
+    padding: 10px;
+  }
+
+  .navbar-nav {
+    flex-direction: column;
+  }
+
+  .navbar-toggler {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+  }
+}
+
 </style>

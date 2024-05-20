@@ -21,7 +21,7 @@
           >
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title"><span class="label blue">Transaction ID:</span> {{ transaction.id }}</h5>
+                <h5 class="card-title"><span class="label blue">Transaction ID:</span> <b>{{ transaction.id }}</b></h5>
                 <small class="text-muted">{{ transaction.type }}</small>
               </div>
               <p class="card-text"><span class="label blue">Amount:</span> £{{ (transaction.amount / 100).toFixed(2) }}</p>
