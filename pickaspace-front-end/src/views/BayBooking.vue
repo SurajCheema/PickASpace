@@ -24,11 +24,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Selected Bay</label>
+            <label><b>Selected Bay</b></label>
             <p>{{ selectedBay ? `Bay ${selectedBay.bay_number}` : 'No bay selected' }}</p>
           </div>
           <div class="form-group">
-            <label>Duration and Cost</label>
+            <label><b>Duration and Cost</b></label>
             <p>{{ stayDuration !== '-' ? `${stayDuration} hours at ${formatCurrency(calculatedCost)}` : stayDuration }}
             </p>
           </div>
@@ -42,15 +42,15 @@
         <h4 class="text-center section-title">Payment Details</h4>
         <div class="payment-container">
           <div class="payment-form-group">
-            <label>Card Number</label>
+            <label><b>Card Number</b></label>
             <div id="card-number" class="stripe-element"></div>
           </div>
           <div class="payment-form-group">
-            <label>Card Expiry</label>
+            <label><b>Card Expiry</b></label>
             <div id="card-expiry" class="stripe-element"></div>
           </div>
           <div class="payment-form-group">
-            <label>Card CVC</label>
+            <label><b>Card CVC</b></label>
             <div id="card-cvc" class="stripe-element"></div>
           </div>
           <button @click.prevent="submitBooking"

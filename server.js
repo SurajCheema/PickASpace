@@ -1025,7 +1025,7 @@ app.post('/api/book-bay', authenticateToken, async (req, res) => {
       stripeAccount: carpark.User.stripe_account_id
     });
 
-    if (!charge.paid) {
+    if (charge.status !== 'succeeded') {
       await transaction.rollback();
       return res.status(402).json({ error: 'Payment failed.' });
     }
