@@ -38,7 +38,7 @@
         <p><strong>Refund ID:</strong> {{ selectedRefund.refund_id }}</p>
         <p><strong>Payment ID:</strong> {{ selectedRefund.payment_id }}</p>
         <p><strong>Receipt URL:</strong> <a :href="selectedRefund.receiptUrl" target="_blank"
-            class="text-primary text-decoration-underline">View Receipt</a></p>
+            class="text-primary text-decoration-underline">View Receipt by clicking the payment</a></p>
         <p><strong>Amount:</strong> {{ selectedRefund.amount }}</p>
         <p><strong>Status:</strong> {{ selectedRefund.status }}</p>
         <p><strong>Requested At:</strong> {{ formatDate(selectedRefund.createdAt) }}</p>
