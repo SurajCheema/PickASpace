@@ -5,6 +5,7 @@
     <form @submit.prevent="registerUser" v-if="!registrationSuccess">
       <div class="form-group">
         <label for="carRegistration">Car Registration:</label>
+        <a href="https://developer-portal.driver-vehicle-licensing.api.gov.uk/apis/vehicle-enquiry-service/mock-responses.html" target="_blank" class="registration-link">Check Registration</a>
         <input type="text" id="carRegistration" v-model="user.car_registration" @blur="validateRegistrationPlate"
           required>
         <p class="error" v-if="registrationError">{{ registrationError }}</p>
