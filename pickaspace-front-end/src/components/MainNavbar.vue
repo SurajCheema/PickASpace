@@ -9,7 +9,7 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
           aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
-        </button>
+        </button>a
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul id="menu-options" class="navbar-nav ms-auto">
             <li class="nav-item" v-if="isLoggedIn">
@@ -20,6 +20,9 @@
             </li>
             <li class="nav-item" v-if="isLoggedIn">
               <router-link class="nav-link" to="/user/dashboard">Profile</router-link>
+            </li>
+            <li class="nav-item" v-if="isLoggedIn && isAdmin">
+              <router-link class="nav-link" to="/admin/dashboard">Admin Dashboard</router-link>
             </li>
             <li class="nav-item" v-if="!isLoggedIn">
               <router-link class="nav-link" to="/login">Login</router-link>
@@ -40,34 +43,47 @@
 
 <script>
 import { eventBus } from '../eventBus.js';
+import { jwtDecode } from 'jwt-decode';
 
 export default {
   name: 'MainNavbar',
   data() {
     return {
       isLoggedIn: false,
+      isAdmin: false,
     };
   },
-  created() {
-    this.checkLogin();
-    eventBus.on('login', () => {
-      this.isLoggedIn = true;
-    });
-    eventBus.on('logout', () => {
-      this.isLoggedIn = false;
-    });
-  },
   methods: {
-    checkLogin() {
-      this.isLoggedIn = !!localStorage.getItem('token');
+    checkLoginStatus() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        this.isLoggedIn = true;
+        this.isAdmin = decodedToken.role === 'admin';
+      } else {
+        this.isLoggedIn = false;
+        this.isAdmin = false;
+      }
     },
     logout() {
       localStorage.removeItem('token');
       this.$router.push('/login');
       eventBus.emit('logout');
-    }
-  }
-}
+      this.isLoggedIn = false;
+      this.isAdmin = false;
+    },
+  },
+  created() {
+    this.checkLoginStatus();
+    eventBus.on('login', () => {
+      this.checkLoginStatus();
+    });
+    eventBus.on('logout', () => {
+      this.isLoggedIn = false;
+      this.isAdmin = false;
+    });
+  },
+};
 </script>
 
 <style scoped>
