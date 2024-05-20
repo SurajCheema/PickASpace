@@ -731,11 +731,6 @@ app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['adm
 });
 
 
-
-
-
-
-
 // Endpoint to edit a car park (for users)
 app.put('/api/carparks/:carparkId', authenticateToken, async (req, res) => {
   const { carparkId } = req.params;
@@ -1738,7 +1733,7 @@ app.post('/api/refunds/:refundId/approve', authenticateToken, verifyRole(['admin
       return res.status(404).send('Refund request not found or already processed');
     }
 
-    // Convert pounds/dollars to cents for the API call
+    // Convert pounds to pence for the API call
     if (refund.amount == null || refund.payment.processingFee == null) {
       console.error('Invalid data: Amount or processing fee is null');
       return res.status(500).send('Internal error with refund data');
