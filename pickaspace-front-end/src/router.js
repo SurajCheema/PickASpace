@@ -147,7 +147,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
   document.title = to.meta.title || 'PickASpace';
-  next();
+
   if (!token) {
     // No token found and route requires authentication
     if (to.matched.some(record => record.meta.requiresAuth)) {
@@ -167,6 +167,14 @@ router.beforeEach(async (to, from, next) => {
       console.log('Token has expired, redirecting to login');
       localStorage.removeItem('token');
       return next({ name: 'UserLogin' });
+    }
+
+    // Check if the route requires admin role
+    if (to.matched.some(record => record.meta.requiresAdmin)) {
+      if (decoded.role !== 'admin') {
+        console.log('Access denied: User does not have admin role, redirecting to home');
+        return next({ name: 'Home' }); // Redirect to home page or an appropriate route
+      }
     }
 
     // Handle routes that require Stripe onboarding
@@ -193,6 +201,5 @@ router.beforeEach(async (to, from, next) => {
     next({ name: 'UserLogin' });
   }
 });
-
 
 export default router;
