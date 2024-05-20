@@ -1,66 +1,153 @@
-# PickASpace 
++++
+# Instructions to Run the Vue.js Node.js Project
 
-## Information about this repository
+This guide will walk you through the steps to clone and run the Vue.js and Node.js project from the GitLab repository, as well as install and configure PostgreSQL, Sequelize, and pgAdmin 4.
 
-This is the repository that you are going to use **individually** for developing your project. Please use the resources provided in the module to learn about **plagiarism** and how plagiarism awareness can foster your learning.
+## Prerequisites
 
-Regarding the use of this repository, once a feature (or part of it) is developed and **working** or parts of your system are integrated and **working**, define a commit and push it to the remote repository. You may find yourself making a commit after a productive hour of work (or even after 20 minutes!), for example. Choose commit message wisely and be concise.
+Before you begin, make sure you have the following installed:
 
-Please choose the structure of the contents of this repository that suits the needs of your project but do indicate in this file where the main software artefacts are located.
+- **Node.js**: Download and install from [nodejs.org](https://nodejs.org/).
+- **Git**: Download and install from [git-scm.com](https://git-scm.com/).
+- **PostgreSQL**: Download and install from [postgresql.org](https://www.postgresql.org/download/).
+- **pgAdmin 4**: Download and install from [pgadmin.org](https://www.pgadmin.org/download/).
 
+## Step 1: Clone the Repository
 
-# PickASpace - Car Parking Web Application
+First, clone the repository from GitLab to your local machine. Replace `https://campus.cs.le.ac.uk/gitlab/ug_project/23-24/ssc26.git` with the actual URL of your GitLab repository.
 
-## Description
-
-PickASpace is a car parking web application developed using Node.js, Vue.js, Express, Sequelize, JavaScript, and PostgreSQL. It is designed to manage and streamline the process of car parking for students.
-
-## Initial Setup
-
-To get the project running after cloning, follow these steps:
-
-### Prerequisites
-
-Ensure you have the following installed:
-
-- Node.js (visit [Node.js Download](https://nodejs.org/en/download/))
-- PostgreSQL (visit [PostgreSQL Downloads](https://www.postgresql.org/download/))
-
-### Installation
-
-1. **Clone the Repository**:
+```sh
 git clone https://campus.cs.le.ac.uk/gitlab/ug_project/23-24/ssc26.git
+```
+
+Navigate to the project directory:
+
+```sh
 cd ssc26
+```
 
+## Step 2: Install Dependencies
 
-2. **Install Dependencies**:
-Navigate to the project directory and install the necessary packages:
+Both the frontend (Vue.js) and backend (Node.js) parts of the project have their own dependencies. You need to install them separately.
+
+### Install Backend Dependencies
+
+Navigate to the backend directory and install the dependencies:
+
+```sh
+cd backend
 npm install
+```
+
+### Install Frontend Dependencies
+
+Navigate to the frontend directory and install the dependencies:
+
+```sh
+cd ../frontend
+npm install
+```
+
+## Step 3: Configure PostgreSQL
+
+### Install PostgreSQL
+
+1. Download and install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/).
+2. During installation, set a password for the `postgres` user.
+
+### Configure PostgreSQL
+
+1. Open `pgAdmin 4` from your applications.
+2. Create a new database:
+    - Right-click on "Servers" and select "Create" > "Server".
+    - Name the server and configure the connection with the password you set during installation.
+    - Create a new database by right-clicking on the server, selecting "Create" > "Database", and providing a name.
+
+### Setup Sequelize
+
+Sequelize is used for interacting with the PostgreSQL database.
+
+1. Ensure you have Sequelize CLI installed:
+
+```sh
+npm install -g sequelize-cli
+```
+
+2. Initialize Sequelize in your backend directory (main directory):
+
+```sh
+npx sequelize init
+```
+
+3. Configure the `config/config.json` file with your PostgreSQL database details. The `config/config.json` should look like this:
+
+```json
+{
+  "development": {
+    "username": "postgres",
+    "password": "admin",
+    "database": "PICKASPACEdb",
+    "host": "localhost",
+    "dialect": "postgres",
+    "port": 5432,
+    "timezone": "+00:00"
+  }
+}
+```
+
+Make sure you use the same configuration to run the project without any changes.
+
+## Step 4: Confirm Environment Variables
+
+Ensure you have the .env files available, in front end and backend. They should contain the API keys and email credentials. Do not change these.
 
 
-3. **Database Setup**:
-- Create a PostgreSQL database in pAdmin named `PICKASPACEdb`.
-- Update the `config/config.json` file with your database credentials.
-- Run the database migrations:
-  ```
-  npx sequelize-cli db:migrate
-  ```
+## Step 5: Run Database Migrations
 
-4. **Start the Application**:
-- To run the backend server:
-  ```
-  node server.js
-  ```
-- To run the Vue.js frontend (in a separate terminal):
-  ```
-  cd pickaspace-frontend
-  npm run serve
-  ```
+Run the Sequelize migrations to set up the database schema:
 
-5. **Access the Application**:
-- The application should now be running at `http://localhost:3000` (backend) and `http://localhost:8080` (frontend).
+```sh
+cd backend
+npx sequelize db:migrate
+```
+
+## Step 5: Run Database seeders
+
+Run the Sequelize seeeders to set up the database dummy data:
+
+```sh
+cd backend
+npx sequelize-cli db:seed:all
+```
+
+## Step 6: Run the Backend Server
+
+Navigate to the backend directory and start the server:
+
+```sh
+cd backend
+node server.js
+```
+
+This will start the backend server on the specified port.
+
+## Step 7: Run the Frontend Development Server
+
+Navigate to the frontend directory and start the development server:
+
+```sh
+cd ../pickaspace-front-end
+npm run serve
+```
+
+This will start the frontend development server, and you can access the application in your web browser.
 
 ## Additional Notes
 
-- The `node_modules` directory and other configurations are excluded from the repository for efficiency and are generated during the installation process.
+- **Backend Server**: Make sure the backend server is running before starting the frontend server, as the frontend will make API calls to the backend.
+- **Port Configuration**: Ensure that the ports configured in the `.env` files do not conflict with other services running on your machine.
 
+## Conclusion
+
+By following these steps, you should be able to clone the repository and run the project successfully. If you encounter any issues, refer to the project's documentation or contact me by email ssc26.
++++
