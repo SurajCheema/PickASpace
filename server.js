@@ -1368,15 +1368,40 @@ app.delete('/api/admin/users/:userId/force', authenticateToken, verifyRole(['adm
   const { userId } = req.params;
 
   try {
-    const deleted = await db.User.destroy({
-      where: { user_id: userId }
+    const user = await db.User.findByPk(userId, {
+      include: [
+        { model: db.CarPark, as: 'carParks' },
+        { model: db.CarParkLog, as: 'logs' },
+        { model: db.Payment, as: 'payments' },
+        { model: db.Refund, as: 'createdRefunds' },
+        { model: db.Refund, as: 'updatedRefunds' }
+      ]
     });
 
-    if (deleted) {
-      res.json({ message: `Successfully deleted user with ID ${userId}` });
-    } else {
-      res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+
+    // Using transactions to ensure data integrity
+    await db.sequelize.transaction(async (transaction) => {
+      // Delete related car parks and their dependencies
+      for (const carPark of user.carParks) {
+        await db.Bay.destroy({ where: { carpark_id: carPark.carpark_id }, transaction });
+        await db.CarParkLog.destroy({ where: { carpark_id: carPark.carpark_id }, transaction });
+        await carPark.destroy({ transaction });
+      }
+
+      // Delete user logs, payments, and refunds
+      await db.CarParkLog.destroy({ where: { user_id: userId }, transaction });
+      await db.Payment.destroy({ where: { userId: userId }, transaction });
+      await db.Refund.destroy({ where: { createdBy: userId }, transaction });
+      await db.Refund.destroy({ where: { updatedBy: userId }, transaction });
+
+      // Finally, delete the user
+      await user.destroy({ transaction, force: true }); // Use force: true to permanently delete the user
+    });
+
+    res.json({ message: `Successfully deleted user with ID ${userId}` });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });

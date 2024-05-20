@@ -36,7 +36,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     // Insert additional settings here.
-    paranoid: true
   });
 
   User.associate = (models) => {
