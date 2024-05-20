@@ -18,56 +18,15 @@
       </ul>
     </div>
 
-    <!-- Modal for Car Park Details -->
-    <div v-if="showModal" class="modal" tabindex="-1" role="dialog" style="display: block;">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Car Park Details</h5>
-            <button type="button" class="close" @click="closeModal" aria-label="Close" style="position: absolute; right: 20px; top: 20px;">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Address:</strong> {{ selectedCarPark.addressLine1 }}, {{ selectedCarPark.addressLine2 }}, {{
-              selectedCarPark.city }}, {{ selectedCarPark.postcode }}</p>
-            <p><strong>Open Time:</strong> {{ selectedCarPark.openTime }}</p>
-            <p><strong>Close Time:</strong> {{ selectedCarPark.closeTime }}</p>
-            <p><strong>Access Instructions:</strong> {{ selectedCarPark.accessInstructions }}</p>
-            <p><strong>Total Number of Bays:</strong> {{ selectedCarPark.bays.length }}</p>
-            <p><strong>Number of Bays with EV Charging:</strong> {{ selectedCarPark.baysWithEVCharging }}</p>
-            <p><strong>Number of Bays with Disabled Access:</strong> {{ selectedCarPark.baysWithDisabledAccess || 'N/A'
-              }}</p>
-            <p><strong>Largest Vehicle Size:</strong> {{ selectedCarPark.largestVehicleSize }}</p>
-            <!-- Pricing details for car park -->
-            <div class="pricing-container">
-              <h6><strong>Pricing:</strong></h6>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="pricing-card">
-                  <p><strong>Hourly:</strong> £{{ selectedCarPark.pricing.hourly.toFixed(2) }}</p>
-                </div>
-                <div class="pricing-card">
-                  <p><strong>Daily:</strong> £{{ selectedCarPark.pricing.daily.toFixed(2) }}</p>
-                </div>
-                <div class="pricing-card">
-                  <p><strong>Weekly:</strong> £{{ selectedCarPark.pricing.weekly.toFixed(2) }}</p>
-                </div>
-                <div class="pricing-card">
-                  <p><strong>Monthly:</strong> £{{ selectedCarPark.pricing.monthly.toFixed(2) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CarParkDetailsModal :carPark="selectedCarPark" :isVisible="showModal" @close="closeModal" />
   </div>
 </template>
 
 <script>
-import { reactive, toRefs } from 'vue';
+import { reactive, toRefs, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { fetchAllCarParks, adminSoftDeleteCarPark, forceDeleteCarPark as forceDeleteCarParkService, fetchCarParkBays } from '@/services/carParkService';
+import CarParkDetailsModal from '@/components/CarParkDetailsModal.vue';
 
 const vehicleSizeMapping = {
   "Small": 1,
@@ -85,6 +44,9 @@ const vehicleSizeName = {
 
 export default {
   name: 'AdminManageCarParks',
+  components: {
+    CarParkDetailsModal
+  },
   setup() {
     const router = useRouter();
     const state = reactive({
@@ -156,6 +118,12 @@ export default {
       return daysDiff > 0 ? daysDiff : 0;
     }
 
+    function formatTime(time) {
+      if (!time) return '';
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    }
+
     loadCarParks();
 
     return {
@@ -165,7 +133,10 @@ export default {
       closeModal,
       localSoftDeleteCarPark,
       localForceDeleteCarPark,
-      getRemainingDays
+      getRemainingDays,
+      formatTime,
+      formattedOpenTime: computed(() => formatTime(state.selectedCarPark?.openTime)),
+      formattedCloseTime: computed(() => formatTime(state.selectedCarPark?.closeTime)),
     };
   }
 };
