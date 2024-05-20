@@ -1,4 +1,3 @@
-+++
 # Instructions to Run the Vue.js Node.js Project
 
 This guide will walk you through the steps to clone and run the Vue.js and Node.js project from the GitLab repository, as well as install and configure PostgreSQL, Sequelize, and pgAdmin 4.
@@ -14,7 +13,7 @@ Before you begin, make sure you have the following installed:
 
 ## Step 1: Clone the Repository
 
-First, clone the repository from GitLab to your local machine. Replace `https://campus.cs.le.ac.uk/gitlab/ug_project/23-24/ssc26.git` with the actual URL of your GitLab repository.
+First, clone the repository from GitLab to your local machine: 'https://campus.cs.le.ac.uk/gitlab/ug_project/23-24/ssc26.git`
 
 ```sh
 git clone https://campus.cs.le.ac.uk/gitlab/ug_project/23-24/ssc26.git
@@ -44,7 +43,7 @@ npm install
 Navigate to the frontend directory and install the dependencies:
 
 ```sh
-cd ../frontend
+cd ../pickaspace-front-end
 npm install
 ```
 
@@ -65,7 +64,7 @@ npm install
 
 ### Setup Sequelize
 
-Sequelize is used for interacting with the PostgreSQL database.
+Sequelize is used for interacting with the PostgreSQL database. Navigate to the backend.
 
 1. Ensure you have Sequelize CLI installed:
 
@@ -101,7 +100,6 @@ Make sure you use the same configuration to run the project without any changes.
 
 Ensure you have the .env files available, in front end and backend. They should contain the API keys and email credentials. Do not change these.
 
-
 ## Step 5: Run Database Migrations
 
 Run the Sequelize migrations to set up the database schema:
@@ -111,16 +109,16 @@ cd backend
 npx sequelize db:migrate
 ```
 
-## Step 5: Run Database seeders
+## Step 6: Run Database Seeders
 
-Run the Sequelize seeeders to set up the database dummy data:
+Run the Sequelize seeders to set up the database dummy data:
 
 ```sh
 cd backend
 npx sequelize-cli db:seed:all
 ```
 
-## Step 6: Run the Backend Server
+## Step 7: Run the Backend Server
 
 Navigate to the backend directory and start the server:
 
@@ -131,7 +129,7 @@ node server.js
 
 This will start the backend server on the specified port.
 
-## Step 7: Run the Frontend Development Server
+## Step 8: Run the Frontend Development Server
 
 Navigate to the frontend directory and start the development server:
 
@@ -149,5 +147,4 @@ This will start the frontend development server, and you can access the applicat
 
 ## Conclusion
 
-By following these steps, you should be able to clone the repository and run the project successfully. If you encounter any issues, refer to the project's documentation or contact me by email ssc26.
-+++
+By following these steps, you should be able to clone the repository and run the project successfully. If you encounter any issues, refer to the project's documentation or contact me by email at `ssc26@student.le.ac.uk`.
