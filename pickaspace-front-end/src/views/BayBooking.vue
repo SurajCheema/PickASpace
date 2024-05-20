@@ -39,7 +39,10 @@
 
       <!-- Payment Section -->
       <div class="col-md-5 payment-section d-flex flex-column">
-        <h4 class="text-center section-title">Payment Details</h4>
+        <div class="d-flex justify-content-between align-items-center position-relative mb-3">
+          <h4 class="section-title flex-grow-1 text-center pb-2 m-0">Payment Details</h4>
+          <button class="btn navbar-button position-absolute end-0" @click="showTestCardModal = true">?</button>
+        </div>
         <div class="payment-container">
           <div class="payment-form-group">
             <label><b>Card Number</b></label>
@@ -90,7 +93,29 @@
   </div>
   <CombinedBayConfirmationModal :show="combinedModalShow" :message="combinedModalMessage"
     @confirm="confirmCombinedModal" @cancel="cancelCombinedModal" />
+
+  <!-- Test Card Modal -->
+  <div class="modal" :class="{ 'd-block': showTestCardModal }">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Stripe Test Card Details</h5>
+          <button type="button" class="btn-close" @click="showTestCardModal = false"></button>
+        </div>
+        <div class="modal-body">
+          <p>Card Number: <span class="test-card-detail">4242424242424242</span></p>
+          <p>Card Expiry: <span class="test-card-detail">Any future date</span></p>
+          <p>Card CVC: <span class="test-card-detail">Any 3 digits</span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="copyTestCardDetails">Copy Details</button>
+          <button type="button" class="btn btn-primary" @click="showTestCardModal = false">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
 
 <script>
 import { fetchCarParkDetails, bookBay, fetchBayAvailability } from '@/services/carParkService';
@@ -123,6 +148,7 @@ export default {
       loading: false,
       combinedModalShow: false,
       combinedModalMessage: '',
+      showTestCardModal: false,
     };
   },
 
@@ -177,6 +203,14 @@ export default {
   },
 
   methods: {
+    copyTestCardDetails() {
+    const testCardDetails = "Card Number: 4242424242424242\nCard Expiry: Any future date\nCard CVC: Any 3 digits";
+    navigator.clipboard.writeText(testCardDetails).then(() => {
+      alert('Test card details copied to clipboard!');
+    }, (err) => {
+      console.error('Failed to copy test card details: ', err);
+    });
+  },
     async selectBay(bay) {
       const details = await getUserDetails();
       this.user = { ...this.user, ...details };
@@ -683,5 +717,57 @@ background-color: #4CAF50;
   font-weight: bold;
   color: #284777;
   /* Dark blue for important info */
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal.d-block {
+  display: block;
+}
+
+.modal-dialog {
+  margin: 15% auto;
+  max-width: 500px;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  width: 80%;
+}
+
+.test-card-detail {
+  font-weight: bold;
+}
+
+.navbar-button {
+  background-color: #6495ed; 
+  color: #fff; 
+  font-weight: bold;
+  margin: 0 10px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar-button:hover {
+  background-color: #ffffff;
+  color: #6495ed; /* Blue text color on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
 }
 </style>
