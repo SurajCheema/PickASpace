@@ -134,7 +134,7 @@ This will start the backend server on the specified port.
 Navigate to the frontend directory and start the development server:
 
 ```sh
-cd ../pickaspace-front-end
+cd .\pickaspace-front-end\
 npm run serve
 ```
 

@@ -64,10 +64,10 @@
         <label for="blueBadge" class="form-label">Has Blue Badge:</label>
         <input type="checkbox" id="blueBadge" v-model="user.blueBadge" class="form-check-input">
       </div>
+      <button type="submit" class="btn btn-primary btn-sm" :disabled="!isValidForm">Update Profile</button>
+    <button class="btn btn-danger btn-sm mt-3" @click="requestPasswordReset">Reset Password</button>
 
     </form>
-    <button type="submit" class="btn btn-primary btn-sm" :disabled="!isValidForm">Update Profile</button>
-<button class="btn btn-danger btn-sm mt-3" @click="requestPasswordReset">Reset Password</button>
     <div v-if="message" class="mt-3" :class="{ 'text-success': isSuccess, 'text-danger': !isSuccess }">
       {{ message }}
     </div>
@@ -184,83 +184,106 @@ export default {
 
 <style scoped>
 .container {
-  max-width: 800px; /* Larger container on large screens */
-  margin: 20px auto; /* Centered with top and bottom margin */
+  max-width: 800px;
+  /* Larger container on large screens */
+  margin: 20px auto;
+  /* Centered with top and bottom margin */
   padding: 20px;
-  background-color: #f4f4f4; /* Light gray background consistent with other forms */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-  border-radius: 8px; /* Rounded corners */
+  background-color: #f4f4f4;
+  /* Light gray background consistent with other forms */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Soft shadow for depth */
+  border-radius: 8px;
+  /* Rounded corners */
   text-align: center;
 }
 
 .mb-3 {
-  margin-bottom: 1rem; /* Consistent spacing */
+  margin-bottom: 1rem;
+  /* Consistent spacing */
 }
 
 .form-label {
-  display: block; /* Ensures labels are properly aligned */
+  display: block;
+  /* Ensures labels are properly aligned */
   margin-bottom: .5rem;
 }
 
 .form-control {
-  width: 100%; /* Full width inputs within container */
-  padding: .375rem .75rem; /* Padding for better text visibility */
+  width: 100%;
+  /* Full width inputs within container */
+  padding: .375rem .75rem;
+  /* Padding for better text visibility */
   border: 1px solid #ccc;
-  border-radius: .25rem; /* Rounded corners for inputs */
+  border-radius: .25rem;
+  /* Rounded corners for inputs */
 }
 
 button {
-  width: 100%; /* Full width button */
-  padding: 4px 8px; /* Smaller padding for smaller buttons */
+  width: 100%;
+  /* Full width button */
+  padding: 4px 8px;
+  /* Smaller padding for smaller buttons */
   border: none;
   border-radius: .25rem;
   cursor: pointer;
-  font-size: 0.875rem; /* Smaller font size for buttons */
+  font-size: 0.875rem;
+  /* Smaller font size for buttons */
 }
 
 .btn-primary {
-  background-color: #4CAF50; /* Consistent button color */
+  background-color: #4CAF50;
+  /* Consistent button color */
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #45a049; /* Darken button on hover for better user feedback */
+  background-color: #45a049;
+  /* Darken button on hover for better user feedback */
 }
 
 .btn-danger {
-  background-color: #dc3545; /* Red color for reset password button */
+  background-color: #dc3545;
+  /* Red color for reset password button */
   color: white;
 }
 
 .btn-danger:hover {
-  background-color: #c82333; /* Darken button on hover for better user feedback */
+  background-color: #c82333;
+  /* Darken button on hover for better user feedback */
 }
 
 .invalid-feedback {
-  color: red; /* Error messages in red */
-  display: block; /* Ensure visibility */
+  color: red;
+  /* Error messages in red */
+  display: block;
+  /* Ensure visibility */
 }
 
 .text-success,
 .text-danger {
-  font-size: 1rem; /* Text size for messages */
+  font-size: 1rem;
+  /* Text size for messages */
 }
 
 @media (min-width: 992px) {
   .container {
-    width: 50%; /* 50% width on large screens */
+    width: 50%;
+    /* 50% width on large screens */
   }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
   .container {
-    width: 60%; /* 60% width on medium screens */
+    width: 60%;
+    /* 60% width on medium screens */
   }
 }
 
 @media (max-width: 767px) {
   .container {
-    width: 100%; /* Full width on small screens */
+    width: 100%;
+    /* Full width on small screens */
   }
 }
 </style>

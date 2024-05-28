@@ -1193,6 +1193,7 @@ app.post('/api/update-user', authenticateToken, async (req, res) => {
     DOB,
     car_registration,
     blueBadge
+//insert id back for stripe api
   };
 
   console.log('Attempting to update user:', userId, updatedFields);
